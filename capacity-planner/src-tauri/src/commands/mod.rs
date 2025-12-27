@@ -1,5 +1,9 @@
 use crate::db::DbPool;
-use crate::models::{Person, CreatePersonInput, Project, CreateProjectInput};
+use crate::models::{
+    Person, CreatePersonInput, 
+    Project, CreateProjectInput,
+    PlanningPeriod, CreatePlanningPeriodInput,
+};
 
 #[tauri::command]
 pub async fn list_people(pool: tauri::State<'_, DbPool>) -> Result<Vec<Person>, String> {
@@ -175,6 +179,86 @@ pub async fn delete_project(
     id: i64,
 ) -> Result<(), String> {
     sqlx::query("DELETE FROM projects WHERE id = ?")
+        .bind(id)
+        .execute(pool.inner())
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+// ============================================================================
+// Planning Period Commands
+// ============================================================================
+
+#[tauri::command]
+pub async fn list_planning_periods(pool: tauri::State<'_, DbPool>) -> Result<Vec<PlanningPeriod>, String> {
+    let periods = sqlx::query_as::<_, PlanningPeriod>("SELECT * FROM planning_periods ORDER BY start_date DESC")
+        .fetch_all(pool.inner())
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(periods)
+}
+
+#[tauri::command]
+pub async fn create_planning_period(
+    pool: tauri::State<'_, DbPool>,
+    input: CreatePlanningPeriodInput,
+) -> Result<PlanningPeriod, String> {
+    let result = sqlx::query(
+        "INSERT INTO planning_periods (name, start_date, end_date) VALUES (?, ?, ?)"
+    )
+    .bind(&input.name)
+    .bind(&input.start_date)
+    .bind(&input.end_date)
+    .execute(pool.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let id = result.last_insert_rowid();
+
+    let period = sqlx::query_as::<_, PlanningPeriod>("SELECT * FROM planning_periods WHERE id = ?")
+        .bind(id)
+        .fetch_one(pool.inner())
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(period)
+}
+
+#[tauri::command]
+pub async fn update_planning_period(
+    pool: tauri::State<'_, DbPool>,
+    id: i64,
+    input: CreatePlanningPeriodInput,
+) -> Result<PlanningPeriod, String> {
+    sqlx::query(
+        "UPDATE planning_periods SET name = ?, start_date = ?, end_date = ? WHERE id = ?"
+    )
+    .bind(&input.name)
+    .bind(&input.start_date)
+    .bind(&input.end_date)
+    .bind(id)
+    .execute(pool.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let period = sqlx::query_as::<_, PlanningPeriod>("SELECT * FROM planning_periods WHERE id = ?")
+        .bind(id)
+        .fetch_one(pool.inner())
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(period)
+}
+
+#[tauri::command]
+pub async fn delete_planning_period(
+    pool: tauri::State<'_, DbPool>,
+    id: i64,
+) -> Result<(), String> {
+    sqlx::query("DELETE FROM planning_periods WHERE id = ?")
         .bind(id)
         .execute(pool.inner())
         .await

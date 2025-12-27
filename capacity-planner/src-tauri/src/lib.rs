@@ -6,6 +6,7 @@ use db::init_database;
 use commands::{
     list_people, create_person, update_person, delete_person,
     list_projects, create_project, update_project, delete_project,
+    list_planning_periods, create_planning_period, update_planning_period, delete_planning_period,
 };
 use tauri::Manager;
 
@@ -33,6 +34,10 @@ pub fn run() {
             create_project,
             update_project,
             delete_project,
+            list_planning_periods,
+            create_planning_period,
+            update_planning_period,
+            delete_planning_period,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
