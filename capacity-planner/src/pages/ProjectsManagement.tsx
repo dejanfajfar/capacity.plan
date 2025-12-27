@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Container, Title, Button, Stack, Group, LoadingOverlay, Paper } from '@mantine/core';
+import { Container, Title, Button, Stack, Group, LoadingOverlay, Paper, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconPlus } from '@tabler/icons-react';
 import { ProjectList } from '../components/projects/ProjectList';
@@ -109,7 +109,12 @@ export function ProjectsManagementPage() {
     <Container size="xl" py="md">
       <Stack gap="lg">
         <Group justify="space-between" align="center">
-          <Title order={1}>Projects Management</Title>
+          <div>
+            <Title order={1}>Projects Management</Title>
+            <Text size="sm" c="dimmed" mt="xs">
+              Projects are global work items available in all planning periods. The 'Target Hours/Period' represents the hard requirement for each period.
+            </Text>
+          </div>
           <Button
             leftSection={<IconPlus size={18} />}
             onClick={() => setFormOpened(true)}

@@ -21,9 +21,6 @@ export interface Project {
   name: string;
   description: string | null;
   required_hours: number;
-  start_date: string;
-  end_date: string;
-  status: 'planned' | 'active' | 'completed';
   created_at: string;
 }
 
@@ -31,6 +28,7 @@ export interface Assignment {
   id: number;
   person_id: number;
   project_id: number;
+  planning_period_id: number;
   productivity_factor: number; // 0.0 to 1.0
   start_date: string;
   end_date: string;
@@ -152,17 +150,15 @@ export interface CreateProjectInput {
   name: string;
   description?: string;
   required_hours: number;
-  start_date: string;
-  end_date: string;
-  status?: 'planned' | 'active' | 'completed';
 }
 
 export interface CreateAssignmentInput {
   person_id: number;
   project_id: number;
+  planning_period_id: number;
   productivity_factor: number;
-  start_date?: string; // Defaults to project start
-  end_date?: string;   // Defaults to project end
+  start_date?: string; // Defaults to period start
+  end_date?: string;   // Defaults to period end
 }
 
 export interface CreateAbsenceInput {

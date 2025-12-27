@@ -60,8 +60,8 @@ export async function setActivePlanningPeriod(id: number): Promise<void> {
 // Project Commands
 // ============================================================================
 
-export async function listProjects(planningPeriodId?: number): Promise<Project[]> {
-  return await invoke('list_projects', { planningPeriodId });
+export async function listProjects(): Promise<Project[]> {
+  return await invoke('list_projects');
 }
 
 export async function createProject(input: CreateProjectInput): Promise<Project> {

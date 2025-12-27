@@ -24,9 +24,6 @@ pub struct Project {
     pub name: String,
     pub description: Option<String>,
     pub required_hours: f64,
-    pub start_date: String,
-    pub end_date: String,
-    pub status: String,
     pub created_at: String,
 }
 
@@ -35,6 +32,7 @@ pub struct Assignment {
     pub id: i64,
     pub person_id: i64,
     pub project_id: i64,
+    pub planning_period_id: i64,
     pub productivity_factor: f64,
     pub start_date: String,
     pub end_date: String,
@@ -78,15 +76,13 @@ pub struct CreateProjectInput {
     pub name: String,
     pub description: Option<String>,
     pub required_hours: f64,
-    pub start_date: String,
-    pub end_date: String,
-    pub status: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct CreateAssignmentInput {
     pub person_id: i64,
     pub project_id: i64,
+    pub planning_period_id: i64,
     pub productivity_factor: f64,
     pub start_date: Option<String>,
     pub end_date: Option<String>,

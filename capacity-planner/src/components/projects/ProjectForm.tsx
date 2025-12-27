@@ -7,7 +7,6 @@ import {
   Stack,
   NumberInput,
   Textarea,
-  Select,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import type { Project, CreateProjectInput } from '../../types';
@@ -28,21 +27,10 @@ export function ProjectForm({ opened, onClose, onSubmit, project, title }: Proje
       name: project?.name || '',
       description: project?.description || '',
       required_hours: project?.required_hours || 0,
-      start_date: project?.start_date || new Date().toISOString().split('T')[0],
-      end_date: project?.end_date || new Date().toISOString().split('T')[0],
-      status: project?.status || 'planned',
     },
     validate: {
       name: (value) => (!value ? 'Name is required' : null),
       required_hours: (value) => (value <= 0 ? 'Required hours must be greater than 0' : null),
-      start_date: (value) => (!value ? 'Start date is required' : null),
-      end_date: (value, values) => {
-        if (!value) return 'End date is required';
-        if (values.start_date && new Date(value) < new Date(values.start_date)) {
-          return 'End date must be after start date';
-        }
-        return null;
-      },
     },
   });
 
@@ -79,38 +67,12 @@ export function ProjectForm({ opened, onClose, onSubmit, project, title }: Proje
           
           <NumberInput
             label="Required Hours"
-            placeholder="Total hours needed for the project"
+            placeholder="Target hours per planning period"
+            description="This represents the hard requirement for this project in each planning period"
             required
             min={0}
             step={10}
             {...form.getInputProps('required_hours')}
-          />
-
-          <Group grow>
-            <TextInput
-              label="Start Date"
-              type="date"
-              required
-              {...form.getInputProps('start_date')}
-            />
-            
-            <TextInput
-              label="End Date"
-              type="date"
-              required
-              {...form.getInputProps('end_date')}
-            />
-          </Group>
-
-          <Select
-            label="Status"
-            placeholder="Select project status"
-            data={[
-              { value: 'planned', label: 'Planned' },
-              { value: 'active', label: 'Active' },
-              { value: 'completed', label: 'Completed' },
-            ]}
-            {...form.getInputProps('status')}
           />
 
           <Group justify="flex-end" mt="md">
