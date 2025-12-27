@@ -1,0 +1,94 @@
+# Operating System
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDEs and Editors
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.iml
+.project
+.classpath
+.settings/
+
+# Node / NPM / Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.pnpm-debug.log
+dist/
+dist-ssr/
+*.local
+.npm
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Vite
+.vite/
+
+# Rust / Cargo
+target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/schemas/
+src-tauri/WixTools/
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+
+# Logs
+logs/
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# User data (if accidentally placed in repo)
+capacity-planner.db
+capacity-planner.db-shm
+capacity-planner.db-wal
+
+# Backups
+*.bak
+*-backup/
+backup/
+
+# Test coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
