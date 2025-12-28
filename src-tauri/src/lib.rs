@@ -9,6 +9,8 @@ use commands::{
     list_projects, create_project, update_project, delete_project,
     list_planning_periods, create_planning_period, update_planning_period, delete_planning_period,
     list_assignments, create_assignment, update_assignment, delete_assignment,
+    list_project_requirements, get_project_requirement, upsert_project_requirement, 
+    batch_upsert_project_requirements, delete_project_requirement,
 };
 use tauri::Manager;
 
@@ -40,6 +42,11 @@ pub fn run() {
             create_planning_period,
             update_planning_period,
             delete_planning_period,
+            list_project_requirements,
+            get_project_requirement,
+            upsert_project_requirement,
+            batch_upsert_project_requirements,
+            delete_project_requirement,
             list_assignments,
             create_assignment,
             update_assignment,

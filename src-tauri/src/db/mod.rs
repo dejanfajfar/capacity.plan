@@ -75,6 +75,8 @@ async fn run_migrations(pool: &DbPool) -> Result<(), sqlx::Error> {
     .await?;
 
     // Create projects table (global entities, no dates/status)
+    // Note: required_hours column is deprecated but kept for backward compatibility
+    // New workflow uses project_requirements table instead
     sqlx::query(
         r#"
         CREATE TABLE IF NOT EXISTS projects (
@@ -83,6 +85,24 @@ async fn run_migrations(pool: &DbPool) -> Result<(), sqlx::Error> {
             description TEXT,
             required_hours REAL NOT NULL,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+        "#,
+    )
+    .execute(pool)
+    .await?;
+
+    // Create project_requirements table (links project + planning_period with required hours)
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS project_requirements (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            planning_period_id INTEGER NOT NULL,
+            required_hours REAL NOT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+            FOREIGN KEY (planning_period_id) REFERENCES planning_periods(id) ON DELETE CASCADE,
+            UNIQUE(project_id, planning_period_id)
         )
         "#,
     )
@@ -147,6 +167,14 @@ async fn run_migrations(pool: &DbPool) -> Result<(), sqlx::Error> {
         .await?;
 
     sqlx::query("CREATE INDEX IF NOT EXISTS idx_absences_person ON absences(person_id)")
+        .execute(pool)
+        .await?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_project_requirements_project ON project_requirements(project_id)")
+        .execute(pool)
+        .await?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_project_requirements_period ON project_requirements(planning_period_id)")
         .execute(pool)
         .await?;
 

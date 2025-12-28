@@ -55,6 +55,15 @@ pub struct Absence {
     pub created_at: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub struct ProjectRequirement {
+    pub id: i64,
+    pub project_id: i64,
+    pub planning_period_id: i64,
+    pub required_hours: f64,
+    pub created_at: String,
+}
+
 // Input DTOs for creation
 
 #[derive(Debug, Deserialize)]
@@ -95,4 +104,22 @@ pub struct CreateAbsenceInput {
     pub end_date: String,
     pub days: i64,
     pub reason: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CreateProjectRequirementInput {
+    pub project_id: i64,
+    pub planning_period_id: i64,
+    pub required_hours: f64,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UpdateProjectRequirementInput {
+    pub required_hours: f64,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct BatchUpsertProjectRequirementsInput {
+    pub planning_period_id: i64,
+    pub requirements: Vec<CreateProjectRequirementInput>,
 }

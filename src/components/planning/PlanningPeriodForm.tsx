@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   TextInput,
   Button,
@@ -22,9 +22,9 @@ export function PlanningPeriodForm({ opened, onClose, onSubmit, period, title }:
 
   const form = useForm<CreatePlanningPeriodInput>({
     initialValues: {
-      name: period?.name || '',
-      start_date: period?.start_date || new Date().toISOString().split('T')[0],
-      end_date: period?.end_date || new Date().toISOString().split('T')[0],
+      name: '',
+      start_date: new Date().toISOString().split('T')[0],
+      end_date: new Date().toISOString().split('T')[0],
     },
     validate: {
       start_date: (value) => (!value ? 'Start date is required' : null),
@@ -37,6 +37,24 @@ export function PlanningPeriodForm({ opened, onClose, onSubmit, period, title }:
       },
     },
   });
+
+  // Update form values when modal opens or period changes
+  useEffect(() => {
+    if (opened) {
+      if (period) {
+        // Edit mode - populate with period's data
+        form.setValues({
+          name: period.name || '',
+          start_date: period.start_date,
+          end_date: period.end_date,
+        });
+        form.clearErrors();
+      } else {
+        // Create mode - reset to defaults
+        form.reset();
+      }
+    }
+  }, [opened, period]);
 
   const handleSubmit = async (values: CreatePlanningPeriodInput) => {
     setLoading(true);

@@ -10,6 +10,8 @@ import type {
   CreateAssignmentInput,
   Absence,
   CreateAbsenceInput,
+  ProjectRequirement,
+  CreateProjectRequirementInput,
 } from '../types';
 
 // ============================================================================
@@ -74,6 +76,38 @@ export async function updateProject(id: number, input: CreateProjectInput): Prom
 
 export async function deleteProject(id: number): Promise<void> {
   return await invoke('delete_project', { id });
+}
+
+// ============================================================================
+// Project Requirement Commands
+// ============================================================================
+
+export async function listProjectRequirements(planningPeriodId: number): Promise<ProjectRequirement[]> {
+  return await invoke('list_project_requirements', { planningPeriodId });
+}
+
+export async function getProjectRequirement(
+  projectId: number,
+  planningPeriodId: number
+): Promise<ProjectRequirement | null> {
+  return await invoke('get_project_requirement', { projectId, planningPeriodId });
+}
+
+export async function upsertProjectRequirement(
+  input: CreateProjectRequirementInput
+): Promise<ProjectRequirement> {
+  return await invoke('upsert_project_requirement', { input });
+}
+
+export async function batchUpsertProjectRequirements(
+  planningPeriodId: number,
+  requirements: CreateProjectRequirementInput[]
+): Promise<void> {
+  return await invoke('batch_upsert_project_requirements', { planningPeriodId, requirements });
+}
+
+export async function deleteProjectRequirement(id: number): Promise<void> {
+  return await invoke('delete_project_requirement', { id });
 }
 
 // ============================================================================

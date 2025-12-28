@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   TextInput,
   Button,
   Modal,
   Group,
   Stack,
-  NumberInput,
   Textarea,
+  Text,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import type { Project, CreateProjectInput } from '../../types';
@@ -24,15 +24,32 @@ export function ProjectForm({ opened, onClose, onSubmit, project, title }: Proje
 
   const form = useForm<CreateProjectInput>({
     initialValues: {
-      name: project?.name || '',
-      description: project?.description || '',
-      required_hours: project?.required_hours || 0,
+      name: '',
+      description: '',
+      required_hours: 0, // Deprecated - will be set per planning period
     },
     validate: {
       name: (value) => (!value ? 'Name is required' : null),
-      required_hours: (value) => (value <= 0 ? 'Required hours must be greater than 0' : null),
     },
   });
+
+  // Update form values when modal opens or project changes
+  useEffect(() => {
+    if (opened) {
+      if (project) {
+        // Edit mode - populate with project's data
+        form.setValues({
+          name: project.name,
+          description: project.description || '',
+          required_hours: 0, // Still deprecated as per design
+        });
+        form.clearErrors();
+      } else {
+        // Create mode - reset to defaults
+        form.reset();
+      }
+    }
+  }, [opened, project]);
 
   const handleSubmit = async (values: CreateProjectInput) => {
     setLoading(true);
@@ -65,15 +82,10 @@ export function ProjectForm({ opened, onClose, onSubmit, project, title }: Proje
             {...form.getInputProps('description')}
           />
           
-          <NumberInput
-            label="Required Hours"
-            placeholder="Target hours per planning period"
-            description="This represents the hard requirement for this project in each planning period"
-            required
-            min={0}
-            step={10}
-            {...form.getInputProps('required_hours')}
-          />
+          <Text size="sm" c="dimmed">
+            Required hours are now set per planning period. After creating a project, 
+            go to a planning period's detail view to set required hours for that specific period.
+          </Text>
 
           <Group justify="flex-end" mt="md">
             <Button variant="subtle" onClick={onClose} disabled={loading}>

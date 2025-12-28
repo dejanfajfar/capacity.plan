@@ -7,8 +7,7 @@ import { AppLayout } from './components/layout/AppLayout';
 import { PlanningSetupPage } from './pages/PlanningSetup';
 import { PeopleManagementPage } from './pages/PeopleManagement';
 import { ProjectsManagementPage } from './pages/ProjectsManagement';
-import { AssignmentDashboardPage } from './pages/AssignmentDashboard';
-import { CapacityAnalysisPage } from './pages/CapacityAnalysis';
+import { PlanningPeriodDetailPage } from './pages/PlanningPeriodDetail';
 
 function App() {
   return (
@@ -19,10 +18,9 @@ function App() {
           <Route path="/" element={<AppLayout />}>
             <Route index element={<Navigate to="/planning" replace />} />
             <Route path="planning" element={<PlanningSetupPage />} />
+            <Route path="planning/:periodId" element={<PlanningPeriodDetailPage />} />
             <Route path="people" element={<PeopleManagementPage />} />
             <Route path="projects" element={<ProjectsManagementPage />} />
-            <Route path="assignments" element={<AssignmentDashboardPage />} />
-            <Route path="analysis" element={<CapacityAnalysisPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

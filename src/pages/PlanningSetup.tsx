@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Container, Title, Button, Stack, Group, LoadingOverlay, Paper, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconPlus } from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
 import { PlanningPeriodList } from '../components/planning/PlanningPeriodList';
 import { PlanningPeriodForm } from '../components/planning/PlanningPeriodForm';
 import { 
@@ -13,6 +14,7 @@ import {
 import type { PlanningPeriod, CreatePlanningPeriodInput } from '../types';
 
 export function PlanningSetupPage() {
+  const navigate = useNavigate();
   const [periods, setPeriods] = useState<PlanningPeriod[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpened, setFormOpened] = useState(false);
@@ -105,6 +107,10 @@ export function PlanningSetupPage() {
     setFormOpened(true);
   };
 
+  const handleView = (periodId: number) => {
+    navigate(`/planning/${periodId}`);
+  };
+
   const handleCloseForm = () => {
     setFormOpened(false);
     setSelectedPeriod(null);
@@ -134,6 +140,7 @@ export function PlanningSetupPage() {
             periods={periods}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onView={handleView}
           />
         </Paper>
       </Stack>

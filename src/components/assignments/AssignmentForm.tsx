@@ -59,12 +59,12 @@ export function AssignmentForm({
 
   const form = useForm<CreateAssignmentInput>({
     initialValues: {
-      person_id: assignment?.person_id || 0,
-      project_id: assignment?.project_id || 0,
+      person_id: 0,
+      project_id: 0,
       planning_period_id: planningPeriod.id,
-      productivity_factor: assignment?.productivity_factor || 0.5,
-      start_date: assignment?.start_date || planningPeriod.start_date,
-      end_date: assignment?.end_date || planningPeriod.end_date,
+      productivity_factor: 0.5,
+      start_date: planningPeriod.start_date,
+      end_date: planningPeriod.end_date,
     },
     validate: {
       person_id: (value) => (value <= 0 ? 'Please select a person' : null),
@@ -96,6 +96,35 @@ export function AssignmentForm({
       },
     },
   });
+
+  // Update form values when modal opens or assignment changes
+  useEffect(() => {
+    if (opened) {
+      if (assignment) {
+        // Edit mode - populate with assignment's data
+        form.setValues({
+          person_id: assignment.person_id,
+          project_id: assignment.project_id,
+          planning_period_id: assignment.planning_period_id,
+          productivity_factor: assignment.productivity_factor,
+          start_date: assignment.start_date,
+          end_date: assignment.end_date,
+        });
+        form.clearErrors();
+      } else {
+        // Create mode - reset to defaults
+        form.setValues({
+          person_id: 0,
+          project_id: 0,
+          planning_period_id: planningPeriod.id,
+          productivity_factor: 0.5,
+          start_date: planningPeriod.start_date,
+          end_date: planningPeriod.end_date,
+        });
+        form.clearErrors();
+      }
+    }
+  }, [opened, assignment, planningPeriod]);
 
   const handleSubmit = async (values: CreateAssignmentInput) => {
     setLoading(true);

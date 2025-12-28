@@ -50,6 +50,14 @@ export interface Absence {
   created_at: string;
 }
 
+export interface ProjectRequirement {
+  id: number;
+  project_id: number;
+  planning_period_id: number;
+  required_hours: number;
+  created_at: string;
+}
+
 // Calculated/derived types for analytics
 
 export interface PersonCapacity {
@@ -167,6 +175,12 @@ export interface CreateAbsenceInput {
   end_date: string;
   days: number;
   reason?: string;
+}
+
+export interface CreateProjectRequirementInput {
+  project_id: number;
+  planning_period_id: number;
+  required_hours: number;
 }
 
 // UI-specific types

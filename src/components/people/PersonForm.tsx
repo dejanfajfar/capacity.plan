@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   TextInput,
   Button,
@@ -23,9 +23,9 @@ export function PersonForm({ opened, onClose, onSubmit, person, title }: PersonF
 
   const form = useForm<CreatePersonInput>({
     initialValues: {
-      name: person?.name || '',
-      email: person?.email || '',
-      available_hours_per_week: person?.available_hours_per_week || 40,
+      name: '',
+      email: '',
+      available_hours_per_week: 40,
     },
     validate: {
       name: (value) => (!value ? 'Name is required' : null),
@@ -35,6 +35,24 @@ export function PersonForm({ opened, onClose, onSubmit, person, title }: PersonF
         value > 168 ? 'Available hours cannot exceed 168 (hours in a week)' : null,
     },
   });
+
+  // Update form values when modal opens or person changes
+  useEffect(() => {
+    if (opened) {
+      if (person) {
+        // Edit mode - populate with person's data
+        form.setValues({
+          name: person.name,
+          email: person.email,
+          available_hours_per_week: person.available_hours_per_week,
+        });
+        form.clearErrors();
+      } else {
+        // Create mode - reset to defaults
+        form.reset();
+      }
+    }
+  }, [opened, person]);
 
   const handleSubmit = async (values: CreatePersonInput) => {
     setLoading(true);

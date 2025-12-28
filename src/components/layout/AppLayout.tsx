@@ -4,9 +4,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { 
   IconCalendar, 
   IconUsers, 
-  IconFolder, 
-  IconClipboardList, 
-  IconChartBar 
+  IconFolder,
 } from '@tabler/icons-react';
 
 export function AppLayout() {
@@ -14,11 +12,9 @@ export function AppLayout() {
   const location = useLocation();
 
   const navItems = [
-    { to: '/planning', label: 'Planning Period', icon: <IconCalendar size={20} /> },
-    { to: '/people', label: 'People', icon: <IconUsers size={20} /> },
+    { to: '/planning', label: 'Planning Periods', icon: <IconCalendar size={20} /> },
     { to: '/projects', label: 'Projects', icon: <IconFolder size={20} /> },
-    { to: '/assignments', label: 'Assignments', icon: <IconClipboardList size={20} /> },
-    { to: '/analysis', label: 'Capacity Analysis', icon: <IconChartBar size={20} /> },
+    { to: '/people', label: 'People', icon: <IconUsers size={20} /> },
   ];
 
   return (
