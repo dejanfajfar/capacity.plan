@@ -1,32 +1,33 @@
-use sqlx::{sqlite::{SqlitePool, SqliteConnectOptions}, Pool, Sqlite};
+use log::{debug, error, info};
+use sqlx::{
+    sqlite::{SqliteConnectOptions, SqlitePool},
+    Pool, Sqlite,
+};
 use std::path::PathBuf;
 use std::str::FromStr;
-use log::{info, debug, error};
 
 pub type DbPool = Pool<Sqlite>;
 
 pub async fn init_database() -> Result<DbPool, sqlx::Error> {
     debug!("Initializing database connection");
-    
+
     // Get the app data directory
     let app_dir = get_app_data_dir();
     std::fs::create_dir_all(&app_dir).expect("Failed to create app data directory");
 
     let db_path = app_dir.join("capacity_planner.db");
     let db_url = format!("sqlite://{}", db_path.display());
-    
+
     debug!("Database path: {}", db_path.display());
 
     // Create connection options with create_if_missing
-    let options = SqliteConnectOptions::from_str(&db_url)?
-        .create_if_missing(true);
+    let options = SqliteConnectOptions::from_str(&db_url)?.create_if_missing(true);
 
     // Create connection pool
-    let pool = SqlitePool::connect_with(options).await
-        .map_err(|e| {
-            error!("Failed to connect to database: {}", e);
-            e
-        })?;
+    let pool = SqlitePool::connect_with(options).await.map_err(|e| {
+        error!("Failed to connect to database: {}", e);
+        e
+    })?;
 
     // Run migrations
     run_migrations(&pool).await?;
@@ -37,13 +38,12 @@ pub async fn init_database() -> Result<DbPool, sqlx::Error> {
 
 fn get_app_data_dir() -> PathBuf {
     let home = std::env::var("HOME").expect("HOME environment variable not set");
-    PathBuf::from(home)
-        .join(".capacity-planner")
+    PathBuf::from(home).join(".capacity-planner")
 }
 
 async fn run_migrations(pool: &DbPool) -> Result<(), sqlx::Error> {
     debug!("Running database migrations");
-    
+
     // Create planning_periods table
     sqlx::query(
         r#"

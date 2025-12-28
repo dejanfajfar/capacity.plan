@@ -1,10 +1,10 @@
+use log::LevelFilter;
 use simplelog::*;
 use std::fs::{self, OpenOptions};
 use std::path::PathBuf;
-use log::LevelFilter;
 
 /// Initialize the logging system
-/// 
+///
 /// Sets up both file and terminal logging:
 /// - File: Always logs DEBUG and above to ~/.capacity-planner/logs/app-YYYY-MM-DD.log
 /// - Terminal: DEBUG+ in dev mode, INFO+ in production mode
@@ -25,9 +25,7 @@ pub fn init() -> Result<(), Box<dyn std::error::Error>> {
     // Configure file logger - always DEBUG level
     let file_logger = WriteLogger::new(
         LevelFilter::Debug,
-        ConfigBuilder::new()
-            .set_time_format_rfc3339()
-            .build(),
+        ConfigBuilder::new().set_time_format_rfc3339().build(),
         log_file,
     );
 
@@ -41,10 +39,7 @@ pub fn init() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // Initialize combined logger
-    CombinedLogger::init(vec![
-        terminal_logger,
-        file_logger,
-    ])?;
+    CombinedLogger::init(vec![terminal_logger, file_logger])?;
 
     // Log initialization success
     log::info!(
@@ -57,7 +52,7 @@ pub fn init() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Get the log directory path
-/// 
+///
 /// Returns: ~/.capacity-planner/logs/
 fn get_log_directory() -> PathBuf {
     dirs::home_dir()
@@ -67,7 +62,7 @@ fn get_log_directory() -> PathBuf {
 }
 
 /// Get the log filename with current date
-/// 
+///
 /// Returns: app-YYYY-MM-DD.log (e.g., app-2025-12-27.log)
 fn get_log_filename() -> String {
     let today = chrono::Local::now().format("%Y-%m-%d");
@@ -75,7 +70,7 @@ fn get_log_filename() -> String {
 }
 
 /// Determine terminal log level based on build mode
-/// 
+///
 /// - Debug builds (cargo run): DEBUG and above
 /// - Release builds (cargo run --release): INFO and above
 fn get_terminal_log_level() -> LevelFilter {

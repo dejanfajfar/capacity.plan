@@ -7,6 +7,6 @@ fn main() {
         eprintln!("Failed to initialize logger: {}", e);
         // Continue anyway - app can still work without logging
     }
-    
+
     capacity_planner_lib::run()
 }

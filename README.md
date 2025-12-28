@@ -1,5 +1,9 @@
 # Capacity Planner
 
+[![CI](https://github.com/dejanfajfar/capacity.plan/actions/workflows/ci.yml/badge.svg)](https://github.com/dejanfajfar/capacity.plan/actions/workflows/ci.yml)
+[![Tests](https://github.com/dejanfajfar/capacity.plan/actions/workflows/test.yml/badge.svg)](https://github.com/dejanfajfar/capacity.plan/actions/workflows/test.yml)
+[![Release](https://github.com/dejanfajfar/capacity.plan/actions/workflows/release.yml/badge.svg)](https://github.com/dejanfajfar/capacity.plan/actions/workflows/release.yml)
+
 A desktop application for optimal resource allocation across projects and people within planning periods.
 
 ## Features
@@ -30,6 +34,35 @@ npm run tauri dev
 # Build for production
 npm run tauri build
 ```
+
+## CI/CD
+
+This project uses GitHub Actions for continuous integration and automated releases:
+
+- **CI Workflow** - Runs on every push and PR
+  - TypeScript type checking
+  - Rust linting (clippy, fmt)
+  - Build verification
+  
+- **Release Workflow** - Creates production builds
+  - Windows (x64): MSI installer + portable EXE
+  - macOS (Universal): DMG installer for Intel and Apple Silicon
+  - Triggered manually or by pushing version tags (e.g., `v0.1.0`)
+  
+- **Test Workflow** - Runs automated tests (when available)
+
+### Creating a Release
+
+**Option 1: Manual trigger**
+1. Go to Actions → Release → Run workflow
+2. Download artifacts from the workflow run
+
+**Option 2: Git tag**
+```bash
+git tag v0.1.0
+git push --tags
+```
+The release will be created automatically with installers attached.
 
 ## Project Structure
 
