@@ -183,6 +183,23 @@ export interface CreateProjectRequirementInput {
   required_hours: number;
 }
 
+// Dependency check types
+
+export interface PersonDependencies {
+  assignment_count: number;
+  absence_count: number;
+}
+
+export interface ProjectDependencies {
+  requirement_count: number;
+  assignment_count: number;
+}
+
+export interface PlanningPeriodDependencies {
+  requirement_count: number;
+  assignment_count: number;
+}
+
 // UI-specific types
 
 export interface ProjectWithStaffing extends Project {

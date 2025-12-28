@@ -125,3 +125,23 @@ pub struct BatchUpsertProjectRequirementsInput {
     pub planning_period_id: i64,
     pub requirements: Vec<CreateProjectRequirementInput>,
 }
+
+// Dependency information for delete operations
+
+#[derive(Debug, Serialize)]
+pub struct PersonDependencies {
+    pub assignment_count: i64,
+    pub absence_count: i64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ProjectDependencies {
+    pub requirement_count: i64,
+    pub assignment_count: i64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct PlanningPeriodDependencies {
+    pub requirement_count: i64,
+    pub assignment_count: i64,
+}

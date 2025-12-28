@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Container, Title, Button, Stack, Group, LoadingOverlay, Paper, Text } from '@mantine/core';
+import { Container, Title, Button, Stack, Group, LoadingOverlay, Paper, Text, Alert } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconPlus } from '@tabler/icons-react';
+import { modals } from '@mantine/modals';
+import { IconPlus, IconAlertTriangle } from '@tabler/icons-react';
 import { ProjectList } from '../components/projects/ProjectList';
 import { ProjectForm } from '../components/projects/ProjectForm';
-import { listProjects, createProject, updateProject, deleteProject } from '../lib/tauri';
+import { listProjects, createProject, updateProject, deleteProject, checkProjectDependencies } from '../lib/tauri';
 import type { Project, CreateProjectInput } from '../types';
 
 export function ProjectsManagementPage() {
@@ -75,23 +76,76 @@ export function ProjectsManagementPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this project?')) return;
+    const project = projects.find(p => p.id === id);
+    if (!project) return;
 
     try {
-      await deleteProject(id);
-      await loadProjects();
-      notifications.show({
-        title: 'Success',
-        message: 'Project deleted successfully',
-        color: 'green',
+      const deps = await checkProjectDependencies(id);
+      
+      modals.openConfirmModal({
+        title: 'Delete Project',
+        centered: true,
+        children: (
+          <Stack gap="sm">
+            <Text size="sm">
+              Are you sure you want to delete <strong>{project.name}</strong>?
+            </Text>
+            {deps.requirement_count > 0 && (
+              <Alert color="orange" icon={<IconAlertTriangle size={16} />}>
+                This project has {deps.requirement_count} requirement(s) across planning periods which will also be deleted.
+              </Alert>
+            )}
+            {deps.assignment_count > 0 && (
+              <Alert color="orange" icon={<IconAlertTriangle size={16} />}>
+                This project has {deps.assignment_count} active assignment(s) which will also be deleted.
+              </Alert>
+            )}
+            {(deps.requirement_count > 0 || deps.assignment_count > 0) && (
+              <Alert color="blue">
+                Capacity calculations will be invalidated and need to be recalculated.
+              </Alert>
+            )}
+            <Text size="sm" c="dimmed">
+              This action cannot be undone.
+            </Text>
+          </Stack>
+        ),
+        labels: { confirm: 'Delete', cancel: 'Cancel' },
+        confirmProps: { color: 'red' },
+        onConfirm: async () => {
+          try {
+            await deleteProject(id);
+            await loadProjects();
+            notifications.show({
+              title: 'Success',
+              message: 'Project deleted successfully',
+              color: 'green',
+            });
+            if (deps.assignment_count > 0) {
+              notifications.show({
+                title: 'Recalculation Needed',
+                message: 'Please recalculate capacity allocations in the Analysis tab.',
+                color: 'yellow',
+                autoClose: 5000,
+              });
+            }
+          } catch (error) {
+            notifications.show({
+              title: 'Error',
+              message: 'Failed to delete project',
+              color: 'red',
+            });
+            console.error('Failed to delete project:', error);
+          }
+        },
       });
     } catch (error) {
       notifications.show({
         title: 'Error',
-        message: 'Failed to delete project',
+        message: 'Failed to check dependencies',
         color: 'red',
       });
-      console.error('Failed to delete project:', error);
+      console.error('Failed to check dependencies:', error);
     }
   };
 

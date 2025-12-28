@@ -11,6 +11,7 @@ import {
   Text,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import { modals } from '@mantine/modals';
 import { IconPlus } from '@tabler/icons-react';
 import { AssignmentList } from '../components/assignments/AssignmentList';
 import { AssignmentForm } from '../components/assignments/AssignmentForm';
@@ -140,24 +141,35 @@ export function AssignmentDashboardPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this assignment?')) return;
-
-    try {
-      await deleteAssignment(id);
-      await loadAssignments();
-      notifications.show({
-        title: 'Success',
-        message: 'Assignment deleted successfully',
-        color: 'green',
-      });
-    } catch (error) {
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to delete assignment',
-        color: 'red',
-      });
-      console.error('Failed to delete assignment:', error);
-    }
+    modals.openConfirmModal({
+      title: 'Delete Assignment',
+      centered: true,
+      children: (
+        <Text size="sm">
+          Are you sure you want to delete this assignment? This action cannot be undone.
+        </Text>
+      ),
+      labels: { confirm: 'Delete', cancel: 'Cancel' },
+      confirmProps: { color: 'red' },
+      onConfirm: async () => {
+        try {
+          await deleteAssignment(id);
+          await loadAssignments();
+          notifications.show({
+            title: 'Success',
+            message: 'Assignment deleted successfully',
+            color: 'green',
+          });
+        } catch (error) {
+          notifications.show({
+            title: 'Error',
+            message: 'Failed to delete assignment',
+            color: 'red',
+          });
+          console.error('Failed to delete assignment:', error);
+        }
+      },
+    });
   };
 
   const handleEdit = (assignment: Assignment) => {

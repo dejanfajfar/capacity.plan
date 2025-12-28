@@ -2,7 +2,8 @@ use crate::db::DbPool;
 use crate::models::{
     Absence, Assignment, CreateAbsenceInput, CreateAssignmentInput, CreatePersonInput,
     CreatePlanningPeriodInput, CreateProjectInput, CreateProjectRequirementInput, Person,
-    PlanningPeriod, Project, ProjectRequirement,
+    PlanningPeriod, Project, ProjectRequirement, PersonDependencies, ProjectDependencies,
+    PlanningPeriodDependencies,
 };
 use crate::capacity::{
     optimize_assignments_proportional, AssignmentSummary, CapacityOverview,
@@ -79,13 +80,73 @@ pub async fn update_person(
 
 #[tauri::command]
 pub async fn delete_person(pool: tauri::State<'_, DbPool>, id: i64) -> Result<(), String> {
+    debug!("Deleting person ID: {}", id);
+
+    // Clear calculated fields for assignments involving this person before deletion
+    sqlx::query(
+        "UPDATE assignments 
+         SET calculated_allocation_percentage = NULL,
+             calculated_effective_hours = NULL,
+             last_calculated_at = NULL
+         WHERE person_id = ?"
+    )
+    .bind(id)
+    .execute(pool.inner())
+    .await
+    .map_err(|e| {
+        error!("Failed to invalidate assignments: {}", e);
+        e.to_string()
+    })?;
+
+    // Delete person (CASCADE will delete assignments and absences)
     sqlx::query("DELETE FROM people WHERE id = ?")
         .bind(id)
         .execute(pool.inner())
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| {
+            error!("Failed to delete person: {}", e);
+            e.to_string()
+        })?;
 
+    info!("Successfully deleted person ID: {} and invalidated allocations", id);
     Ok(())
+}
+
+#[tauri::command]
+pub async fn check_person_dependencies(
+    pool: tauri::State<'_, DbPool>,
+    id: i64,
+) -> Result<PersonDependencies, String> {
+    debug!("Checking dependencies for person ID: {}", id);
+
+    let assignment_count = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM assignments WHERE person_id = ?"
+    )
+    .bind(id)
+    .fetch_one(pool.inner())
+    .await
+    .map_err(|e| {
+        error!("Failed to count assignments: {}", e);
+        e.to_string()
+    })?;
+
+    let absence_count = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM absences WHERE person_id = ?"
+    )
+    .bind(id)
+    .fetch_one(pool.inner())
+    .await
+    .map_err(|e| {
+        error!("Failed to count absences: {}", e);
+        e.to_string()
+    })?;
+
+    info!("Person ID {} has {} assignments and {} absences", id, assignment_count, absence_count);
+
+    Ok(PersonDependencies {
+        assignment_count,
+        absence_count,
+    })
 }
 
 // ============================================================================
@@ -180,6 +241,23 @@ pub async fn update_project(
 pub async fn delete_project(pool: tauri::State<'_, DbPool>, id: i64) -> Result<(), String> {
     debug!("Deleting project ID: {}", id);
 
+    // Clear calculated fields for assignments involving this project before deletion
+    sqlx::query(
+        "UPDATE assignments 
+         SET calculated_allocation_percentage = NULL,
+             calculated_effective_hours = NULL,
+             last_calculated_at = NULL
+         WHERE project_id = ?"
+    )
+    .bind(id)
+    .execute(pool.inner())
+    .await
+    .map_err(|e| {
+        error!("Failed to invalidate assignments: {}", e);
+        e.to_string()
+    })?;
+
+    // Delete project (CASCADE will delete project_requirements and assignments)
     sqlx::query("DELETE FROM projects WHERE id = ?")
         .bind(id)
         .execute(pool.inner())
@@ -189,8 +267,45 @@ pub async fn delete_project(pool: tauri::State<'_, DbPool>, id: i64) -> Result<(
             e.to_string()
         })?;
 
-    info!("Successfully deleted project ID: {}", id);
+    info!("Successfully deleted project ID: {} and invalidated allocations", id);
     Ok(())
+}
+
+#[tauri::command]
+pub async fn check_project_dependencies(
+    pool: tauri::State<'_, DbPool>,
+    id: i64,
+) -> Result<ProjectDependencies, String> {
+    debug!("Checking dependencies for project ID: {}", id);
+
+    let requirement_count = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM project_requirements WHERE project_id = ?"
+    )
+    .bind(id)
+    .fetch_one(pool.inner())
+    .await
+    .map_err(|e| {
+        error!("Failed to count project requirements: {}", e);
+        e.to_string()
+    })?;
+
+    let assignment_count = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM assignments WHERE project_id = ?"
+    )
+    .bind(id)
+    .fetch_one(pool.inner())
+    .await
+    .map_err(|e| {
+        error!("Failed to count assignments: {}", e);
+        e.to_string()
+    })?;
+
+    info!("Project ID {} has {} requirements and {} assignments", id, requirement_count, assignment_count);
+
+    Ok(ProjectDependencies {
+        requirement_count,
+        assignment_count,
+    })
 }
 
 // ============================================================================
@@ -268,13 +383,73 @@ pub async fn update_planning_period(
 
 #[tauri::command]
 pub async fn delete_planning_period(pool: tauri::State<'_, DbPool>, id: i64) -> Result<(), String> {
+    debug!("Deleting planning period ID: {}", id);
+
+    // Clear calculated fields for assignments in this planning period before deletion
+    sqlx::query(
+        "UPDATE assignments 
+         SET calculated_allocation_percentage = NULL,
+             calculated_effective_hours = NULL,
+             last_calculated_at = NULL
+         WHERE planning_period_id = ?"
+    )
+    .bind(id)
+    .execute(pool.inner())
+    .await
+    .map_err(|e| {
+        error!("Failed to invalidate assignments: {}", e);
+        e.to_string()
+    })?;
+
+    // Delete planning period (CASCADE will delete project_requirements and assignments)
     sqlx::query("DELETE FROM planning_periods WHERE id = ?")
         .bind(id)
         .execute(pool.inner())
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| {
+            error!("Failed to delete planning period: {}", e);
+            e.to_string()
+        })?;
 
+    info!("Successfully deleted planning period ID: {} and invalidated allocations", id);
     Ok(())
+}
+
+#[tauri::command]
+pub async fn check_planning_period_dependencies(
+    pool: tauri::State<'_, DbPool>,
+    id: i64,
+) -> Result<PlanningPeriodDependencies, String> {
+    debug!("Checking dependencies for planning period ID: {}", id);
+
+    let requirement_count = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM project_requirements WHERE planning_period_id = ?"
+    )
+    .bind(id)
+    .fetch_one(pool.inner())
+    .await
+    .map_err(|e| {
+        error!("Failed to count project requirements: {}", e);
+        e.to_string()
+    })?;
+
+    let assignment_count = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM assignments WHERE planning_period_id = ?"
+    )
+    .bind(id)
+    .fetch_one(pool.inner())
+    .await
+    .map_err(|e| {
+        error!("Failed to count assignments: {}", e);
+        e.to_string()
+    })?;
+
+    info!("Planning period ID {} has {} requirements and {} assignments", id, requirement_count, assignment_count);
+
+    Ok(PlanningPeriodDependencies {
+        requirement_count,
+        assignment_count,
+    })
 }
 
 // ============================================================================

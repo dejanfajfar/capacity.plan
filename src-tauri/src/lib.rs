@@ -5,7 +5,8 @@ pub mod logger;
 mod models;
 
 use commands::{
-    batch_upsert_project_requirements, create_absence, create_assignment, create_person,
+    batch_upsert_project_requirements, check_person_dependencies, check_planning_period_dependencies,
+    check_project_dependencies, create_absence, create_assignment, create_person,
     create_planning_period, create_project, delete_absence, delete_assignment, delete_person,
     delete_planning_period, delete_project, delete_project_requirement, get_capacity_overview,
     get_person_capacity, get_project_requirement, get_project_staffing, list_absences,
@@ -38,14 +39,17 @@ pub fn run() {
             create_person,
             update_person,
             delete_person,
+            check_person_dependencies,
             list_projects,
             create_project,
             update_project,
             delete_project,
+            check_project_dependencies,
             list_planning_periods,
             create_planning_period,
             update_planning_period,
             delete_planning_period,
+            check_planning_period_dependencies,
             list_project_requirements,
             get_project_requirement,
             upsert_project_requirement,

@@ -16,6 +16,9 @@ import type {
   CapacityOverview,
   PersonCapacity,
   ProjectStaffing,
+  PersonDependencies,
+  ProjectDependencies,
+  PlanningPeriodDependencies,
 } from '../types';
 
 // ============================================================================
@@ -38,6 +41,10 @@ export async function deletePerson(id: number): Promise<void> {
   return await invoke('delete_person', { id });
 }
 
+export async function checkPersonDependencies(id: number): Promise<PersonDependencies> {
+  return await invoke('check_person_dependencies', { id });
+}
+
 // ============================================================================
 // Planning Period Commands
 // ============================================================================
@@ -56,6 +63,10 @@ export async function updatePlanningPeriod(id: number, input: CreatePlanningPeri
 
 export async function deletePlanningPeriod(id: number): Promise<void> {
   return await invoke('delete_planning_period', { id });
+}
+
+export async function checkPlanningPeriodDependencies(id: number): Promise<PlanningPeriodDependencies> {
+  return await invoke('check_planning_period_dependencies', { id });
 }
 
 export async function setActivePlanningPeriod(id: number): Promise<void> {
@@ -81,6 +92,10 @@ export async function updateProject(id: number, input: CreateProjectInput): Prom
 
 export async function deleteProject(id: number): Promise<void> {
   return await invoke('delete_project', { id });
+}
+
+export async function checkProjectDependencies(id: number): Promise<ProjectDependencies> {
+  return await invoke('check_project_dependencies', { id });
 }
 
 // ============================================================================

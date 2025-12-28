@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Container, Title, Button, Stack, Group, LoadingOverlay, Paper, Text } from '@mantine/core';
+import { Container, Title, Button, Stack, Group, LoadingOverlay, Paper, Text, Alert } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconPlus } from '@tabler/icons-react';
+import { modals } from '@mantine/modals';
+import { IconPlus, IconAlertTriangle } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { PlanningPeriodList } from '../components/planning/PlanningPeriodList';
 import { PlanningPeriodForm } from '../components/planning/PlanningPeriodForm';
@@ -9,7 +10,8 @@ import {
   listPlanningPeriods, 
   createPlanningPeriod, 
   updatePlanningPeriod, 
-  deletePlanningPeriod 
+  deletePlanningPeriod,
+  checkPlanningPeriodDependencies
 } from '../lib/tauri';
 import type { PlanningPeriod, CreatePlanningPeriodInput } from '../types';
 
@@ -82,23 +84,68 @@ export function PlanningSetupPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this planning period? This will also delete all associated projects and assignments.')) return;
+    const period = periods.find(p => p.id === id);
+    if (!period) return;
 
     try {
-      await deletePlanningPeriod(id);
-      await loadPeriods();
-      notifications.show({
-        title: 'Success',
-        message: 'Planning period deleted successfully',
-        color: 'green',
+      const deps = await checkPlanningPeriodDependencies(id);
+      
+      modals.openConfirmModal({
+        title: 'Delete Planning Period',
+        centered: true,
+        children: (
+          <Stack gap="sm">
+            <Text size="sm">
+              Are you sure you want to delete <strong>{period.name || 'this planning period'}</strong>?
+            </Text>
+            {deps.requirement_count > 0 && (
+              <Alert color="orange" icon={<IconAlertTriangle size={16} />}>
+                This will delete {deps.requirement_count} project requirement(s) defined for this period.
+              </Alert>
+            )}
+            {deps.assignment_count > 0 && (
+              <Alert color="orange" icon={<IconAlertTriangle size={16} />}>
+                This will delete {deps.assignment_count} assignment(s) for this period.
+              </Alert>
+            )}
+            {(deps.requirement_count > 0 || deps.assignment_count > 0) && (
+              <Alert color="blue">
+                All associated data will be permanently removed.
+              </Alert>
+            )}
+            <Text size="sm" c="dimmed">
+              This action cannot be undone.
+            </Text>
+          </Stack>
+        ),
+        labels: { confirm: 'Delete', cancel: 'Cancel' },
+        confirmProps: { color: 'red' },
+        onConfirm: async () => {
+          try {
+            await deletePlanningPeriod(id);
+            await loadPeriods();
+            notifications.show({
+              title: 'Success',
+              message: 'Planning period deleted successfully',
+              color: 'green',
+            });
+          } catch (error) {
+            notifications.show({
+              title: 'Error',
+              message: 'Failed to delete planning period',
+              color: 'red',
+            });
+            console.error('Failed to delete planning period:', error);
+          }
+        },
       });
     } catch (error) {
       notifications.show({
         title: 'Error',
-        message: 'Failed to delete planning period',
+        message: 'Failed to check dependencies',
         color: 'red',
       });
-      console.error('Failed to delete planning period:', error);
+      console.error('Failed to check dependencies:', error);
     }
   };
 

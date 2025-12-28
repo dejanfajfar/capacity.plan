@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Container, Title, Button, Stack, Group, LoadingOverlay, Paper } from '@mantine/core';
+import { Container, Title, Button, Stack, Group, LoadingOverlay, Paper, Text, Alert } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconPlus } from '@tabler/icons-react';
+import { modals } from '@mantine/modals';
+import { IconPlus, IconAlertTriangle } from '@tabler/icons-react';
 import { PersonList } from '../components/people/PersonList';
 import { PersonForm } from '../components/people/PersonForm';
-import { listPeople, createPerson, updatePerson, deletePerson } from '../lib/tauri';
+import { listPeople, createPerson, updatePerson, deletePerson, checkPersonDependencies } from '../lib/tauri';
 import type { Person, CreatePersonInput } from '../types';
 
 export function PeopleManagementPage() {
@@ -75,23 +76,76 @@ export function PeopleManagementPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this person?')) return;
+    const person = people.find(p => p.id === id);
+    if (!person) return;
 
     try {
-      await deletePerson(id);
-      await loadPeople();
-      notifications.show({
-        title: 'Success',
-        message: 'Person deleted successfully',
-        color: 'green',
+      const deps = await checkPersonDependencies(id);
+      
+      modals.openConfirmModal({
+        title: 'Delete Person',
+        centered: true,
+        children: (
+          <Stack gap="sm">
+            <Text size="sm">
+              Are you sure you want to delete <strong>{person.name}</strong>?
+            </Text>
+            {deps.assignment_count > 0 && (
+              <Alert color="orange" icon={<IconAlertTriangle size={16} />}>
+                This person has {deps.assignment_count} active assignment(s) which will also be deleted.
+              </Alert>
+            )}
+            {deps.absence_count > 0 && (
+              <Alert color="yellow" icon={<IconAlertTriangle size={16} />}>
+                This will also delete {deps.absence_count} absence record(s).
+              </Alert>
+            )}
+            {(deps.assignment_count > 0 || deps.absence_count > 0) && (
+              <Alert color="blue">
+                Capacity calculations will be invalidated and need to be recalculated.
+              </Alert>
+            )}
+            <Text size="sm" c="dimmed">
+              This action cannot be undone.
+            </Text>
+          </Stack>
+        ),
+        labels: { confirm: 'Delete', cancel: 'Cancel' },
+        confirmProps: { color: 'red' },
+        onConfirm: async () => {
+          try {
+            await deletePerson(id);
+            await loadPeople();
+            notifications.show({
+              title: 'Success',
+              message: 'Person deleted successfully',
+              color: 'green',
+            });
+            if (deps.assignment_count > 0) {
+              notifications.show({
+                title: 'Recalculation Needed',
+                message: 'Please recalculate capacity allocations in the Analysis tab.',
+                color: 'yellow',
+                autoClose: 5000,
+              });
+            }
+          } catch (error) {
+            notifications.show({
+              title: 'Error',
+              message: 'Failed to delete person',
+              color: 'red',
+            });
+            console.error('Failed to delete person:', error);
+          }
+        },
       });
     } catch (error) {
       notifications.show({
         title: 'Error',
-        message: 'Failed to delete person',
+        message: 'Failed to check dependencies',
         color: 'red',
       });
-      console.error('Failed to delete person:', error);
+      console.error('Failed to check dependencies:', error);
     }
   };
 
