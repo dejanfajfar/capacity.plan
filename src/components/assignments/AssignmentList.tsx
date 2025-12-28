@@ -1,5 +1,5 @@
-import { ActionIcon, Table, Text } from '@mantine/core';
-import { IconEdit, IconTrash } from '@tabler/icons-react';
+import { ActionIcon, Badge, Group, Table, Text, Tooltip } from '@mantine/core';
+import { IconEdit, IconTrash, IconPin } from '@tabler/icons-react';
 import type { Assignment, Person, Project } from '../../types';
 
 interface AssignmentListProps {
@@ -54,16 +54,29 @@ export function AssignmentList({
               </Text>
             </Table.Td>
             <Table.Td>
-              {assignment.is_pinned && assignment.pinned_allocation_percentage !== null
-                ? `${(assignment.pinned_allocation_percentage * 100).toFixed(1)}% (pinned)`
-                : assignment.calculated_allocation_percentage !== null
-                ? `${(assignment.calculated_allocation_percentage * 100).toFixed(1)}%`
-                : '-'}
+              <Group gap="xs">
+                {assignment.is_pinned && assignment.pinned_allocation_percentage !== null ? (
+                  <>
+                    <Text>{assignment.pinned_allocation_percentage.toFixed(1)}%</Text>
+                    <Badge size="xs" color="blue" leftSection={<IconPin size={12} />}>
+                      Pinned
+                    </Badge>
+                  </>
+                ) : assignment.calculated_allocation_percentage !== null ? (
+                  <Tooltip label="Calculated by optimization" withArrow>
+                    <Text>{assignment.calculated_allocation_percentage.toFixed(1)}%</Text>
+                  </Tooltip>
+                ) : (
+                  <Text c="dimmed">Not calculated</Text>
+                )}
+              </Group>
             </Table.Td>
             <Table.Td>
-              {assignment.calculated_effective_hours !== null 
-                ? `${assignment.calculated_effective_hours.toFixed(1)} hrs`
-                : '-'}
+              {assignment.calculated_effective_hours !== null ? (
+                <Text>{assignment.calculated_effective_hours.toFixed(1)}h</Text>
+              ) : (
+                <Text c="dimmed">-</Text>
+              )}
             </Table.Td>
             <Table.Td>
               <ActionIcon.Group>

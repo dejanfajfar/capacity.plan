@@ -12,6 +12,10 @@ import type {
   CreateAbsenceInput,
   ProjectRequirement,
   CreateProjectRequirementInput,
+  OptimizationResult,
+  CapacityOverview,
+  PersonCapacity,
+  ProjectStaffing,
 } from '../types';
 
 // ============================================================================
@@ -55,6 +59,7 @@ export async function deletePlanningPeriod(id: number): Promise<void> {
 }
 
 export async function setActivePlanningPeriod(id: number): Promise<void> {
+  // This will be implemented when we add active period functionality
   return await invoke('set_active_planning_period', { id });
 }
 
@@ -131,10 +136,12 @@ export async function deleteAssignment(id: number): Promise<void> {
 }
 
 export async function pinAssignment(id: number, allocationPercent: number): Promise<void> {
+  // This will be implemented when we add pin/unpin functionality
   return await invoke('pin_assignment', { id, allocationPercent });
 }
 
 export async function unpinAssignment(id: number): Promise<void> {
+  // This will be implemented when we add pin/unpin functionality
   return await invoke('unpin_assignment', { id });
 }
 
@@ -142,7 +149,7 @@ export async function unpinAssignment(id: number): Promise<void> {
 // Absence Commands
 // ============================================================================
 
-export async function listAbsences(personId?: number): Promise<Absence[]> {
+export async function listAbsences(personId: number): Promise<Absence[]> {
   return await invoke('list_absences', { personId });
 }
 
@@ -150,34 +157,30 @@ export async function createAbsence(input: CreateAbsenceInput): Promise<Absence>
   return await invoke('create_absence', { input });
 }
 
-export async function updateAbsence(id: number, input: CreateAbsenceInput): Promise<Absence> {
-  return await invoke('update_absence', { id, input });
-}
-
 export async function deleteAbsence(id: number): Promise<void> {
   return await invoke('delete_absence', { id });
 }
 
 // ============================================================================
-// Optimization Commands (Phase 3+)
+// Optimization Commands
 // ============================================================================
 
-export async function calculateOptimalAllocations(planningPeriodId: number): Promise<void> {
-  return await invoke('calculate_optimal_allocations', { planningPeriodId });
-}
-
-export async function getProjectFeasibility(planningPeriodId: number): Promise<any> {
-  return await invoke('get_project_feasibility', { planningPeriodId });
+export async function optimizeAssignments(planningPeriodId: number): Promise<OptimizationResult> {
+  return await invoke('optimize_assignments', { planningPeriodId });
 }
 
 // ============================================================================
-// Capacity Analysis Commands (Phase 4)
+// Capacity Analysis Commands
 // ============================================================================
 
-export async function getPersonCapacity(planningPeriodId: number): Promise<any> {
-  return await invoke('get_person_capacity', { planningPeriodId });
+export async function getCapacityOverview(planningPeriodId: number): Promise<CapacityOverview> {
+  return await invoke('get_capacity_overview', { planningPeriodId });
 }
 
-export async function getProjectStaffing(planningPeriodId: number): Promise<any> {
-  return await invoke('get_project_staffing', { planningPeriodId });
+export async function getPersonCapacity(personId: number, planningPeriodId: number): Promise<PersonCapacity> {
+  return await invoke('get_person_capacity', { personId, planningPeriodId });
+}
+
+export async function getProjectStaffing(projectId: number, planningPeriodId: number): Promise<ProjectStaffing> {
+  return await invoke('get_project_staffing', { projectId, planningPeriodId });
 }

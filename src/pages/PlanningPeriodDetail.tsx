@@ -14,7 +14,7 @@ import type { PlanningPeriod } from '../types';
 import { PeriodOverview } from '../components/period/PeriodOverview';
 import { ProjectRequirementManager } from '../components/requirements/ProjectRequirementManager';
 import { AssignmentManager } from '../components/assignments/AssignmentManager';
-import { CapacityAnalysisPlaceholder } from '../components/analysis/CapacityAnalysisPlaceholder';
+import { CapacityAnalysis } from '../components/analysis/CapacityAnalysis';
 
 export function PlanningPeriodDetailPage() {
   const { periodId } = useParams<{ periodId: string }>();
@@ -123,7 +123,7 @@ export function PlanningPeriodDetailPage() {
               </Tabs.Panel>
 
               <Tabs.Panel value="analysis" pt="lg">
-                <CapacityAnalysisPlaceholder periodId={period.id} />
+                <CapacityAnalysis periodId={period.id} />
               </Tabs.Panel>
             </Tabs>
           </>

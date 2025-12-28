@@ -45,7 +45,6 @@ pub struct Assignment {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
-#[allow(dead_code)] // Future feature: absence management
 pub struct Absence {
     pub id: i64,
     pub person_id: i64,
@@ -99,7 +98,6 @@ pub struct CreateAssignmentInput {
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)] // Future feature: absence management
 pub struct CreateAbsenceInput {
     pub person_id: i64,
     pub start_date: String,
