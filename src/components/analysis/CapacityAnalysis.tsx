@@ -102,9 +102,10 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
   };
 
   const getUtilizationColor = (utilization: number) => {
-    if (utilization > 100) return 'red';    // Should rarely happen with new algorithm
-    if (utilization >= 85) return 'yellow'; // At/near capacity
-    return 'green';                          // OK
+    if (utilization > 100) return 'red';    // Overcommitted
+    if (utilization >= 96) return 'red';    // At capacity (96-100%)
+    if (utilization >= 50) return 'green';  // OK (50-95%)
+    return 'orange';                         // Underutilized (0-49%)
   };
 
   const getStaffingColor = (percentage: number) => {
@@ -233,15 +234,17 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                           </div>
                           <Badge 
                             color={
-                              person.utilization_percentage > 100 ? 'red' :    // Over-committed (rare)
-                              person.utilization_percentage >= 85 ? 'yellow' : // At capacity
-                              'green'                                           // OK
+                              person.utilization_percentage > 100 ? 'red' :       // Overcommitted
+                              person.utilization_percentage >= 96 ? 'red' :       // At capacity
+                              person.utilization_percentage >= 50 ? 'green' :     // OK
+                              'orange'                                             // Underutilized
                             }
                             variant="filled"
                           >
-                            {person.utilization_percentage > 100 ? 'Over-Committed' :
-                             person.utilization_percentage >= 85 ? 'At Capacity' : 
-                             'OK'}
+                            {person.utilization_percentage > 100 ? 'Overcommitted' :
+                             person.utilization_percentage >= 96 ? 'Capacity' :
+                             person.utilization_percentage >= 50 ? 'OK' :
+                             'Underutilized'}
                           </Badge>
                         </Group>
                       </Group>
