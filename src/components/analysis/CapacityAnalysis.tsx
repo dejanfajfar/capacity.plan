@@ -102,9 +102,9 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
   };
 
   const getUtilizationColor = (utilization: number) => {
-    if (utilization > 100) return 'red';
-    if (utilization >= 90) return 'yellow';
-    return 'green';
+    if (utilization > 100) return 'red';    // Should rarely happen with new algorithm
+    if (utilization >= 85) return 'yellow'; // At/near capacity
+    return 'green';                          // OK
   };
 
   const getStaffingColor = (percentage: number) => {
@@ -190,8 +190,8 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
               </Grid.Col>
               <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
                 <Card withBorder>
-                  <Text size="sm" c="dimmed">Over-Committed People</Text>
-                  <Title order={2} c={overview.over_committed_people > 0 ? 'red' : 'green'}>
+                  <Text size="sm" c="dimmed">At/Near Capacity People</Text>
+                  <Title order={2} c={overview.over_committed_people > 0 ? 'yellow' : 'green'}>
                     {overview.over_committed_people}
                   </Title>
                 </Card>
@@ -232,10 +232,16 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                             </Text>
                           </div>
                           <Badge 
-                            color={person.is_over_committed ? 'red' : 'green'}
+                            color={
+                              person.utilization_percentage > 100 ? 'red' :    // Over-committed (rare)
+                              person.utilization_percentage >= 85 ? 'yellow' : // At capacity
+                              'green'                                           // OK
+                            }
                             variant="filled"
                           >
-                            {person.is_over_committed ? 'Over-Committed' : 'OK'}
+                            {person.utilization_percentage > 100 ? 'Over-Committed' :
+                             person.utilization_percentage >= 85 ? 'At Capacity' : 
+                             'OK'}
                           </Badge>
                         </Group>
                       </Group>
@@ -256,9 +262,9 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                             <Table.Tbody>
                               {person.assignments.map((assignment) => (
                                 <Table.Tr key={assignment.assignment_id}>
-                                  <Table.Td>{assignment.project_name}</Table.Td>
-                                  <Table.Td>{assignment.allocation_percentage.toFixed(1)}%</Table.Td>
-                                  <Table.Td>{assignment.effective_hours.toFixed(1)}h</Table.Td>
+                                   <Table.Td>{assignment.project_name}</Table.Td>
+                                   <Table.Td>{assignment.allocation_percentage.toFixed(1)}%</Table.Td>
+                                   <Table.Td>{assignment.effective_hours.toFixed(1)}h</Table.Td>
                                   <Table.Td>
                                     {assignment.is_pinned && (
                                       <Badge size="sm" variant="light">Pinned</Badge>
@@ -352,9 +358,9 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                             <Table.Tbody>
                               {project.assigned_people.map((person) => (
                                 <Table.Tr key={person.assignment_id}>
-                                  <Table.Td>{person.person_name}</Table.Td>
-                                  <Table.Td>{person.allocation_percentage.toFixed(1)}%</Table.Td>
-                                  <Table.Td>{(person.productivity_factor * 100).toFixed(0)}%</Table.Td>
+                                   <Table.Td>{person.person_name}</Table.Td>
+                                   <Table.Td>{person.allocation_percentage.toFixed(1)}%</Table.Td>
+                                   <Table.Td>{(person.productivity_factor * 100).toFixed(0)}%</Table.Td>
                                   <Table.Td>{person.effective_hours.toFixed(1)}h</Table.Td>
                                 </Table.Tr>
                               ))}
@@ -392,7 +398,7 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                 <Stack gap="xs">
                   {overview.over_committed_people > 0 && (
                     <Text size="sm">
-                      • {overview.over_committed_people} people are over-committed (&gt;100% allocation)
+                      • {overview.over_committed_people} people are at or near capacity (≥85% allocation)
                     </Text>
                   )}
                   {overview.under_staffed_projects > 0 && (

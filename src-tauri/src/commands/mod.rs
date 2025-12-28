@@ -572,15 +572,18 @@ pub async fn batch_upsert_project_requirements(
     })?;
 
     for req in requirements {
+        let priority = req.priority.unwrap_or(10); // Default to Medium
         sqlx::query(
-            "INSERT INTO project_requirements (project_id, planning_period_id, required_hours)
-             VALUES (?, ?, ?)
+            "INSERT INTO project_requirements (project_id, planning_period_id, required_hours, priority)
+             VALUES (?, ?, ?, ?)
              ON CONFLICT(project_id, planning_period_id) 
-             DO UPDATE SET required_hours = excluded.required_hours",
+             DO UPDATE SET required_hours = excluded.required_hours,
+                           priority = excluded.priority",
         )
         .bind(req.project_id)
         .bind(req.planning_period_id)
         .bind(req.required_hours)
+        .bind(priority)
         .execute(&mut *tx)
         .await
         .map_err(|e| {

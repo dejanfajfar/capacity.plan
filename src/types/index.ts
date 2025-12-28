@@ -55,6 +55,7 @@ export interface ProjectRequirement {
   project_id: number;
   planning_period_id: number;
   required_hours: number;
+  priority: number; // 0=Low, 10=Medium, 20=High, 30=Blocker
   created_at: string;
 }
 
@@ -181,6 +182,7 @@ export interface CreateProjectRequirementInput {
   project_id: number;
   planning_period_id: number;
   required_hours: number;
+  priority?: number; // Optional, defaults to 10 (Medium)
 }
 
 // Dependency check types

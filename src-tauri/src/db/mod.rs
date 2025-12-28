@@ -178,6 +178,18 @@ async fn run_migrations(pool: &DbPool) -> Result<(), sqlx::Error> {
         .execute(pool)
         .await?;
 
+    // Add priority column to project_requirements if it doesn't exist
+    // This migration handles both new databases and existing ones
+    // Default priority=10 corresponds to "Medium" priority
+    sqlx::query(
+        "ALTER TABLE project_requirements ADD COLUMN priority INTEGER DEFAULT 10"
+    )
+    .execute(pool)
+    .await
+    .ok(); // Ignore error if column already exists (SQLite limitation)
+
+    debug!("Priority column migration completed");
+
     info!("Database migrations completed successfully");
     Ok(())
 }

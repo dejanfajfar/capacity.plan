@@ -61,6 +61,7 @@ pub struct ProjectRequirement {
     pub project_id: i64,
     pub planning_period_id: i64,
     pub required_hours: f64,
+    pub priority: i64, // 0=Low, 10=Medium, 20=High, 30=Blocker
     pub created_at: String,
 }
 
@@ -111,6 +112,7 @@ pub struct CreateProjectRequirementInput {
     pub project_id: i64,
     pub planning_period_id: i64,
     pub required_hours: f64,
+    pub priority: Option<i64>, // Optional, defaults to 10 (Medium)
 }
 
 #[derive(Debug, Deserialize)]
