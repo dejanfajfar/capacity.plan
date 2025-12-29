@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   TextInput,
   Button,
@@ -8,10 +8,16 @@ import {
   NumberInput,
   Select,
   Text,
-} from '@mantine/core';
-import { useForm } from '@mantine/form';
-import type { Assignment, CreateAssignmentInput, Person, Project, PlanningPeriod } from '../../types';
-import { listPeople, listProjects } from '../../lib/tauri';
+} from "@mantine/core";
+import { useForm } from "@mantine/form";
+import type {
+  Assignment,
+  CreateAssignmentInput,
+  Person,
+  Project,
+  PlanningPeriod,
+} from "../../types";
+import { listPeople, listProjects } from "../../lib/tauri";
 
 interface AssignmentFormProps {
   opened: boolean;
@@ -22,13 +28,13 @@ interface AssignmentFormProps {
   title: string;
 }
 
-export function AssignmentForm({ 
-  opened, 
-  onClose, 
-  onSubmit, 
-  assignment, 
+export function AssignmentForm({
+  opened,
+  onClose,
+  onSubmit,
+  assignment,
   planningPeriod,
-  title 
+  title,
 }: AssignmentFormProps) {
   const [loading, setLoading] = useState(false);
   const [people, setPeople] = useState<Person[]>([]);
@@ -51,7 +57,7 @@ export function AssignmentForm({
       setPeople(peopleData);
       setProjects(projectsData);
     } catch (error) {
-      console.error('Failed to load form data:', error);
+      console.error("Failed to load form data:", error);
     } finally {
       setLoadingData(false);
     }
@@ -67,30 +73,33 @@ export function AssignmentForm({
       end_date: planningPeriod.end_date,
     },
     validate: {
-      person_id: (value) => (value <= 0 ? 'Please select a person' : null),
-      project_id: (value) => (value <= 0 ? 'Please select a project' : null),
+      person_id: (value) => (value <= 0 ? "Please select a person" : null),
+      project_id: (value) => (value <= 0 ? "Please select a project" : null),
       productivity_factor: (value) => {
-        if (value < 0) return 'Productivity factor cannot be negative';
-        if (value > 1) return 'Productivity factor cannot exceed 1.0';
+        if (value < 0) return "Productivity factor cannot be negative";
+        if (value > 1) return "Productivity factor cannot exceed 1.0";
         return null;
       },
       start_date: (value) => {
-        if (!value) return 'Start date is required';
+        if (!value) return "Start date is required";
         if (value < planningPeriod.start_date) {
-          return 'Start date must be within the planning period';
+          return "Start date must be within the planning period";
         }
         if (value > planningPeriod.end_date) {
-          return 'Start date must be within the planning period';
+          return "Start date must be within the planning period";
         }
         return null;
       },
       end_date: (value, values) => {
-        if (!value) return 'End date is required';
-        if (value < planningPeriod.start_date || value > planningPeriod.end_date) {
-          return 'End date must be within the planning period';
+        if (!value) return "End date is required";
+        if (
+          value < planningPeriod.start_date ||
+          value > planningPeriod.end_date
+        ) {
+          return "End date must be within the planning period";
         }
         if (values.start_date && value < values.start_date) {
-          return 'End date must be after start date';
+          return "End date must be after start date";
         }
         return null;
       },
@@ -133,7 +142,7 @@ export function AssignmentForm({
       form.reset();
       onClose();
     } catch (error) {
-      console.error('Failed to save assignment:', error);
+      console.error("Failed to save assignment:", error);
     } finally {
       setLoading(false);
     }
@@ -158,7 +167,9 @@ export function AssignmentForm({
               Planning Period
             </Text>
             <Text size="sm" c="dimmed">
-              {planningPeriod.name} ({new Date(planningPeriod.start_date).toLocaleDateString()} - {new Date(planningPeriod.end_date).toLocaleDateString()})
+              {planningPeriod.name} (
+              {new Date(planningPeriod.start_date).toLocaleDateString()} -{" "}
+              {new Date(planningPeriod.end_date).toLocaleDateString()})
             </Text>
           </div>
 
@@ -169,8 +180,14 @@ export function AssignmentForm({
             required
             disabled={loadingData}
             searchable
-            value={form.values.person_id > 0 ? form.values.person_id.toString() : null}
-            onChange={(value) => form.setFieldValue('person_id', value ? parseInt(value) : 0)}
+            value={
+              form.values.person_id > 0
+                ? form.values.person_id.toString()
+                : null
+            }
+            onChange={(value) =>
+              form.setFieldValue("person_id", value ? parseInt(value) : 0)
+            }
             error={form.errors.person_id}
           />
 
@@ -181,8 +198,14 @@ export function AssignmentForm({
             required
             disabled={loadingData}
             searchable
-            value={form.values.project_id > 0 ? form.values.project_id.toString() : null}
-            onChange={(value) => form.setFieldValue('project_id', value ? parseInt(value) : 0)}
+            value={
+              form.values.project_id > 0
+                ? form.values.project_id.toString()
+                : null
+            }
+            onChange={(value) =>
+              form.setFieldValue("project_id", value ? parseInt(value) : 0)
+            }
             error={form.errors.project_id}
           />
 
@@ -195,7 +218,7 @@ export function AssignmentForm({
             max={1}
             step={0.1}
             decimalScale={2}
-            {...form.getInputProps('productivity_factor')}
+            {...form.getInputProps("productivity_factor")}
           />
 
           <Group grow>
@@ -203,14 +226,14 @@ export function AssignmentForm({
               label="Start Date"
               type="date"
               required
-              {...form.getInputProps('start_date')}
+              {...form.getInputProps("start_date")}
             />
-            
+
             <TextInput
               label="End Date"
               type="date"
               required
-              {...form.getInputProps('end_date')}
+              {...form.getInputProps("end_date")}
             />
           </Group>
 
@@ -219,7 +242,7 @@ export function AssignmentForm({
               Cancel
             </Button>
             <Button type="submit" loading={loading || loadingData}>
-              {assignment ? 'Update' : 'Create'}
+              {assignment ? "Update" : "Create"}
             </Button>
           </Group>
         </Stack>

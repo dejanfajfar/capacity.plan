@@ -1,27 +1,36 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Title, Text, Tabs, LoadingOverlay, Group, Button, Paper } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
-import { 
-  IconInfoCircle, 
-  IconTarget, 
-  IconClipboardList, 
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  Container,
+  Title,
+  Text,
+  Tabs,
+  LoadingOverlay,
+  Group,
+  Button,
+  Paper,
+} from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import {
+  IconInfoCircle,
+  IconTarget,
+  IconClipboardList,
   IconChartBar,
   IconArrowLeft,
-} from '@tabler/icons-react';
-import { listPlanningPeriods } from '../lib/tauri';
-import type { PlanningPeriod } from '../types';
-import { PeriodOverview } from '../components/period/PeriodOverview';
-import { ProjectRequirementManager } from '../components/requirements/ProjectRequirementManager';
-import { AssignmentManager } from '../components/assignments/AssignmentManager';
-import { CapacityAnalysis } from '../components/analysis/CapacityAnalysis';
+} from "@tabler/icons-react";
+import { listPlanningPeriods } from "../lib/tauri";
+import type { PlanningPeriod } from "../types";
+import { PeriodOverview } from "../components/period/PeriodOverview";
+import { ProjectRequirementManager } from "../components/requirements/ProjectRequirementManager";
+import { AssignmentManager } from "../components/assignments/AssignmentManager";
+import { CapacityAnalysis } from "../components/analysis/CapacityAnalysis";
 
 export function PlanningPeriodDetailPage() {
   const { periodId } = useParams<{ periodId: string }>();
   const navigate = useNavigate();
   const [period, setPeriod] = useState<PlanningPeriod | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<string | null>('overview');
+  const [activeTab, setActiveTab] = useState<string | null>("overview");
 
   useEffect(() => {
     loadPeriod();
@@ -29,30 +38,30 @@ export function PlanningPeriodDetailPage() {
 
   const loadPeriod = async () => {
     if (!periodId) return;
-    
+
     try {
       setLoading(true);
       const periods = await listPlanningPeriods();
-      const found = periods.find(p => p.id === parseInt(periodId));
-      
+      const found = periods.find((p) => p.id === parseInt(periodId));
+
       if (!found) {
         notifications.show({
-          title: 'Error',
-          message: 'Planning period not found',
-          color: 'red',
+          title: "Error",
+          message: "Planning period not found",
+          color: "red",
         });
-        navigate('/planning');
+        navigate("/planning");
         return;
       }
-      
+
       setPeriod(found);
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: 'Failed to load planning period',
-        color: 'red',
+        title: "Error",
+        message: "Failed to load planning period",
+        color: "red",
       });
-      console.error('Failed to load planning period:', error);
+      console.error("Failed to load planning period:", error);
     } finally {
       setLoading(false);
     }
@@ -72,7 +81,7 @@ export function PlanningPeriodDetailPage() {
     <Container size="xl" py="md">
       <Paper pos="relative" p="md">
         <LoadingOverlay visible={loading} />
-        
+
         {period && (
           <>
             <Group justify="space-between" mb="lg">
@@ -81,13 +90,13 @@ export function PlanningPeriodDetailPage() {
                   <Button
                     variant="subtle"
                     leftSection={<IconArrowLeft size={16} />}
-                    onClick={() => navigate('/planning')}
+                    onClick={() => navigate("/planning")}
                     size="sm"
                   >
                     Back to Planning Periods
                   </Button>
                 </Group>
-                <Title order={1}>{period.name || 'Planning Period'}</Title>
+                <Title order={1}>{period.name || "Planning Period"}</Title>
                 <Text size="sm" c="dimmed" mt="xs">
                   {formatDateRange(period)}
                 </Text>
@@ -96,16 +105,28 @@ export function PlanningPeriodDetailPage() {
 
             <Tabs value={activeTab} onChange={setActiveTab}>
               <Tabs.List>
-                <Tabs.Tab value="overview" leftSection={<IconInfoCircle size={16} />}>
+                <Tabs.Tab
+                  value="overview"
+                  leftSection={<IconInfoCircle size={16} />}
+                >
                   Overview
                 </Tabs.Tab>
-                <Tabs.Tab value="requirements" leftSection={<IconTarget size={16} />}>
+                <Tabs.Tab
+                  value="requirements"
+                  leftSection={<IconTarget size={16} />}
+                >
                   Project Requirements
                 </Tabs.Tab>
-                <Tabs.Tab value="assignments" leftSection={<IconClipboardList size={16} />}>
+                <Tabs.Tab
+                  value="assignments"
+                  leftSection={<IconClipboardList size={16} />}
+                >
                   Assignments
                 </Tabs.Tab>
-                <Tabs.Tab value="analysis" leftSection={<IconChartBar size={16} />}>
+                <Tabs.Tab
+                  value="analysis"
+                  leftSection={<IconChartBar size={16} />}
+                >
                   Capacity Analysis
                 </Tabs.Tab>
               </Tabs.List>

@@ -1,13 +1,7 @@
-import { useState, useEffect } from 'react';
-import {
-  TextInput,
-  Button,
-  Modal,
-  Group,
-  Stack,
-} from '@mantine/core';
-import { useForm } from '@mantine/form';
-import type { PlanningPeriod, CreatePlanningPeriodInput } from '../../types';
+import { useState, useEffect } from "react";
+import { TextInput, Button, Modal, Group, Stack } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import type { PlanningPeriod, CreatePlanningPeriodInput } from "../../types";
 
 interface PlanningPeriodFormProps {
   opened: boolean;
@@ -17,21 +11,30 @@ interface PlanningPeriodFormProps {
   title: string;
 }
 
-export function PlanningPeriodForm({ opened, onClose, onSubmit, period, title }: PlanningPeriodFormProps) {
+export function PlanningPeriodForm({
+  opened,
+  onClose,
+  onSubmit,
+  period,
+  title,
+}: PlanningPeriodFormProps) {
   const [loading, setLoading] = useState(false);
 
   const form = useForm<CreatePlanningPeriodInput>({
     initialValues: {
-      name: '',
-      start_date: new Date().toISOString().split('T')[0],
-      end_date: new Date().toISOString().split('T')[0],
+      name: "",
+      start_date: new Date().toISOString().split("T")[0],
+      end_date: new Date().toISOString().split("T")[0],
     },
     validate: {
-      start_date: (value) => (!value ? 'Start date is required' : null),
+      start_date: (value) => (!value ? "Start date is required" : null),
       end_date: (value, values) => {
-        if (!value) return 'End date is required';
-        if (values.start_date && new Date(value) < new Date(values.start_date)) {
-          return 'End date must be after start date';
+        if (!value) return "End date is required";
+        if (
+          values.start_date &&
+          new Date(value) < new Date(values.start_date)
+        ) {
+          return "End date must be after start date";
         }
         return null;
       },
@@ -44,7 +47,7 @@ export function PlanningPeriodForm({ opened, onClose, onSubmit, period, title }:
       if (period) {
         // Edit mode - populate with period's data
         form.setValues({
-          name: period.name || '',
+          name: period.name || "",
           start_date: period.start_date,
           end_date: period.end_date,
         });
@@ -63,7 +66,7 @@ export function PlanningPeriodForm({ opened, onClose, onSubmit, period, title }:
       form.reset();
       onClose();
     } catch (error) {
-      console.error('Failed to save planning period:', error);
+      console.error("Failed to save planning period:", error);
     } finally {
       setLoading(false);
     }
@@ -76,7 +79,7 @@ export function PlanningPeriodForm({ opened, onClose, onSubmit, period, title }:
           <TextInput
             label="Name (optional)"
             placeholder="e.g., Q1 2024, Spring Planning"
-            {...form.getInputProps('name')}
+            {...form.getInputProps("name")}
           />
 
           <Group grow>
@@ -84,14 +87,14 @@ export function PlanningPeriodForm({ opened, onClose, onSubmit, period, title }:
               label="Start Date"
               type="date"
               required
-              {...form.getInputProps('start_date')}
+              {...form.getInputProps("start_date")}
             />
-            
+
             <TextInput
               label="End Date"
               type="date"
               required
-              {...form.getInputProps('end_date')}
+              {...form.getInputProps("end_date")}
             />
           </Group>
 
@@ -100,7 +103,7 @@ export function PlanningPeriodForm({ opened, onClose, onSubmit, period, title }:
               Cancel
             </Button>
             <Button type="submit" loading={loading}>
-              {period ? 'Update' : 'Create'}
+              {period ? "Update" : "Create"}
             </Button>
           </Group>
         </Stack>

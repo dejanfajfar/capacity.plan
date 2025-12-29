@@ -1,6 +1,6 @@
-import { ActionIcon, Badge, Group, Table, Text, Tooltip } from '@mantine/core';
-import { IconEdit, IconTrash, IconPin } from '@tabler/icons-react';
-import type { Assignment, Person, Project } from '../../types';
+import { ActionIcon, Badge, Group, Table, Text, Tooltip } from "@mantine/core";
+import { IconEdit, IconTrash, IconPin } from "@tabler/icons-react";
+import type { Assignment, Person, Project } from "../../types";
 
 interface AssignmentListProps {
   assignments: Assignment[];
@@ -10,12 +10,12 @@ interface AssignmentListProps {
   onDelete: (id: number) => void;
 }
 
-export function AssignmentList({ 
-  assignments, 
-  people, 
-  projects, 
-  onEdit, 
-  onDelete 
+export function AssignmentList({
+  assignments,
+  people,
+  projects,
+  onEdit,
+  onDelete,
 }: AssignmentListProps) {
   if (assignments.length === 0) {
     return (
@@ -45,26 +45,42 @@ export function AssignmentList({
       <Table.Tbody>
         {assignments.map((assignment) => (
           <Table.Tr key={assignment.id}>
-            <Table.Td>{personMap.get(assignment.person_id) || 'Unknown'}</Table.Td>
-            <Table.Td>{projectMap.get(assignment.project_id) || 'Unknown'}</Table.Td>
-            <Table.Td className="numeric-data">{(assignment.productivity_factor * 100).toFixed(0)}%</Table.Td>
+            <Table.Td>
+              {personMap.get(assignment.person_id) || "Unknown"}
+            </Table.Td>
+            <Table.Td>
+              {projectMap.get(assignment.project_id) || "Unknown"}
+            </Table.Td>
+            <Table.Td className="numeric-data">
+              {(assignment.productivity_factor * 100).toFixed(0)}%
+            </Table.Td>
             <Table.Td>
               <Text size="sm">
-                {new Date(assignment.start_date).toLocaleDateString()} - {new Date(assignment.end_date).toLocaleDateString()}
+                {new Date(assignment.start_date).toLocaleDateString()} -{" "}
+                {new Date(assignment.end_date).toLocaleDateString()}
               </Text>
             </Table.Td>
             <Table.Td>
               <Group gap="xs">
-                {assignment.is_pinned && assignment.pinned_allocation_percentage !== null ? (
+                {assignment.is_pinned &&
+                assignment.pinned_allocation_percentage !== null ? (
                   <>
-                    <Text className="numeric-data">{assignment.pinned_allocation_percentage.toFixed(1)}%</Text>
-                    <Badge size="xs" color="blue" leftSection={<IconPin size={12} />}>
+                    <Text className="numeric-data">
+                      {assignment.pinned_allocation_percentage.toFixed(1)}%
+                    </Text>
+                    <Badge
+                      size="xs"
+                      color="blue"
+                      leftSection={<IconPin size={12} />}
+                    >
                       Pinned
                     </Badge>
                   </>
                 ) : assignment.calculated_allocation_percentage !== null ? (
                   <Tooltip label="Calculated by optimization" withArrow>
-                    <Text className="numeric-data">{assignment.calculated_allocation_percentage.toFixed(1)}%</Text>
+                    <Text className="numeric-data">
+                      {assignment.calculated_allocation_percentage.toFixed(1)}%
+                    </Text>
                   </Tooltip>
                 ) : (
                   <Text c="dimmed">Not calculated</Text>
@@ -73,7 +89,9 @@ export function AssignmentList({
             </Table.Td>
             <Table.Td>
               {assignment.calculated_effective_hours !== null ? (
-                <Text className="numeric-data">{assignment.calculated_effective_hours.toFixed(1)}h</Text>
+                <Text className="numeric-data">
+                  {assignment.calculated_effective_hours.toFixed(1)}h
+                </Text>
               ) : (
                 <Text c="dimmed">-</Text>
               )}

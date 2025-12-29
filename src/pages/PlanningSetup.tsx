@@ -1,26 +1,38 @@
-import { useEffect, useState } from 'react';
-import { Container, Title, Button, Stack, Group, LoadingOverlay, Paper, Text, Alert } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
-import { modals } from '@mantine/modals';
-import { IconPlus, IconAlertTriangle } from '@tabler/icons-react';
-import { useNavigate } from 'react-router-dom';
-import { PlanningPeriodList } from '../components/planning/PlanningPeriodList';
-import { PlanningPeriodForm } from '../components/planning/PlanningPeriodForm';
-import { 
-  listPlanningPeriods, 
-  createPlanningPeriod, 
-  updatePlanningPeriod, 
+import { useEffect, useState } from "react";
+import {
+  Container,
+  Title,
+  Button,
+  Stack,
+  Group,
+  LoadingOverlay,
+  Paper,
+  Text,
+  Alert,
+} from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { modals } from "@mantine/modals";
+import { IconPlus, IconAlertTriangle } from "@tabler/icons-react";
+import { useNavigate } from "react-router-dom";
+import { PlanningPeriodList } from "../components/planning/PlanningPeriodList";
+import { PlanningPeriodForm } from "../components/planning/PlanningPeriodForm";
+import {
+  listPlanningPeriods,
+  createPlanningPeriod,
+  updatePlanningPeriod,
   deletePlanningPeriod,
-  checkPlanningPeriodDependencies
-} from '../lib/tauri';
-import type { PlanningPeriod, CreatePlanningPeriodInput } from '../types';
+  checkPlanningPeriodDependencies,
+} from "../lib/tauri";
+import type { PlanningPeriod, CreatePlanningPeriodInput } from "../types";
 
 export function PlanningSetupPage() {
   const navigate = useNavigate();
   const [periods, setPeriods] = useState<PlanningPeriod[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpened, setFormOpened] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState<PlanningPeriod | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<PlanningPeriod | null>(
+    null,
+  );
 
   useEffect(() => {
     loadPeriods();
@@ -33,11 +45,11 @@ export function PlanningSetupPage() {
       setPeriods(data);
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: 'Failed to load planning periods',
-        color: 'red',
+        title: "Error",
+        message: "Failed to load planning periods",
+        color: "red",
       });
-      console.error('Failed to load planning periods:', error);
+      console.error("Failed to load planning periods:", error);
     } finally {
       setLoading(false);
     }
@@ -48,15 +60,15 @@ export function PlanningSetupPage() {
       await createPlanningPeriod(values);
       await loadPeriods();
       notifications.show({
-        title: 'Success',
-        message: 'Planning period created successfully',
-        color: 'green',
+        title: "Success",
+        message: "Planning period created successfully",
+        color: "green",
       });
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: 'Failed to create planning period',
-        color: 'red',
+        title: "Error",
+        message: "Failed to create planning period",
+        color: "red",
       });
       throw error;
     }
@@ -64,48 +76,51 @@ export function PlanningSetupPage() {
 
   const handleUpdate = async (values: CreatePlanningPeriodInput) => {
     if (!selectedPeriod) return;
-    
+
     try {
       await updatePlanningPeriod(selectedPeriod.id, values);
       await loadPeriods();
       notifications.show({
-        title: 'Success',
-        message: 'Planning period updated successfully',
-        color: 'green',
+        title: "Success",
+        message: "Planning period updated successfully",
+        color: "green",
       });
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: 'Failed to update planning period',
-        color: 'red',
+        title: "Error",
+        message: "Failed to update planning period",
+        color: "red",
       });
       throw error;
     }
   };
 
   const handleDelete = async (id: number) => {
-    const period = periods.find(p => p.id === id);
+    const period = periods.find((p) => p.id === id);
     if (!period) return;
 
     try {
       const deps = await checkPlanningPeriodDependencies(id);
-      
+
       modals.openConfirmModal({
-        title: 'Delete Planning Period',
+        title: "Delete Planning Period",
         centered: true,
         children: (
           <Stack gap="sm">
             <Text size="sm">
-              Are you sure you want to delete <strong>{period.name || 'this planning period'}</strong>?
+              Are you sure you want to delete{" "}
+              <strong>{period.name || "this planning period"}</strong>?
             </Text>
             {deps.requirement_count > 0 && (
               <Alert color="orange" icon={<IconAlertTriangle size={16} />}>
-                This will delete {deps.requirement_count} project requirement(s) defined for this period.
+                This will delete {deps.requirement_count} project requirement(s)
+                defined for this period.
               </Alert>
             )}
             {deps.assignment_count > 0 && (
               <Alert color="orange" icon={<IconAlertTriangle size={16} />}>
-                This will delete {deps.assignment_count} assignment(s) for this period.
+                This will delete {deps.assignment_count} assignment(s) for this
+                period.
               </Alert>
             )}
             {(deps.requirement_count > 0 || deps.assignment_count > 0) && (
@@ -118,34 +133,34 @@ export function PlanningSetupPage() {
             </Text>
           </Stack>
         ),
-        labels: { confirm: 'Delete', cancel: 'Cancel' },
-        confirmProps: { color: 'red' },
+        labels: { confirm: "Delete", cancel: "Cancel" },
+        confirmProps: { color: "red" },
         onConfirm: async () => {
           try {
             await deletePlanningPeriod(id);
             await loadPeriods();
             notifications.show({
-              title: 'Success',
-              message: 'Planning period deleted successfully',
-              color: 'green',
+              title: "Success",
+              message: "Planning period deleted successfully",
+              color: "green",
             });
           } catch (error) {
             notifications.show({
-              title: 'Error',
-              message: 'Failed to delete planning period',
-              color: 'red',
+              title: "Error",
+              message: "Failed to delete planning period",
+              color: "red",
             });
-            console.error('Failed to delete planning period:', error);
+            console.error("Failed to delete planning period:", error);
           }
         },
       });
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: 'Failed to check dependencies',
-        color: 'red',
+        title: "Error",
+        message: "Failed to check dependencies",
+        color: "red",
       });
-      console.error('Failed to check dependencies:', error);
+      console.error("Failed to check dependencies:", error);
     }
   };
 
@@ -177,7 +192,8 @@ export function PlanningSetupPage() {
             </Button>
           </Group>
           <Text c="dimmed" size="sm">
-            Planning periods define the timeframes for capacity planning. Create periods like quarters, sprints, or custom date ranges.
+            Planning periods define the timeframes for capacity planning. Create
+            periods like quarters, sprints, or custom date ranges.
           </Text>
         </div>
 
@@ -197,7 +213,9 @@ export function PlanningSetupPage() {
         onClose={handleCloseForm}
         onSubmit={selectedPeriod ? handleUpdate : handleCreate}
         period={selectedPeriod}
-        title={selectedPeriod ? 'Edit Planning Period' : 'Create Planning Period'}
+        title={
+          selectedPeriod ? "Edit Planning Period" : "Create Planning Period"
+        }
       />
     </Container>
   );

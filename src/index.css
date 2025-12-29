@@ -1,5 +1,5 @@
 /* Import JetBrains Mono from Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -14,7 +14,7 @@
   --od-text-primary: #abb2bf;
   --od-text-secondary: #5c6370;
   --od-text-white: #ffffff;
-  
+
   --od-red: #e06c75;
   --od-orange: #d19a66;
   --od-yellow: #e5c07b;
@@ -33,7 +33,7 @@
   --sl-text-primary: #657b83;
   --sl-text-secondary: #93a1a1;
   --sl-text-emphasis: #073642;
-  
+
   --sl-red: #dc322f;
   --sl-orange: #cb4b16;
   --sl-yellow: #b58900;
@@ -46,14 +46,14 @@
 
 /* Utility classes for monospace */
 .numeric-data {
-  font-family: 'JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-family: "JetBrains Mono", "Consolas", "Monaco", "Courier New", monospace;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
 
 .percentage,
 .hours {
-  font-family: 'JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-family: "JetBrains Mono", "Consolas", "Monaco", "Courier New", monospace;
   font-variant-numeric: tabular-nums;
 }
 

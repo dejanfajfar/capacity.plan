@@ -1,6 +1,6 @@
-import { ActionIcon, Table, Text } from '@mantine/core';
-import { IconEdit, IconTrash } from '@tabler/icons-react';
-import type { Person } from '../../types';
+import { ActionIcon, Table, Text } from "@mantine/core";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
+import type { Person } from "../../types";
 
 interface PersonListProps {
   people: Person[];
@@ -32,7 +32,9 @@ export function PersonList({ people, onEdit, onDelete }: PersonListProps) {
           <Table.Tr key={person.id}>
             <Table.Td>{person.name}</Table.Td>
             <Table.Td>{person.email}</Table.Td>
-            <Table.Td className="numeric-data">{person.available_hours_per_week} hrs</Table.Td>
+            <Table.Td className="numeric-data">
+              {person.available_hours_per_week} hrs
+            </Table.Td>
             <Table.Td>
               <ActionIcon.Group>
                 <ActionIcon

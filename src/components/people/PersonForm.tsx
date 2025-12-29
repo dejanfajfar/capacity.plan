@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   TextInput,
   Button,
@@ -6,9 +6,9 @@ import {
   Group,
   Stack,
   NumberInput,
-} from '@mantine/core';
-import { useForm } from '@mantine/form';
-import type { Person, CreatePersonInput } from '../../types';
+} from "@mantine/core";
+import { useForm } from "@mantine/form";
+import type { Person, CreatePersonInput } from "../../types";
 
 interface PersonFormProps {
   opened: boolean;
@@ -18,21 +18,35 @@ interface PersonFormProps {
   title: string;
 }
 
-export function PersonForm({ opened, onClose, onSubmit, person, title }: PersonFormProps) {
+export function PersonForm({
+  opened,
+  onClose,
+  onSubmit,
+  person,
+  title,
+}: PersonFormProps) {
   const [loading, setLoading] = useState(false);
 
   const form = useForm<CreatePersonInput>({
     initialValues: {
-      name: '',
-      email: '',
+      name: "",
+      email: "",
       available_hours_per_week: 40,
     },
     validate: {
-      name: (value) => (!value ? 'Name is required' : null),
-      email: (value) => (!value ? 'Email is required' : /^\S+@\S+$/.test(value) ? null : 'Invalid email'),
-      available_hours_per_week: (value) => 
-        value <= 0 ? 'Available hours must be greater than 0' : 
-        value > 168 ? 'Available hours cannot exceed 168 (hours in a week)' : null,
+      name: (value) => (!value ? "Name is required" : null),
+      email: (value) =>
+        !value
+          ? "Email is required"
+          : /^\S+@\S+$/.test(value)
+            ? null
+            : "Invalid email",
+      available_hours_per_week: (value) =>
+        value <= 0
+          ? "Available hours must be greater than 0"
+          : value > 168
+            ? "Available hours cannot exceed 168 (hours in a week)"
+            : null,
     },
   });
 
@@ -61,7 +75,7 @@ export function PersonForm({ opened, onClose, onSubmit, person, title }: PersonF
       form.reset();
       onClose();
     } catch (error) {
-      console.error('Failed to save person:', error);
+      console.error("Failed to save person:", error);
     } finally {
       setLoading(false);
     }
@@ -75,17 +89,17 @@ export function PersonForm({ opened, onClose, onSubmit, person, title }: PersonF
             label="Name"
             placeholder="Enter person's name"
             required
-            {...form.getInputProps('name')}
+            {...form.getInputProps("name")}
           />
-          
+
           <TextInput
             label="Email"
             placeholder="person@example.com"
             required
             type="email"
-            {...form.getInputProps('email')}
+            {...form.getInputProps("email")}
           />
-          
+
           <NumberInput
             label="Available Hours per Week"
             placeholder="40"
@@ -93,7 +107,7 @@ export function PersonForm({ opened, onClose, onSubmit, person, title }: PersonF
             min={0}
             max={168}
             step={1}
-            {...form.getInputProps('available_hours_per_week')}
+            {...form.getInputProps("available_hours_per_week")}
           />
 
           <Group justify="flex-end" mt="md">
@@ -101,7 +115,7 @@ export function PersonForm({ opened, onClose, onSubmit, person, title }: PersonF
               Cancel
             </Button>
             <Button type="submit" loading={loading}>
-              {person ? 'Update' : 'Create'}
+              {person ? "Update" : "Create"}
             </Button>
           </Group>
         </Stack>

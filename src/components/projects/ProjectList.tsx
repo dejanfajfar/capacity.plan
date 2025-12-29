@@ -1,6 +1,6 @@
-import { ActionIcon, Table, Text } from '@mantine/core';
-import { IconEdit, IconTrash } from '@tabler/icons-react';
-import type { Project } from '../../types';
+import { ActionIcon, Table, Text } from "@mantine/core";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
+import type { Project } from "../../types";
 
 interface ProjectListProps {
   projects: Project[];
@@ -33,10 +33,12 @@ export function ProjectList({ projects, onEdit, onDelete }: ProjectListProps) {
             <Table.Td>{project.name}</Table.Td>
             <Table.Td>
               <Text size="sm" lineClamp={1}>
-                {project.description || '-'}
+                {project.description || "-"}
               </Text>
             </Table.Td>
-            <Table.Td className="numeric-data">{project.required_hours} hrs/period</Table.Td>
+            <Table.Td className="numeric-data">
+              {project.required_hours} hrs/period
+            </Table.Td>
             <Table.Td>
               <ActionIcon.Group>
                 <ActionIcon

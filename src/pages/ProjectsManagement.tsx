@@ -1,12 +1,28 @@
-import { useEffect, useState } from 'react';
-import { Container, Title, Button, Stack, Group, LoadingOverlay, Paper, Text, Alert } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
-import { modals } from '@mantine/modals';
-import { IconPlus, IconAlertTriangle } from '@tabler/icons-react';
-import { ProjectList } from '../components/projects/ProjectList';
-import { ProjectForm } from '../components/projects/ProjectForm';
-import { listProjects, createProject, updateProject, deleteProject, checkProjectDependencies } from '../lib/tauri';
-import type { Project, CreateProjectInput } from '../types';
+import { useEffect, useState } from "react";
+import {
+  Container,
+  Title,
+  Button,
+  Stack,
+  Group,
+  LoadingOverlay,
+  Paper,
+  Text,
+  Alert,
+} from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { modals } from "@mantine/modals";
+import { IconPlus, IconAlertTriangle } from "@tabler/icons-react";
+import { ProjectList } from "../components/projects/ProjectList";
+import { ProjectForm } from "../components/projects/ProjectForm";
+import {
+  listProjects,
+  createProject,
+  updateProject,
+  deleteProject,
+  checkProjectDependencies,
+} from "../lib/tauri";
+import type { Project, CreateProjectInput } from "../types";
 
 export function ProjectsManagementPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -25,11 +41,11 @@ export function ProjectsManagementPage() {
       setProjects(data);
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: 'Failed to load projects',
-        color: 'red',
+        title: "Error",
+        message: "Failed to load projects",
+        color: "red",
       });
-      console.error('Failed to load projects:', error);
+      console.error("Failed to load projects:", error);
     } finally {
       setLoading(false);
     }
@@ -40,15 +56,15 @@ export function ProjectsManagementPage() {
       await createProject(values);
       await loadProjects();
       notifications.show({
-        title: 'Success',
-        message: 'Project created successfully',
-        color: 'green',
+        title: "Success",
+        message: "Project created successfully",
+        color: "green",
       });
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: 'Failed to create project',
-        color: 'red',
+        title: "Error",
+        message: "Failed to create project",
+        color: "red",
       });
       throw error;
     }
@@ -56,34 +72,34 @@ export function ProjectsManagementPage() {
 
   const handleUpdate = async (values: CreateProjectInput) => {
     if (!selectedProject) return;
-    
+
     try {
       await updateProject(selectedProject.id, values);
       await loadProjects();
       notifications.show({
-        title: 'Success',
-        message: 'Project updated successfully',
-        color: 'green',
+        title: "Success",
+        message: "Project updated successfully",
+        color: "green",
       });
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: 'Failed to update project',
-        color: 'red',
+        title: "Error",
+        message: "Failed to update project",
+        color: "red",
       });
       throw error;
     }
   };
 
   const handleDelete = async (id: number) => {
-    const project = projects.find(p => p.id === id);
+    const project = projects.find((p) => p.id === id);
     if (!project) return;
 
     try {
       const deps = await checkProjectDependencies(id);
-      
+
       modals.openConfirmModal({
-        title: 'Delete Project',
+        title: "Delete Project",
         centered: true,
         children: (
           <Stack gap="sm">
@@ -92,17 +108,20 @@ export function ProjectsManagementPage() {
             </Text>
             {deps.requirement_count > 0 && (
               <Alert color="orange" icon={<IconAlertTriangle size={16} />}>
-                This project has {deps.requirement_count} requirement(s) across planning periods which will also be deleted.
+                This project has {deps.requirement_count} requirement(s) across
+                planning periods which will also be deleted.
               </Alert>
             )}
             {deps.assignment_count > 0 && (
               <Alert color="orange" icon={<IconAlertTriangle size={16} />}>
-                This project has {deps.assignment_count} active assignment(s) which will also be deleted.
+                This project has {deps.assignment_count} active assignment(s)
+                which will also be deleted.
               </Alert>
             )}
             {(deps.requirement_count > 0 || deps.assignment_count > 0) && (
               <Alert color="blue">
-                Capacity calculations will be invalidated and need to be recalculated.
+                Capacity calculations will be invalidated and need to be
+                recalculated.
               </Alert>
             )}
             <Text size="sm" c="dimmed">
@@ -110,42 +129,43 @@ export function ProjectsManagementPage() {
             </Text>
           </Stack>
         ),
-        labels: { confirm: 'Delete', cancel: 'Cancel' },
-        confirmProps: { color: 'red' },
+        labels: { confirm: "Delete", cancel: "Cancel" },
+        confirmProps: { color: "red" },
         onConfirm: async () => {
           try {
             await deleteProject(id);
             await loadProjects();
             notifications.show({
-              title: 'Success',
-              message: 'Project deleted successfully',
-              color: 'green',
+              title: "Success",
+              message: "Project deleted successfully",
+              color: "green",
             });
             if (deps.assignment_count > 0) {
               notifications.show({
-                title: 'Recalculation Needed',
-                message: 'Please recalculate capacity allocations in the Analysis tab.',
-                color: 'yellow',
+                title: "Recalculation Needed",
+                message:
+                  "Please recalculate capacity allocations in the Analysis tab.",
+                color: "yellow",
                 autoClose: 5000,
               });
             }
           } catch (error) {
             notifications.show({
-              title: 'Error',
-              message: 'Failed to delete project',
-              color: 'red',
+              title: "Error",
+              message: "Failed to delete project",
+              color: "red",
             });
-            console.error('Failed to delete project:', error);
+            console.error("Failed to delete project:", error);
           }
         },
       });
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: 'Failed to check dependencies',
-        color: 'red',
+        title: "Error",
+        message: "Failed to check dependencies",
+        color: "red",
       });
-      console.error('Failed to check dependencies:', error);
+      console.error("Failed to check dependencies:", error);
     }
   };
 
@@ -166,7 +186,9 @@ export function ProjectsManagementPage() {
           <div>
             <Title order={1}>Projects Management</Title>
             <Text size="sm" c="dimmed" mt="xs">
-              Projects are global work items available in all planning periods. The 'Target Hours/Period' represents the hard requirement for each period.
+              Projects are global work items available in all planning periods.
+              The 'Target Hours/Period' represents the hard requirement for each
+              period.
             </Text>
           </div>
           <Button
@@ -192,7 +214,7 @@ export function ProjectsManagementPage() {
         onClose={handleCloseForm}
         onSubmit={selectedProject ? handleUpdate : handleCreate}
         project={selectedProject}
-        title={selectedProject ? 'Edit Project' : 'Create Project'}
+        title={selectedProject ? "Edit Project" : "Create Project"}
       />
     </Container>
   );

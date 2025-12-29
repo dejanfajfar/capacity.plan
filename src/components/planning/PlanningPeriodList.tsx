@@ -1,6 +1,6 @@
-import { ActionIcon, Table, Text } from '@mantine/core';
-import { IconEdit, IconTrash, IconEye } from '@tabler/icons-react';
-import type { PlanningPeriod } from '../../types';
+import { ActionIcon, Table, Text } from "@mantine/core";
+import { IconEdit, IconTrash, IconEye } from "@tabler/icons-react";
+import type { PlanningPeriod } from "../../types";
 
 interface PlanningPeriodListProps {
   periods: PlanningPeriod[];
@@ -9,11 +9,17 @@ interface PlanningPeriodListProps {
   onView: (periodId: number) => void;
 }
 
-export function PlanningPeriodList({ periods, onEdit, onDelete, onView }: PlanningPeriodListProps) {
+export function PlanningPeriodList({
+  periods,
+  onEdit,
+  onDelete,
+  onView,
+}: PlanningPeriodListProps) {
   if (periods.length === 0) {
     return (
       <Text c="dimmed" ta="center" py="xl">
-        No planning periods found. Create your first planning period to get started.
+        No planning periods found. Create your first planning period to get
+        started.
       </Text>
     );
   }
@@ -33,12 +39,22 @@ export function PlanningPeriodList({ periods, onEdit, onDelete, onView }: Planni
         {periods.map((period) => {
           const startDate = new Date(period.start_date);
           const endDate = new Date(period.end_date);
-          const durationDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-          
+          const durationDays = Math.ceil(
+            (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+          );
+
           return (
-            <Table.Tr key={period.id} style={{ cursor: 'pointer' }} onClick={() => onView(period.id)}>
+            <Table.Tr
+              key={period.id}
+              style={{ cursor: "pointer" }}
+              onClick={() => onView(period.id)}
+            >
               <Table.Td>
-                {period.name || <Text c="dimmed" fs="italic">Unnamed Period</Text>}
+                {period.name || (
+                  <Text c="dimmed" fs="italic">
+                    Unnamed Period
+                  </Text>
+                )}
               </Table.Td>
               <Table.Td>{startDate.toLocaleDateString()}</Table.Td>
               <Table.Td>{endDate.toLocaleDateString()}</Table.Td>

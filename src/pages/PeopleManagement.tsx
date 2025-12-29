@@ -1,12 +1,28 @@
-import { useEffect, useState } from 'react';
-import { Container, Title, Button, Stack, Group, LoadingOverlay, Paper, Text, Alert } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
-import { modals } from '@mantine/modals';
-import { IconPlus, IconAlertTriangle } from '@tabler/icons-react';
-import { PersonList } from '../components/people/PersonList';
-import { PersonForm } from '../components/people/PersonForm';
-import { listPeople, createPerson, updatePerson, deletePerson, checkPersonDependencies } from '../lib/tauri';
-import type { Person, CreatePersonInput } from '../types';
+import { useEffect, useState } from "react";
+import {
+  Container,
+  Title,
+  Button,
+  Stack,
+  Group,
+  LoadingOverlay,
+  Paper,
+  Text,
+  Alert,
+} from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { modals } from "@mantine/modals";
+import { IconPlus, IconAlertTriangle } from "@tabler/icons-react";
+import { PersonList } from "../components/people/PersonList";
+import { PersonForm } from "../components/people/PersonForm";
+import {
+  listPeople,
+  createPerson,
+  updatePerson,
+  deletePerson,
+  checkPersonDependencies,
+} from "../lib/tauri";
+import type { Person, CreatePersonInput } from "../types";
 
 export function PeopleManagementPage() {
   const [people, setPeople] = useState<Person[]>([]);
@@ -25,11 +41,11 @@ export function PeopleManagementPage() {
       setPeople(data);
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: 'Failed to load people',
-        color: 'red',
+        title: "Error",
+        message: "Failed to load people",
+        color: "red",
       });
-      console.error('Failed to load people:', error);
+      console.error("Failed to load people:", error);
     } finally {
       setLoading(false);
     }
@@ -40,15 +56,15 @@ export function PeopleManagementPage() {
       await createPerson(values);
       await loadPeople();
       notifications.show({
-        title: 'Success',
-        message: 'Person created successfully',
-        color: 'green',
+        title: "Success",
+        message: "Person created successfully",
+        color: "green",
       });
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: 'Failed to create person',
-        color: 'red',
+        title: "Error",
+        message: "Failed to create person",
+        color: "red",
       });
       throw error;
     }
@@ -56,34 +72,34 @@ export function PeopleManagementPage() {
 
   const handleUpdate = async (values: CreatePersonInput) => {
     if (!selectedPerson) return;
-    
+
     try {
       await updatePerson(selectedPerson.id, values);
       await loadPeople();
       notifications.show({
-        title: 'Success',
-        message: 'Person updated successfully',
-        color: 'green',
+        title: "Success",
+        message: "Person updated successfully",
+        color: "green",
       });
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: 'Failed to update person',
-        color: 'red',
+        title: "Error",
+        message: "Failed to update person",
+        color: "red",
       });
       throw error;
     }
   };
 
   const handleDelete = async (id: number) => {
-    const person = people.find(p => p.id === id);
+    const person = people.find((p) => p.id === id);
     if (!person) return;
 
     try {
       const deps = await checkPersonDependencies(id);
-      
+
       modals.openConfirmModal({
-        title: 'Delete Person',
+        title: "Delete Person",
         centered: true,
         children: (
           <Stack gap="sm">
@@ -92,7 +108,8 @@ export function PeopleManagementPage() {
             </Text>
             {deps.assignment_count > 0 && (
               <Alert color="orange" icon={<IconAlertTriangle size={16} />}>
-                This person has {deps.assignment_count} active assignment(s) which will also be deleted.
+                This person has {deps.assignment_count} active assignment(s)
+                which will also be deleted.
               </Alert>
             )}
             {deps.absence_count > 0 && (
@@ -102,7 +119,8 @@ export function PeopleManagementPage() {
             )}
             {(deps.assignment_count > 0 || deps.absence_count > 0) && (
               <Alert color="blue">
-                Capacity calculations will be invalidated and need to be recalculated.
+                Capacity calculations will be invalidated and need to be
+                recalculated.
               </Alert>
             )}
             <Text size="sm" c="dimmed">
@@ -110,42 +128,43 @@ export function PeopleManagementPage() {
             </Text>
           </Stack>
         ),
-        labels: { confirm: 'Delete', cancel: 'Cancel' },
-        confirmProps: { color: 'red' },
+        labels: { confirm: "Delete", cancel: "Cancel" },
+        confirmProps: { color: "red" },
         onConfirm: async () => {
           try {
             await deletePerson(id);
             await loadPeople();
             notifications.show({
-              title: 'Success',
-              message: 'Person deleted successfully',
-              color: 'green',
+              title: "Success",
+              message: "Person deleted successfully",
+              color: "green",
             });
             if (deps.assignment_count > 0) {
               notifications.show({
-                title: 'Recalculation Needed',
-                message: 'Please recalculate capacity allocations in the Analysis tab.',
-                color: 'yellow',
+                title: "Recalculation Needed",
+                message:
+                  "Please recalculate capacity allocations in the Analysis tab.",
+                color: "yellow",
                 autoClose: 5000,
               });
             }
           } catch (error) {
             notifications.show({
-              title: 'Error',
-              message: 'Failed to delete person',
-              color: 'red',
+              title: "Error",
+              message: "Failed to delete person",
+              color: "red",
             });
-            console.error('Failed to delete person:', error);
+            console.error("Failed to delete person:", error);
           }
         },
       });
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: 'Failed to check dependencies',
-        color: 'red',
+        title: "Error",
+        message: "Failed to check dependencies",
+        color: "red",
       });
-      console.error('Failed to check dependencies:', error);
+      console.error("Failed to check dependencies:", error);
     }
   };
 
@@ -187,7 +206,7 @@ export function PeopleManagementPage() {
         onClose={handleCloseForm}
         onSubmit={selectedPerson ? handleUpdate : handleCreate}
         person={selectedPerson}
-        title={selectedPerson ? 'Edit Person' : 'Create Person'}
+        title={selectedPerson ? "Edit Person" : "Create Person"}
       />
     </Container>
   );

@@ -167,7 +167,7 @@ export interface CreateAssignmentInput {
   planning_period_id: number;
   productivity_factor: number;
   start_date?: string; // Defaults to period start
-  end_date?: string;   // Defaults to period end
+  end_date?: string; // Defaults to period end
 }
 
 export interface CreateAbsenceInput {

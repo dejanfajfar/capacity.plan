@@ -1,45 +1,49 @@
-import { useEffect, useState } from 'react';
-import { 
-  Button, 
-  Stack, 
-  Group, 
-  LoadingOverlay, 
-  Paper, 
+import { useEffect, useState } from "react";
+import {
+  Button,
+  Stack,
+  Group,
+  LoadingOverlay,
+  Paper,
   Text,
-} from '@mantine/core';
-import { notifications } from '@mantine/notifications';
-import { modals } from '@mantine/modals';
-import { IconPlus } from '@tabler/icons-react';
-import { AssignmentList } from './AssignmentList';
-import { AssignmentForm } from './AssignmentForm';
-import { 
+} from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { modals } from "@mantine/modals";
+import { IconPlus } from "@tabler/icons-react";
+import { AssignmentList } from "./AssignmentList";
+import { AssignmentForm } from "./AssignmentForm";
+import {
   listAssignments,
   listPeople,
   listProjects,
   createAssignment,
   updateAssignment,
   deleteAssignment,
-} from '../../lib/tauri';
-import type { 
-  Assignment, 
-  CreateAssignmentInput, 
-  PlanningPeriod, 
-  Person, 
-  Project 
-} from '../../types';
+} from "../../lib/tauri";
+import type {
+  Assignment,
+  CreateAssignmentInput,
+  PlanningPeriod,
+  Person,
+  Project,
+} from "../../types";
 
 interface AssignmentManagerProps {
   periodId: number;
   period: PlanningPeriod;
 }
 
-export function AssignmentManager({ periodId, period }: AssignmentManagerProps) {
+export function AssignmentManager({
+  periodId,
+  period,
+}: AssignmentManagerProps) {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [people, setPeople] = useState<Person[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpened, setFormOpened] = useState(false);
-  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+  const [selectedAssignment, setSelectedAssignment] =
+    useState<Assignment | null>(null);
 
   useEffect(() => {
     loadData();
@@ -53,17 +57,17 @@ export function AssignmentManager({ periodId, period }: AssignmentManagerProps) 
         listPeople(),
         listProjects(),
       ]);
-      
+
       setAssignments(assignmentsData);
       setPeople(peopleData);
       setProjects(projectsData);
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: 'Failed to load assignments data',
-        color: 'red',
+        title: "Error",
+        message: "Failed to load assignments data",
+        color: "red",
       });
-      console.error('Failed to load data:', error);
+      console.error("Failed to load data:", error);
     } finally {
       setLoading(false);
     }
@@ -74,17 +78,18 @@ export function AssignmentManager({ periodId, period }: AssignmentManagerProps) 
       await createAssignment(values);
       await loadData();
       notifications.show({
-        title: 'Success',
-        message: 'Assignment created successfully',
-        color: 'green',
+        title: "Success",
+        message: "Assignment created successfully",
+        color: "green",
       });
     } catch (error) {
       // Show the error message from the backend (validation error)
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create assignment';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to create assignment";
       notifications.show({
-        title: 'Error',
+        title: "Error",
         message: errorMessage,
-        color: 'red',
+        color: "red",
       });
       throw error;
     }
@@ -92,21 +97,22 @@ export function AssignmentManager({ periodId, period }: AssignmentManagerProps) 
 
   const handleUpdate = async (values: CreateAssignmentInput) => {
     if (!selectedAssignment) return;
-    
+
     try {
       await updateAssignment(selectedAssignment.id, values);
       await loadData();
       notifications.show({
-        title: 'Success',
-        message: 'Assignment updated successfully',
-        color: 'green',
+        title: "Success",
+        message: "Assignment updated successfully",
+        color: "green",
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update assignment';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to update assignment";
       notifications.show({
-        title: 'Error',
+        title: "Error",
         message: errorMessage,
-        color: 'red',
+        color: "red",
       });
       throw error;
     }
@@ -114,31 +120,32 @@ export function AssignmentManager({ periodId, period }: AssignmentManagerProps) 
 
   const handleDelete = async (id: number) => {
     modals.openConfirmModal({
-      title: 'Delete Assignment',
+      title: "Delete Assignment",
       centered: true,
       children: (
         <Text size="sm">
-          Are you sure you want to delete this assignment? This action cannot be undone.
+          Are you sure you want to delete this assignment? This action cannot be
+          undone.
         </Text>
       ),
-      labels: { confirm: 'Delete', cancel: 'Cancel' },
-      confirmProps: { color: 'red' },
+      labels: { confirm: "Delete", cancel: "Cancel" },
+      confirmProps: { color: "red" },
       onConfirm: async () => {
         try {
           await deleteAssignment(id);
           await loadData();
           notifications.show({
-            title: 'Success',
-            message: 'Assignment deleted successfully',
-            color: 'green',
+            title: "Success",
+            message: "Assignment deleted successfully",
+            color: "green",
           });
         } catch (error) {
           notifications.show({
-            title: 'Error',
-            message: 'Failed to delete assignment',
-            color: 'red',
+            title: "Error",
+            message: "Failed to delete assignment",
+            color: "red",
           });
-          console.error('Failed to delete assignment:', error);
+          console.error("Failed to delete assignment:", error);
         }
       },
     });
@@ -178,16 +185,18 @@ export function AssignmentManager({ periodId, period }: AssignmentManagerProps) 
     <Stack gap="md">
       <Paper p="md" withBorder bg="blue.0">
         <Text size="sm" c="blue.9">
-          Create assignments to allocate people to projects for this planning period. 
-          You must set project requirements before creating assignments.
+          Create assignments to allocate people to projects for this planning
+          period. You must set project requirements before creating assignments.
         </Text>
       </Paper>
 
       <Paper p="md" withBorder pos="relative">
         <LoadingOverlay visible={loading} />
-        
+
         <Group justify="space-between" mb="md">
-          <Text fw={500} size="lg">Assignments</Text>
+          <Text fw={500} size="lg">
+            Assignments
+          </Text>
           <Button
             leftSection={<IconPlus size={18} />}
             onClick={() => setFormOpened(true)}
@@ -211,7 +220,7 @@ export function AssignmentManager({ periodId, period }: AssignmentManagerProps) 
         onSubmit={selectedAssignment ? handleUpdate : handleCreate}
         assignment={selectedAssignment}
         planningPeriod={period}
-        title={selectedAssignment ? 'Edit Assignment' : 'Create Assignment'}
+        title={selectedAssignment ? "Edit Assignment" : "Create Assignment"}
       />
     </Stack>
   );
