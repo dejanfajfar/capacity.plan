@@ -35,7 +35,7 @@ jobs:
           targets: x86_64-pc-windows-msvc
 
       - name: Cache Cargo dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
@@ -103,7 +103,7 @@ jobs:
           rustup target add x86_64-apple-darwin
 
       - name: Cache Cargo dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
