@@ -32,7 +32,7 @@ export function PersonList({ people, onEdit, onDelete }: PersonListProps) {
           <Table.Tr key={person.id}>
             <Table.Td>{person.name}</Table.Td>
             <Table.Td>{person.email}</Table.Td>
-            <Table.Td>{person.available_hours_per_week} hrs</Table.Td>
+            <Table.Td className="numeric-data">{person.available_hours_per_week} hrs</Table.Td>
             <Table.Td>
               <ActionIcon.Group>
                 <ActionIcon

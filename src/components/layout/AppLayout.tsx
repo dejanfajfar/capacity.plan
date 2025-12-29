@@ -1,15 +1,19 @@
-import { AppShell, Burger, Group, Text, NavLink } from '@mantine/core';
+import { AppShell, Burger, Group, Text, NavLink, ActionIcon } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { 
   IconCalendar, 
   IconUsers, 
   IconFolder,
+  IconSun,
+  IconMoon,
 } from '@tabler/icons-react';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export function AppLayout() {
   const [opened, { toggle }] = useDisclosure();
   const location = useLocation();
+  const { colorScheme, toggleColorScheme } = useTheme();
 
   const navItems = [
     { to: '/planning', label: 'Planning Periods', icon: <IconCalendar size={20} /> },
@@ -28,9 +32,20 @@ export function AppLayout() {
       padding="md"
     >
       <AppShell.Header>
-        <Group h="100%" px="md">
-          <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-          <Text size="xl" fw={700}>Capacity Planner</Text>
+        <Group h="100%" px="md" justify="space-between">
+          <Group>
+            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+            <Text size="xl" fw={700}>Capacity Planner</Text>
+          </Group>
+          
+          <ActionIcon
+            variant="subtle"
+            size="lg"
+            onClick={toggleColorScheme}
+            title={`Switch to ${colorScheme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            {colorScheme === 'dark' ? <IconSun size={20} /> : <IconMoon size={20} />}
+          </ActionIcon>
         </Group>
       </AppShell.Header>
 

@@ -9,10 +9,15 @@ import { PlanningSetupPage } from './pages/PlanningSetup';
 import { PeopleManagementPage } from './pages/PeopleManagement';
 import { ProjectsManagementPage } from './pages/ProjectsManagement';
 import { PlanningPeriodDetailPage } from './pages/PlanningPeriodDetail';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { oneDarkTheme, solarizedLightTheme } from './theme';
 
-function App() {
+function AppContent() {
+  const { colorScheme } = useTheme();
+  const theme = colorScheme === 'dark' ? oneDarkTheme : solarizedLightTheme;
+
   return (
-    <MantineProvider>
+    <MantineProvider theme={theme} defaultColorScheme={colorScheme}>
       <ModalsProvider>
         <Notifications />
         <BrowserRouter>
@@ -28,6 +33,14 @@ function App() {
         </BrowserRouter>
       </ModalsProvider>
     </MantineProvider>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }
 

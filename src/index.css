@@ -1,5 +1,67 @@
+/* Import JetBrains Mono from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Mantine will handle most base styles */
+/* CSS Custom Properties for One Dark (Dark Mode) */
+:root[data-mantine-color-scheme="dark"] {
+  --od-bg: #282c34;
+  --od-surface: #21252b;
+  --od-surface-hover: #2c313a;
+  --od-border: #3e4451;
+  --od-text-primary: #abb2bf;
+  --od-text-secondary: #5c6370;
+  --od-text-white: #ffffff;
+  
+  --od-red: #e06c75;
+  --od-orange: #d19a66;
+  --od-yellow: #e5c07b;
+  --od-green: #98c379;
+  --od-cyan: #56b6c2;
+  --od-blue: #61afef;
+  --od-purple: #c678dd;
+}
+
+/* CSS Custom Properties for Solarized Light (Light Mode) */
+:root[data-mantine-color-scheme="light"] {
+  --sl-bg: #fdf6e3;
+  --sl-surface: #eee8d5;
+  --sl-surface-hover: #93a1a1;
+  --sl-border: #839496;
+  --sl-text-primary: #657b83;
+  --sl-text-secondary: #93a1a1;
+  --sl-text-emphasis: #073642;
+  
+  --sl-red: #dc322f;
+  --sl-orange: #cb4b16;
+  --sl-yellow: #b58900;
+  --sl-green: #859900;
+  --sl-cyan: #2aa198;
+  --sl-blue: #268bd2;
+  --sl-magenta: #d33682;
+  --sl-violet: #6c71c4;
+}
+
+/* Utility classes for monospace */
+.numeric-data {
+  font-family: 'JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.percentage,
+.hours {
+  font-family: 'JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Global body background */
+body {
+  background-color: var(--od-bg);
+}
+
+[data-mantine-color-scheme="light"] body {
+  background-color: var(--sl-bg);
+}

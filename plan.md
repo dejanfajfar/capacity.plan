@@ -183,8 +183,15 @@ For each project:
 
 ### Frontend (React)
 - **Framework**: React 18+ with TypeScript
-- **UI Library**: Mantine 
-- **Styling**: Tailwind CSS
+- **UI Library**: Mantine v8.3.10
+- **Styling**: Tailwind CSS + Custom Themes
+- **Theme System**: 
+  - Dark Mode: One Dark (Atom/VS Code inspired)
+  - Light Mode: Solarized Light
+  - Toggle persistence via localStorage
+- **Typography**:
+  - Sans-serif: Inter (headers, navigation, body text)
+  - Monospace: JetBrains Mono (numbers, tables, buttons, inputs)
 - **State Management**: Zustand or React Context (local-first, simple)
 - **Routing**: React Router
 - **Forms**: React Hook Form + Zod validation
@@ -201,6 +208,121 @@ For each project:
 - **Date Handling**: chrono
 - **Commands**: Tauri commands for all CRUD operations
 - **Business Logic**: Rust functions for calculations and validations
+
+---
+
+## Design System & Theming
+
+### Color Themes
+
+#### One Dark Theme (Dark Mode)
+Inspired by Atom/VS Code One Dark, with syntax-highlighting color palette:
+
+**Background Colors:**
+- Background: `#282c34`
+- Surface: `#21252b`
+- Surface Hover: `#2c313a`
+- Border: `#3e4451`
+
+**Text Colors:**
+- Primary: `#abb2bf`
+- Secondary: `#5c6370`
+- White: `#ffffff`
+
+**Accent Colors** (10-shade interpolated palettes):
+- Red: `#e06c75` - Errors, overcommitted status
+- Orange: `#d19a66` - Warnings, underutilized status
+- Yellow: `#e5c07b` - Caution, at-risk indicators
+- Green: `#98c379` - Success, OK status
+- Cyan: `#56b6c2` - Info, links
+- Blue: `#61afef` - Primary actions, pinned items
+- Purple: `#c678dd` - Special states
+
+#### Solarized Light Theme (Light Mode)
+Classic Solarized Light palette for daytime use:
+
+**Background Colors:**
+- Background: `#fdf6e3` (base3)
+- Surface: `#eee8d5` (base2)
+- Surface Hover: `#93a1a1` (base1)
+- Border: `#839496` (base0)
+
+**Text Colors:**
+- Primary: `#657b83` (base00)
+- Secondary: `#93a1a1` (base1)
+- Emphasis: `#073642` (base02)
+
+**Accent Colors** (10-shade interpolated palettes):
+- Red: `#dc322f` - Errors, alerts
+- Orange: `#cb4b16` - Warnings
+- Yellow: `#b58900` - Caution
+- Green: `#859900` - Success
+- Cyan: `#2aa198` - Info
+- Blue: `#268bd2` - Primary actions
+- Magenta: `#d33682` - Special states
+- Violet: `#6c71c4` - Accents
+
+**UI Component Color Usage:**
+- **Header/Navbar Background**: `#eee8d5` (base2 - light surface)
+- **Main Content Background**: `#fdf6e3` (base3 - lightest)
+- **Borders**: `#93a1a1` (base1 - subtle gray)
+- **Table Headers**: `#eee8d5` (base2 - matches header)
+- **Card/Paper Background**: `#ffffff` (pure white)
+- **Input Background**: `#ffffff` (pure white)
+- **Hover States**: `#93a1a1` (base1 - subtle highlight)
+- **Active Nav Item**: `#839496` (base0 - medium gray)
+- **Text in Inputs/Headers**: `#073642` (base02 - dark text)
+- **Body Text**: `#657b83` (base00 - primary text)
+- **Dimmed Text**: `#93a1a1` (base1 - subtle gray)
+
+### Typography
+
+**Font Loading:**
+- JetBrains Mono loaded via Google Fonts CDN
+- Inter loaded via system font stack fallback
+
+**Font Application:**
+
+**Monospace (JetBrains Mono):**
+- All numeric data (percentages, hours, counts)
+- All table content (headers and cells)
+- All button labels
+- All input fields (text, number, select)
+- All badges and status indicators
+
+**Sans-serif (Inter):**
+- Page titles and headers (H1, H2, H3)
+- Navigation menu items
+- Body text and descriptions
+- Long-form content
+
+**Utility Classes:**
+```css
+.numeric-data {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+```
+
+### Theme Toggle
+- Located in header (right side, next to app title)
+- Icon: Sun (light mode) / Moon (dark mode)
+- Persists preference in localStorage
+- Smooth transition between themes
+
+### Status Color Mappings
+
+**Person Utilization:**
+- 0-49%: Orange - "Underutilized"
+- 50-95%: Green - "OK"
+- 96-100%: Red - "Capacity"
+- >100%: Red - "Overcommitted"
+
+**Project Staffing:**
+- ≥100%: Green - "Viable"
+- 80-99%: Yellow - "At Risk"
+- <80%: Red - "Under-Staffed"
 
 ---
 

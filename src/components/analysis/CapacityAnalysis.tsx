@@ -217,7 +217,7 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                       <Group justify="space-between" wrap="nowrap">
                         <div>
                           <Text fw={500}>{person.person_name}</Text>
-                          <Text size="sm" c="dimmed">
+                          <Text size="sm" c="dimmed" className="numeric-data">
                             {person.total_available_hours.toFixed(0)}h available
                           </Text>
                         </div>
@@ -228,7 +228,7 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                               color={getUtilizationColor(person.utilization_percentage)}
                               size="lg"
                             />
-                            <Text size="xs" ta="center" mt={4}>
+                            <Text size="xs" ta="center" mt={4} className="numeric-data">
                               {person.utilization_percentage.toFixed(1)}% utilized
                             </Text>
                           </div>
@@ -266,8 +266,8 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                               {person.assignments.map((assignment) => (
                                 <Table.Tr key={assignment.assignment_id}>
                                    <Table.Td>{assignment.project_name}</Table.Td>
-                                   <Table.Td>{assignment.allocation_percentage.toFixed(1)}%</Table.Td>
-                                   <Table.Td>{assignment.effective_hours.toFixed(1)}h</Table.Td>
+                                   <Table.Td className="numeric-data">{assignment.allocation_percentage.toFixed(1)}%</Table.Td>
+                                   <Table.Td className="numeric-data">{assignment.effective_hours.toFixed(1)}h</Table.Td>
                                   <Table.Td>
                                     {assignment.is_pinned && (
                                       <Badge size="sm" variant="light">Pinned</Badge>
@@ -281,13 +281,13 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                         <Group gap="lg">
                           <div>
                             <Text size="sm" c="dimmed">Total Effective Hours</Text>
-                            <Text size="lg" fw={500}>
+                            <Text size="lg" fw={500} className="numeric-data">
                               {person.total_effective_hours.toFixed(1)}h
                             </Text>
                           </div>
                           <div>
                             <Text size="sm" c="dimmed">Total Allocated Hours</Text>
-                            <Text size="lg" fw={500}>
+                            <Text size="lg" fw={500} className="numeric-data">
                               {person.total_allocated_hours.toFixed(1)}h
                             </Text>
                           </div>
@@ -309,7 +309,7 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                       <Group justify="space-between" wrap="nowrap">
                         <div>
                           <Text fw={500}>{project.project_name}</Text>
-                          <Text size="sm" c="dimmed">
+                          <Text size="sm" c="dimmed" className="numeric-data">
                             {project.required_hours.toFixed(0)}h required
                           </Text>
                         </div>
@@ -320,7 +320,7 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                               color={getStaffingColor(project.staffing_percentage)}
                               size="lg"
                             />
-                            <Text size="xs" ta="center" mt={4}>
+                            <Text size="xs" ta="center" mt={4} className="numeric-data">
                               {project.staffing_percentage.toFixed(1)}% staffed
                             </Text>
                           </div>
@@ -339,8 +339,8 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                         {!project.is_viable && (
                           <Alert icon={<IconAlertTriangle size={16} />} color="red">
                             <Text size="sm">
-                              <strong>Shortfall:</strong> {project.shortfall.toFixed(1)}h needed
-                              ({((project.shortfall / project.required_hours) * 100).toFixed(1)}% under capacity)
+                              <strong>Shortfall:</strong> <span className="numeric-data">{project.shortfall.toFixed(1)}h</span> needed
+                              (<span className="numeric-data">{((project.shortfall / project.required_hours) * 100).toFixed(1)}%</span> under capacity)
                             </Text>
                             <Text size="sm" mt="xs">
                               Consider assigning more people, increasing productivity factors, or reducing project scope.
@@ -362,9 +362,9 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                               {project.assigned_people.map((person) => (
                                 <Table.Tr key={person.assignment_id}>
                                    <Table.Td>{person.person_name}</Table.Td>
-                                   <Table.Td>{person.allocation_percentage.toFixed(1)}%</Table.Td>
-                                   <Table.Td>{(person.productivity_factor * 100).toFixed(0)}%</Table.Td>
-                                  <Table.Td>{person.effective_hours.toFixed(1)}h</Table.Td>
+                                   <Table.Td className="numeric-data">{person.allocation_percentage.toFixed(1)}%</Table.Td>
+                                   <Table.Td className="numeric-data">{(person.productivity_factor * 100).toFixed(0)}%</Table.Td>
+                                  <Table.Td className="numeric-data">{person.effective_hours.toFixed(1)}h</Table.Td>
                                 </Table.Tr>
                               ))}
                             </Table.Tbody>
@@ -373,13 +373,13 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                         <Group gap="lg">
                           <div>
                             <Text size="sm" c="dimmed">Total Effective Hours</Text>
-                            <Text size="lg" fw={500}>
+                            <Text size="lg" fw={500} className="numeric-data">
                               {project.total_effective_hours.toFixed(1)}h / {project.required_hours.toFixed(0)}h
                             </Text>
                           </div>
                           <div>
                             <Text size="sm" c="dimmed">Total Allocated Hours</Text>
-                            <Text size="lg" fw={500}>
+                            <Text size="lg" fw={500} className="numeric-data">
                               {project.total_allocated_hours.toFixed(1)}h
                             </Text>
                           </div>
