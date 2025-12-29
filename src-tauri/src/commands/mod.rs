@@ -1,14 +1,13 @@
+use crate::capacity::{
+    calculate_person_available_hours, optimize_assignments_proportional, AssignmentSummary,
+    CapacityOverview, OptimizationResult, PersonAssignmentSummary, PersonCapacity, ProjectStaffing,
+};
 use crate::db::DbPool;
 use crate::models::{
     Absence, Assignment, CreateAbsenceInput, CreateAssignmentInput, CreatePersonInput,
     CreatePlanningPeriodInput, CreateProjectInput, CreateProjectRequirementInput, Person,
-    PlanningPeriod, Project, ProjectRequirement, PersonDependencies, ProjectDependencies,
-    PlanningPeriodDependencies,
-};
-use crate::capacity::{
-    optimize_assignments_proportional, AssignmentSummary, CapacityOverview,
-    OptimizationResult, PersonAssignmentSummary, PersonCapacity, ProjectStaffing,
-    calculate_person_available_hours,
+    PersonDependencies, PlanningPeriod, PlanningPeriodDependencies, Project, ProjectDependencies,
+    ProjectRequirement,
 };
 use log::{debug, error, info, warn};
 use std::collections::HashMap;
@@ -88,7 +87,7 @@ pub async fn delete_person(pool: tauri::State<'_, DbPool>, id: i64) -> Result<()
          SET calculated_allocation_percentage = NULL,
              calculated_effective_hours = NULL,
              last_calculated_at = NULL
-         WHERE person_id = ?"
+         WHERE person_id = ?",
     )
     .bind(id)
     .execute(pool.inner())
@@ -108,7 +107,10 @@ pub async fn delete_person(pool: tauri::State<'_, DbPool>, id: i64) -> Result<()
             e.to_string()
         })?;
 
-    info!("Successfully deleted person ID: {} and invalidated allocations", id);
+    info!(
+        "Successfully deleted person ID: {} and invalidated allocations",
+        id
+    );
     Ok(())
 }
 
@@ -119,29 +121,30 @@ pub async fn check_person_dependencies(
 ) -> Result<PersonDependencies, String> {
     debug!("Checking dependencies for person ID: {}", id);
 
-    let assignment_count = sqlx::query_scalar::<_, i64>(
-        "SELECT COUNT(*) FROM assignments WHERE person_id = ?"
-    )
-    .bind(id)
-    .fetch_one(pool.inner())
-    .await
-    .map_err(|e| {
-        error!("Failed to count assignments: {}", e);
-        e.to_string()
-    })?;
+    let assignment_count =
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM assignments WHERE person_id = ?")
+            .bind(id)
+            .fetch_one(pool.inner())
+            .await
+            .map_err(|e| {
+                error!("Failed to count assignments: {}", e);
+                e.to_string()
+            })?;
 
-    let absence_count = sqlx::query_scalar::<_, i64>(
-        "SELECT COUNT(*) FROM absences WHERE person_id = ?"
-    )
-    .bind(id)
-    .fetch_one(pool.inner())
-    .await
-    .map_err(|e| {
-        error!("Failed to count absences: {}", e);
-        e.to_string()
-    })?;
+    let absence_count =
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM absences WHERE person_id = ?")
+            .bind(id)
+            .fetch_one(pool.inner())
+            .await
+            .map_err(|e| {
+                error!("Failed to count absences: {}", e);
+                e.to_string()
+            })?;
 
-    info!("Person ID {} has {} assignments and {} absences", id, assignment_count, absence_count);
+    info!(
+        "Person ID {} has {} assignments and {} absences",
+        id, assignment_count, absence_count
+    );
 
     Ok(PersonDependencies {
         assignment_count,
@@ -247,7 +250,7 @@ pub async fn delete_project(pool: tauri::State<'_, DbPool>, id: i64) -> Result<(
          SET calculated_allocation_percentage = NULL,
              calculated_effective_hours = NULL,
              last_calculated_at = NULL
-         WHERE project_id = ?"
+         WHERE project_id = ?",
     )
     .bind(id)
     .execute(pool.inner())
@@ -267,7 +270,10 @@ pub async fn delete_project(pool: tauri::State<'_, DbPool>, id: i64) -> Result<(
             e.to_string()
         })?;
 
-    info!("Successfully deleted project ID: {} and invalidated allocations", id);
+    info!(
+        "Successfully deleted project ID: {} and invalidated allocations",
+        id
+    );
     Ok(())
 }
 
@@ -279,7 +285,7 @@ pub async fn check_project_dependencies(
     debug!("Checking dependencies for project ID: {}", id);
 
     let requirement_count = sqlx::query_scalar::<_, i64>(
-        "SELECT COUNT(*) FROM project_requirements WHERE project_id = ?"
+        "SELECT COUNT(*) FROM project_requirements WHERE project_id = ?",
     )
     .bind(id)
     .fetch_one(pool.inner())
@@ -289,18 +295,20 @@ pub async fn check_project_dependencies(
         e.to_string()
     })?;
 
-    let assignment_count = sqlx::query_scalar::<_, i64>(
-        "SELECT COUNT(*) FROM assignments WHERE project_id = ?"
-    )
-    .bind(id)
-    .fetch_one(pool.inner())
-    .await
-    .map_err(|e| {
-        error!("Failed to count assignments: {}", e);
-        e.to_string()
-    })?;
+    let assignment_count =
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM assignments WHERE project_id = ?")
+            .bind(id)
+            .fetch_one(pool.inner())
+            .await
+            .map_err(|e| {
+                error!("Failed to count assignments: {}", e);
+                e.to_string()
+            })?;
 
-    info!("Project ID {} has {} requirements and {} assignments", id, requirement_count, assignment_count);
+    info!(
+        "Project ID {} has {} requirements and {} assignments",
+        id, requirement_count, assignment_count
+    );
 
     Ok(ProjectDependencies {
         requirement_count,
@@ -391,7 +399,7 @@ pub async fn delete_planning_period(pool: tauri::State<'_, DbPool>, id: i64) -> 
          SET calculated_allocation_percentage = NULL,
              calculated_effective_hours = NULL,
              last_calculated_at = NULL
-         WHERE planning_period_id = ?"
+         WHERE planning_period_id = ?",
     )
     .bind(id)
     .execute(pool.inner())
@@ -411,7 +419,10 @@ pub async fn delete_planning_period(pool: tauri::State<'_, DbPool>, id: i64) -> 
             e.to_string()
         })?;
 
-    info!("Successfully deleted planning period ID: {} and invalidated allocations", id);
+    info!(
+        "Successfully deleted planning period ID: {} and invalidated allocations",
+        id
+    );
     Ok(())
 }
 
@@ -423,7 +434,7 @@ pub async fn check_planning_period_dependencies(
     debug!("Checking dependencies for planning period ID: {}", id);
 
     let requirement_count = sqlx::query_scalar::<_, i64>(
-        "SELECT COUNT(*) FROM project_requirements WHERE planning_period_id = ?"
+        "SELECT COUNT(*) FROM project_requirements WHERE planning_period_id = ?",
     )
     .bind(id)
     .fetch_one(pool.inner())
@@ -434,7 +445,7 @@ pub async fn check_planning_period_dependencies(
     })?;
 
     let assignment_count = sqlx::query_scalar::<_, i64>(
-        "SELECT COUNT(*) FROM assignments WHERE planning_period_id = ?"
+        "SELECT COUNT(*) FROM assignments WHERE planning_period_id = ?",
     )
     .bind(id)
     .fetch_one(pool.inner())
@@ -444,7 +455,10 @@ pub async fn check_planning_period_dependencies(
         e.to_string()
     })?;
 
-    info!("Planning period ID {} has {} requirements and {} assignments", id, requirement_count, assignment_count);
+    info!(
+        "Planning period ID {} has {} requirements and {} assignments",
+        id, requirement_count, assignment_count
+    );
 
     Ok(PlanningPeriodDependencies {
         requirement_count,
@@ -863,7 +877,7 @@ pub async fn list_absences(
     debug!("Fetching absences for person ID: {}", person_id);
 
     let absences = sqlx::query_as::<_, Absence>(
-        "SELECT * FROM absences WHERE person_id = ? ORDER BY start_date DESC"
+        "SELECT * FROM absences WHERE person_id = ? ORDER BY start_date DESC",
     )
     .bind(person_id)
     .fetch_all(pool.inner())
@@ -886,7 +900,7 @@ pub async fn create_absence(
 
     let result = sqlx::query(
         "INSERT INTO absences (person_id, start_date, end_date, days, reason) 
-         VALUES (?, ?, ?, ?, ?)"
+         VALUES (?, ?, ?, ?, ?)",
     )
     .bind(input.person_id)
     .bind(&input.start_date)
@@ -942,10 +956,13 @@ pub async fn optimize_assignments(
     pool: tauri::State<'_, DbPool>,
     planning_period_id: i64,
 ) -> Result<OptimizationResult, String> {
-    info!("Running optimization for planning period ID: {}", planning_period_id);
-    
+    info!(
+        "Running optimization for planning period ID: {}",
+        planning_period_id
+    );
+
     let result = optimize_assignments_proportional(planning_period_id, pool.inner()).await?;
-    
+
     info!("Optimization completed successfully");
     Ok(result)
 }
@@ -959,16 +976,18 @@ pub async fn get_capacity_overview(
     pool: tauri::State<'_, DbPool>,
     planning_period_id: i64,
 ) -> Result<CapacityOverview, String> {
-    debug!("Getting capacity overview for planning period ID: {}", planning_period_id);
+    debug!(
+        "Getting capacity overview for planning period ID: {}",
+        planning_period_id
+    );
 
     // Load planning period
-    let planning_period = sqlx::query_as::<_, PlanningPeriod>(
-        "SELECT * FROM planning_periods WHERE id = ?"
-    )
-    .bind(planning_period_id)
-    .fetch_one(pool.inner())
-    .await
-    .map_err(|e| format!("Failed to fetch planning period: {}", e))?;
+    let planning_period =
+        sqlx::query_as::<_, PlanningPeriod>("SELECT * FROM planning_periods WHERE id = ?")
+            .bind(planning_period_id)
+            .fetch_one(pool.inner())
+            .await
+            .map_err(|e| format!("Failed to fetch planning period: {}", e))?;
 
     // Load all people
     let people = sqlx::query_as::<_, Person>("SELECT * FROM people ORDER BY name")
@@ -984,7 +1003,7 @@ pub async fn get_capacity_overview(
 
     // Load project requirements
     let requirements = sqlx::query_as::<_, ProjectRequirement>(
-        "SELECT * FROM project_requirements WHERE planning_period_id = ?"
+        "SELECT * FROM project_requirements WHERE planning_period_id = ?",
     )
     .bind(planning_period_id)
     .fetch_all(pool.inner())
@@ -997,21 +1016,21 @@ pub async fn get_capacity_overview(
         .collect();
 
     // Load all assignments for this planning period
-    let assignments = sqlx::query_as::<_, Assignment>(
-        "SELECT * FROM assignments WHERE planning_period_id = ?"
-    )
-    .bind(planning_period_id)
-    .fetch_all(pool.inner())
-    .await
-    .map_err(|e| format!("Failed to fetch assignments: {}", e))?;
+    let assignments =
+        sqlx::query_as::<_, Assignment>("SELECT * FROM assignments WHERE planning_period_id = ?")
+            .bind(planning_period_id)
+            .fetch_all(pool.inner())
+            .await
+            .map_err(|e| format!("Failed to fetch assignments: {}", e))?;
 
     // Build people capacity
     let mut people_capacity = Vec::new();
     let mut over_committed_count = 0;
 
     for person in &people {
-        let available_hours = calculate_person_available_hours(person, &planning_period, pool.inner()).await?;
-        
+        let available_hours =
+            calculate_person_available_hours(person, &planning_period, pool.inner()).await?;
+
         let person_assignments: Vec<&Assignment> = assignments
             .iter()
             .filter(|a| a.person_id == person.id)
@@ -1091,10 +1110,12 @@ pub async fn get_capacity_overview(
 
             for assignment in &project_assignments {
                 let person = people.iter().find(|p| p.id == assignment.person_id);
-                
+
                 if let Some(person) = person {
-                    let available_hours = calculate_person_available_hours(person, &planning_period, pool.inner()).await?;
-                    
+                    let available_hours =
+                        calculate_person_available_hours(person, &planning_period, pool.inner())
+                            .await?;
+
                     let allocation_pct = if assignment.is_pinned {
                         assignment.pinned_allocation_percentage.unwrap_or(0.0)
                     } else {
@@ -1167,7 +1188,10 @@ pub async fn get_person_capacity(
     person_id: i64,
     planning_period_id: i64,
 ) -> Result<PersonCapacity, String> {
-    debug!("Getting capacity for person ID: {} in period ID: {}", person_id, planning_period_id);
+    debug!(
+        "Getting capacity for person ID: {} in period ID: {}",
+        person_id, planning_period_id
+    );
 
     // Load person
     let person = sqlx::query_as::<_, Person>("SELECT * FROM people WHERE id = ?")
@@ -1177,20 +1201,20 @@ pub async fn get_person_capacity(
         .map_err(|e| format!("Failed to fetch person: {}", e))?;
 
     // Load planning period
-    let planning_period = sqlx::query_as::<_, PlanningPeriod>(
-        "SELECT * FROM planning_periods WHERE id = ?"
-    )
-    .bind(planning_period_id)
-    .fetch_one(pool.inner())
-    .await
-    .map_err(|e| format!("Failed to fetch planning period: {}", e))?;
+    let planning_period =
+        sqlx::query_as::<_, PlanningPeriod>("SELECT * FROM planning_periods WHERE id = ?")
+            .bind(planning_period_id)
+            .fetch_one(pool.inner())
+            .await
+            .map_err(|e| format!("Failed to fetch planning period: {}", e))?;
 
     // Calculate available hours
-    let available_hours = calculate_person_available_hours(&person, &planning_period, pool.inner()).await?;
+    let available_hours =
+        calculate_person_available_hours(&person, &planning_period, pool.inner()).await?;
 
     // Load assignments
     let assignments = sqlx::query_as::<_, Assignment>(
-        "SELECT * FROM assignments WHERE person_id = ? AND planning_period_id = ?"
+        "SELECT * FROM assignments WHERE person_id = ? AND planning_period_id = ?",
     )
     .bind(person_id)
     .bind(planning_period_id)
@@ -1216,11 +1240,12 @@ pub async fn get_person_capacity(
         total_effective_hours += effective_hours;
 
         // Get project name
-        let project_name = sqlx::query_scalar::<_, String>("SELECT name FROM projects WHERE id = ?")
-            .bind(assignment.project_id)
-            .fetch_one(pool.inner())
-            .await
-            .unwrap_or_else(|_| format!("Project {}", assignment.project_id));
+        let project_name =
+            sqlx::query_scalar::<_, String>("SELECT name FROM projects WHERE id = ?")
+                .bind(assignment.project_id)
+                .fetch_one(pool.inner())
+                .await
+                .unwrap_or_else(|_| format!("Project {}", assignment.project_id));
 
         assignment_summaries.push(AssignmentSummary {
             assignment_id: assignment.id,
@@ -1258,7 +1283,10 @@ pub async fn get_project_staffing(
     project_id: i64,
     planning_period_id: i64,
 ) -> Result<ProjectStaffing, String> {
-    debug!("Getting staffing for project ID: {} in period ID: {}", project_id, planning_period_id);
+    debug!(
+        "Getting staffing for project ID: {} in period ID: {}",
+        project_id, planning_period_id
+    );
 
     // Load project
     let project = sqlx::query_as::<_, Project>("SELECT * FROM projects WHERE id = ?")
@@ -1268,17 +1296,16 @@ pub async fn get_project_staffing(
         .map_err(|e| format!("Failed to fetch project: {}", e))?;
 
     // Load planning period
-    let planning_period = sqlx::query_as::<_, PlanningPeriod>(
-        "SELECT * FROM planning_periods WHERE id = ?"
-    )
-    .bind(planning_period_id)
-    .fetch_one(pool.inner())
-    .await
-    .map_err(|e| format!("Failed to fetch planning period: {}", e))?;
+    let planning_period =
+        sqlx::query_as::<_, PlanningPeriod>("SELECT * FROM planning_periods WHERE id = ?")
+            .bind(planning_period_id)
+            .fetch_one(pool.inner())
+            .await
+            .map_err(|e| format!("Failed to fetch planning period: {}", e))?;
 
     // Load project requirement
     let requirement = sqlx::query_as::<_, ProjectRequirement>(
-        "SELECT * FROM project_requirements WHERE project_id = ? AND planning_period_id = ?"
+        "SELECT * FROM project_requirements WHERE project_id = ? AND planning_period_id = ?",
     )
     .bind(project_id)
     .bind(planning_period_id)
@@ -1288,7 +1315,7 @@ pub async fn get_project_staffing(
 
     // Load assignments
     let assignments = sqlx::query_as::<_, Assignment>(
-        "SELECT * FROM assignments WHERE project_id = ? AND planning_period_id = ?"
+        "SELECT * FROM assignments WHERE project_id = ? AND planning_period_id = ?",
     )
     .bind(project_id)
     .bind(planning_period_id)
@@ -1308,7 +1335,8 @@ pub async fn get_project_staffing(
             .await
             .map_err(|e| format!("Failed to fetch person: {}", e))?;
 
-        let available_hours = calculate_person_available_hours(&person, &planning_period, pool.inner()).await?;
+        let available_hours =
+            calculate_person_available_hours(&person, &planning_period, pool.inner()).await?;
 
         let allocation_pct = if assignment.is_pinned {
             assignment.pinned_allocation_percentage.unwrap_or(0.0)

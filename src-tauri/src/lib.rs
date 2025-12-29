@@ -5,14 +5,15 @@ pub mod logger;
 mod models;
 
 use commands::{
-    batch_upsert_project_requirements, check_person_dependencies, check_planning_period_dependencies,
-    check_project_dependencies, create_absence, create_assignment, create_person,
-    create_planning_period, create_project, delete_absence, delete_assignment, delete_person,
-    delete_planning_period, delete_project, delete_project_requirement, get_capacity_overview,
-    get_person_capacity, get_project_requirement, get_project_staffing, list_absences,
-    list_assignments, list_people, list_planning_periods, list_project_requirements,
-    list_projects, optimize_assignments, update_assignment, update_person,
-    update_planning_period, update_project, upsert_project_requirement,
+    batch_upsert_project_requirements, check_person_dependencies,
+    check_planning_period_dependencies, check_project_dependencies, create_absence,
+    create_assignment, create_person, create_planning_period, create_project, delete_absence,
+    delete_assignment, delete_person, delete_planning_period, delete_project,
+    delete_project_requirement, get_capacity_overview, get_person_capacity,
+    get_project_requirement, get_project_staffing, list_absences, list_assignments, list_people,
+    list_planning_periods, list_project_requirements, list_projects, optimize_assignments,
+    update_assignment, update_person, update_planning_period, update_project,
+    upsert_project_requirement,
 };
 use db::init_database;
 use tauri::Manager;
