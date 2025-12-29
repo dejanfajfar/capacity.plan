@@ -1,14 +1,20 @@
 import { ActionIcon, Table, Text } from "@mantine/core";
-import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconTrash, IconEye } from "@tabler/icons-react";
 import type { Person } from "../../types";
 
 interface PersonListProps {
   people: Person[];
   onEdit: (person: Person) => void;
   onDelete: (id: number) => void;
+  onView: (personId: number) => void;
 }
 
-export function PersonList({ people, onEdit, onDelete }: PersonListProps) {
+export function PersonList({
+  people,
+  onEdit,
+  onDelete,
+  onView,
+}: PersonListProps) {
   if (people.length === 0) {
     return (
       <Text c="dimmed" ta="center" py="xl">
@@ -29,17 +35,29 @@ export function PersonList({ people, onEdit, onDelete }: PersonListProps) {
       </Table.Thead>
       <Table.Tbody>
         {people.map((person) => (
-          <Table.Tr key={person.id}>
+          <Table.Tr
+            key={person.id}
+            style={{ cursor: "pointer" }}
+            onClick={() => onView(person.id)}
+          >
             <Table.Td>{person.name}</Table.Td>
             <Table.Td>{person.email}</Table.Td>
             <Table.Td className="numeric-data">
               {person.available_hours_per_week} hrs
             </Table.Td>
-            <Table.Td>
+            <Table.Td onClick={(e) => e.stopPropagation()}>
               <ActionIcon.Group>
                 <ActionIcon
                   variant="subtle"
                   color="blue"
+                  onClick={() => onView(person.id)}
+                  title="View details"
+                >
+                  <IconEye size={18} />
+                </ActionIcon>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
                   onClick={() => onEdit(person)}
                   title="Edit person"
                 >

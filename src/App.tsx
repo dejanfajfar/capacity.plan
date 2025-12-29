@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppLayout } from "./components/layout/AppLayout";
 import { PlanningSetupPage } from "./pages/PlanningSetup";
 import { PeopleManagementPage } from "./pages/PeopleManagement";
+import { PersonDetailPage } from "./pages/PersonDetail";
 import { ProjectsManagementPage } from "./pages/ProjectsManagement";
 import { PlanningPeriodDetailPage } from "./pages/PlanningPeriodDetail";
 import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
@@ -30,6 +31,7 @@ function AppContent() {
                 element={<PlanningPeriodDetailPage />}
               />
               <Route path="people" element={<PeopleManagementPage />} />
+              <Route path="people/:personId" element={<PersonDetailPage />} />
               <Route path="projects" element={<ProjectsManagementPage />} />
             </Route>
           </Routes>

@@ -13,6 +13,7 @@ import {
 import { notifications } from "@mantine/notifications";
 import { modals } from "@mantine/modals";
 import { IconPlus, IconAlertTriangle } from "@tabler/icons-react";
+import { useNavigate } from "react-router-dom";
 import { PersonList } from "../components/people/PersonList";
 import { PersonForm } from "../components/people/PersonForm";
 import {
@@ -25,6 +26,7 @@ import {
 import type { Person, CreatePersonInput } from "../types";
 
 export function PeopleManagementPage() {
+  const navigate = useNavigate();
   const [people, setPeople] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpened, setFormOpened] = useState(false);
@@ -173,6 +175,10 @@ export function PeopleManagementPage() {
     setFormOpened(true);
   };
 
+  const handleView = (personId: number) => {
+    navigate(`/people/${personId}`);
+  };
+
   const handleCloseForm = () => {
     setFormOpened(false);
     setSelectedPerson(null);
@@ -197,6 +203,7 @@ export function PeopleManagementPage() {
             people={people}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onView={handleView}
           />
         </Paper>
       </Stack>
