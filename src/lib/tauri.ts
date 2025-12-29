@@ -211,6 +211,13 @@ export async function createAbsence(
   return await invoke("create_absence", { input });
 }
 
+export async function updateAbsence(
+  id: number,
+  input: CreateAbsenceInput,
+): Promise<Absence> {
+  return await invoke("update_absence", { id, input });
+}
+
 export async function deleteAbsence(id: number): Promise<void> {
   return await invoke("delete_absence", { id });
 }

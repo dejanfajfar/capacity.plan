@@ -931,6 +931,44 @@ pub async fn create_absence(
 }
 
 #[tauri::command]
+pub async fn update_absence(
+    pool: tauri::State<'_, DbPool>,
+    id: i64,
+    input: CreateAbsenceInput,
+) -> Result<Absence, String> {
+    debug!("Updating absence ID: {}", id);
+
+    sqlx::query(
+        "UPDATE absences 
+         SET start_date = ?, end_date = ?, days = ?, reason = ?
+         WHERE id = ?",
+    )
+    .bind(&input.start_date)
+    .bind(&input.end_date)
+    .bind(input.days)
+    .bind(&input.reason)
+    .bind(id)
+    .execute(pool.inner())
+    .await
+    .map_err(|e| {
+        error!("Failed to update absence: {}", e);
+        e.to_string()
+    })?;
+
+    let absence = sqlx::query_as::<_, Absence>("SELECT * FROM absences WHERE id = ?")
+        .bind(id)
+        .fetch_one(pool.inner())
+        .await
+        .map_err(|e| {
+            error!("Failed to fetch updated absence: {}", e);
+            e.to_string()
+        })?;
+
+    info!("Successfully updated absence ID: {}", id);
+    Ok(absence)
+}
+
+#[tauri::command]
 pub async fn delete_absence(pool: tauri::State<'_, DbPool>, id: i64) -> Result<(), String> {
     debug!("Deleting absence ID: {}", id);
 

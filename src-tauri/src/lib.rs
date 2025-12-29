@@ -12,7 +12,7 @@ use commands::{
     delete_project_requirement, get_capacity_overview, get_person_capacity,
     get_project_requirement, get_project_staffing, list_absences, list_assignments, list_people,
     list_planning_periods, list_project_requirements, list_projects, optimize_assignments,
-    update_assignment, update_person, update_planning_period, update_project,
+    update_absence, update_assignment, update_person, update_planning_period, update_project,
     upsert_project_requirement,
 };
 use db::init_database;
@@ -62,6 +62,7 @@ pub fn run() {
             delete_assignment,
             list_absences,
             create_absence,
+            update_absence,
             delete_absence,
             optimize_assignments,
             get_capacity_overview,
