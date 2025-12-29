@@ -1,4 +1,3 @@
-
 use crate::db::DbPool;
 use crate::models::{
     Absence as ModelAbsence, Assignment, Person, PlanningPeriod, ProjectRequirement,
@@ -226,7 +225,7 @@ pub async fn optimize_assignments_proportional(
     for assignment in &assignments {
         assignments_by_project
             .entry(assignment.project_id)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(assignment);
     }
 
@@ -296,7 +295,7 @@ pub async fn optimize_assignments_proportional(
     // Group assignments by project and priority
     let mut projects_by_priority: Vec<(i64, i64)> = Vec::new(); // (priority, project_id)
 
-    for (project_id, _) in &assignments_by_project {
+    for project_id in assignments_by_project.keys() {
         let requirement = match requirements_map.get(project_id) {
             Some(req) => req,
             None => {
