@@ -1,5 +1,7 @@
 use crate::db::DbPool;
-use crate::models::{Absence as ModelAbsence, Assignment, Person, PlanningPeriod, ProjectRequirement};
+use crate::models::{
+    Absence as ModelAbsence, Assignment, Person, PlanningPeriod, ProjectRequirement,
+};
 use chrono::NaiveDate;
 use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
