@@ -53,6 +53,9 @@ pub struct PersonCapacity {
     pub utilization_percentage: f64,
     pub is_over_committed: bool,
     pub assignments: Vec<AssignmentSummary>,
+    pub absence_days: i64,
+    pub absence_hours: f64,
+    pub base_available_hours: f64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -84,6 +87,16 @@ pub struct PersonAssignmentSummary {
     pub allocation_percentage: f64,
     pub productivity_factor: f64,
     pub effective_hours: f64,
+    pub absence_days: i64,
+    pub absence_hours: f64,
+}
+
+#[derive(Debug)]
+pub struct PersonAvailableHoursBreakdown {
+    pub available_hours: f64,
+    pub base_hours: f64,
+    pub absence_days: i64,
+    pub absence_hours: f64,
 }
 
 // Core calculation functions
@@ -93,7 +106,7 @@ pub async fn calculate_person_available_hours(
     person: &Person,
     planning_period: &PlanningPeriod,
     pool: &DbPool,
-) -> Result<f64, String> {
+) -> Result<PersonAvailableHoursBreakdown, String> {
     // Parse dates
     let start = NaiveDate::parse_from_str(&planning_period.start_date, "%Y-%m-%d")
         .map_err(|e| format!("Invalid start date: {}", e))?;
@@ -106,6 +119,12 @@ pub async fn calculate_person_available_hours(
     // Calculate working days (assume 5-day work week)
     let total_weeks = total_days as f64 / 7.0;
     let working_days = total_weeks * 5.0;
+
+    // Calculate hours per day
+    let hours_per_day = person.available_hours_per_week / 5.0;
+
+    // Calculate base hours (before absences)
+    let base_hours = working_days * hours_per_day;
 
     // Get absences for this person within the planning period
     let absences = sqlx::query_as::<_, ModelAbsence>(
@@ -129,22 +148,23 @@ pub async fn calculate_person_available_hours(
     .map_err(|e| format!("Failed to fetch absences: {}", e))?;
 
     let total_absence_days: i64 = absences.iter().map(|a| a.days).sum();
+    let absence_hours = total_absence_days as f64 * hours_per_day;
 
-    // Calculate available working days
+    // Calculate available working days and hours after absences
     let available_working_days = working_days - total_absence_days as f64;
-
-    // Calculate hours per day
-    let hours_per_day = person.available_hours_per_week / 5.0;
-
-    // Calculate total available hours
-    let available_hours = available_working_days * hours_per_day;
+    let available_hours = (available_working_days * hours_per_day).max(0.0);
 
     debug!(
-        "Person {} available hours: {} (working days: {}, absence days: {}, hours/day: {})",
-        person.name, available_hours, working_days, total_absence_days, hours_per_day
+        "Person {} available hours: {} (base: {}, working days: {}, absence days: {}, absence hours: {}, hours/day: {})",
+        person.name, available_hours, base_hours, working_days, total_absence_days, absence_hours, hours_per_day
     );
 
-    Ok(available_hours.max(0.0))
+    Ok(PersonAvailableHoursBreakdown {
+        available_hours,
+        base_hours,
+        absence_days: total_absence_days,
+        absence_hours,
+    })
 }
 
 /// Calculate effective hours for an assignment
@@ -202,8 +222,8 @@ pub async fn optimize_assignments_proportional(
     // Calculate available hours for each person
     let mut person_available_hours: HashMap<i64, f64> = HashMap::new();
     for (person_id, person) in &people_map {
-        let available = calculate_person_available_hours(person, &planning_period, pool).await?;
-        person_available_hours.insert(*person_id, available);
+        let breakdown = calculate_person_available_hours(person, &planning_period, pool).await?;
+        person_available_hours.insert(*person_id, breakdown.available_hours);
     }
 
     // Load project requirements

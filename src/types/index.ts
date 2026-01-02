@@ -70,6 +70,9 @@ export interface PersonCapacity {
   utilization_percentage: number;
   is_over_committed: boolean;
   assignments: AssignmentSummary[];
+  absence_days: number;
+  absence_hours: number;
+  base_available_hours: number;
 }
 
 export interface ProjectStaffing {
@@ -98,6 +101,8 @@ export interface PersonAssignmentSummary {
   allocation_percentage: number;
   productivity_factor: number;
   effective_hours: number;
+  absence_days: number;
+  absence_hours: number;
 }
 
 export interface OptimizationResult {

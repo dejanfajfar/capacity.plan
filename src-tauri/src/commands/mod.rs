@@ -1066,7 +1066,7 @@ pub async fn get_capacity_overview(
     let mut over_committed_count = 0;
 
     for person in &people {
-        let available_hours =
+        let breakdown =
             calculate_person_available_hours(person, &planning_period, pool.inner()).await?;
 
         let person_assignments: Vec<&Assignment> = assignments
@@ -1085,7 +1085,7 @@ pub async fn get_capacity_overview(
                 assignment.calculated_allocation_percentage.unwrap_or(0.0)
             };
 
-            let allocated_hours = available_hours * (allocation_pct / 100.0);
+            let allocated_hours = breakdown.available_hours * (allocation_pct / 100.0);
             let effective_hours = assignment.calculated_effective_hours.unwrap_or(0.0);
 
             total_allocated_hours += allocated_hours;
@@ -1107,8 +1107,8 @@ pub async fn get_capacity_overview(
             });
         }
 
-        let utilization = if available_hours > 0.0 {
-            (total_allocated_hours / available_hours) * 100.0
+        let utilization = if breakdown.available_hours > 0.0 {
+            (total_allocated_hours / breakdown.available_hours) * 100.0
         } else {
             0.0
         };
@@ -1121,12 +1121,15 @@ pub async fn get_capacity_overview(
         people_capacity.push(PersonCapacity {
             person_id: person.id,
             person_name: person.name.clone(),
-            total_available_hours: available_hours,
+            total_available_hours: breakdown.available_hours,
             total_allocated_hours,
             total_effective_hours,
             utilization_percentage: utilization,
             is_over_committed,
             assignments: assignment_summaries,
+            absence_days: breakdown.absence_days,
+            absence_hours: breakdown.absence_hours,
+            base_available_hours: breakdown.base_hours,
         });
     }
 
@@ -1150,7 +1153,7 @@ pub async fn get_capacity_overview(
                 let person = people.iter().find(|p| p.id == assignment.person_id);
 
                 if let Some(person) = person {
-                    let available_hours =
+                    let breakdown =
                         calculate_person_available_hours(person, &planning_period, pool.inner())
                             .await?;
 
@@ -1160,7 +1163,7 @@ pub async fn get_capacity_overview(
                         assignment.calculated_allocation_percentage.unwrap_or(0.0)
                     };
 
-                    let allocated_hours = available_hours * (allocation_pct / 100.0);
+                    let allocated_hours = breakdown.available_hours * (allocation_pct / 100.0);
                     let effective_hours = assignment.calculated_effective_hours.unwrap_or(0.0);
 
                     total_allocated_hours += allocated_hours;
@@ -1172,6 +1175,8 @@ pub async fn get_capacity_overview(
                         allocation_percentage: allocation_pct,
                         productivity_factor: assignment.productivity_factor,
                         effective_hours,
+                        absence_days: breakdown.absence_days,
+                        absence_hours: breakdown.absence_hours,
                     });
                 }
             }
@@ -1247,7 +1252,7 @@ pub async fn get_person_capacity(
             .map_err(|e| format!("Failed to fetch planning period: {}", e))?;
 
     // Calculate available hours
-    let available_hours =
+    let breakdown =
         calculate_person_available_hours(&person, &planning_period, pool.inner()).await?;
 
     // Load assignments
@@ -1271,7 +1276,7 @@ pub async fn get_person_capacity(
             assignment.calculated_allocation_percentage.unwrap_or(0.0)
         };
 
-        let allocated_hours = available_hours * (allocation_pct / 100.0);
+        let allocated_hours = breakdown.available_hours * (allocation_pct / 100.0);
         let effective_hours = assignment.calculated_effective_hours.unwrap_or(0.0);
 
         total_allocated_hours += allocated_hours;
@@ -1294,8 +1299,8 @@ pub async fn get_person_capacity(
         });
     }
 
-    let utilization = if available_hours > 0.0 {
-        (total_allocated_hours / available_hours) * 100.0
+    let utilization = if breakdown.available_hours > 0.0 {
+        (total_allocated_hours / breakdown.available_hours) * 100.0
     } else {
         0.0
     };
@@ -1303,12 +1308,15 @@ pub async fn get_person_capacity(
     let capacity = PersonCapacity {
         person_id: person.id,
         person_name: person.name,
-        total_available_hours: available_hours,
+        total_available_hours: breakdown.available_hours,
         total_allocated_hours,
         total_effective_hours,
         utilization_percentage: utilization,
         is_over_committed: utilization > 100.0,
         assignments: assignment_summaries,
+        absence_days: breakdown.absence_days,
+        absence_hours: breakdown.absence_hours,
+        base_available_hours: breakdown.base_hours,
     };
 
     info!("Successfully generated person capacity");
@@ -1373,7 +1381,7 @@ pub async fn get_project_staffing(
             .await
             .map_err(|e| format!("Failed to fetch person: {}", e))?;
 
-        let available_hours =
+        let breakdown =
             calculate_person_available_hours(&person, &planning_period, pool.inner()).await?;
 
         let allocation_pct = if assignment.is_pinned {
@@ -1382,7 +1390,7 @@ pub async fn get_project_staffing(
             assignment.calculated_allocation_percentage.unwrap_or(0.0)
         };
 
-        let allocated_hours = available_hours * (allocation_pct / 100.0);
+        let allocated_hours = breakdown.available_hours * (allocation_pct / 100.0);
         let effective_hours = assignment.calculated_effective_hours.unwrap_or(0.0);
 
         total_allocated_hours += allocated_hours;
@@ -1394,6 +1402,8 @@ pub async fn get_project_staffing(
             allocation_percentage: allocation_pct,
             productivity_factor: assignment.productivity_factor,
             effective_hours,
+            absence_days: breakdown.absence_days,
+            absence_hours: breakdown.absence_hours,
         });
     }
 

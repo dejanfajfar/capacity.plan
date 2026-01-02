@@ -14,6 +14,7 @@ import {
   Table,
   Alert,
   Accordion,
+  Tooltip,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import {
@@ -23,6 +24,7 @@ import {
   IconCheck,
   IconAlertTriangle,
   IconX,
+  IconCalendarOff,
 } from "@tabler/icons-react";
 import { optimizeAssignments, getCapacityOverview } from "../../lib/tauri";
 import type { CapacityOverview, OptimizationResult } from "../../types";
@@ -296,6 +298,33 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                     </Accordion.Control>
                     <Accordion.Panel>
                       <Stack gap="md">
+                        {/* Absence Summary */}
+                        {person.absence_days > 0 && (
+                          <Alert
+                            icon={<IconCalendarOff size={16} />}
+                            color="blue"
+                            variant="light"
+                          >
+                            <Group gap="xs">
+                              <Text size="sm">
+                                <strong>{person.absence_days}</strong>{" "}
+                                {person.absence_days === 1 ? "day" : "days"}{" "}
+                                absent (
+                                <strong className="numeric-data">
+                                  {person.absence_hours.toFixed(0)}h
+                                </strong>{" "}
+                                deducted from capacity)
+                              </Text>
+                            </Group>
+                            <Text size="xs" c="dimmed" mt={4}>
+                              Base capacity:{" "}
+                              {person.base_available_hours.toFixed(0)}h →
+                              Available:{" "}
+                              {person.total_available_hours.toFixed(0)}h
+                            </Text>
+                          </Alert>
+                        )}
+
                         <div>
                           <Text size="sm" fw={500}>
                             Assignments:
@@ -447,6 +476,7 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                                 <Table.Th>Allocation</Table.Th>
                                 <Table.Th>Productivity</Table.Th>
                                 <Table.Th>Effective Hours</Table.Th>
+                                <Table.Th>Absences</Table.Th>
                               </Table.Tr>
                             </Table.Thead>
                             <Table.Tbody>
@@ -464,6 +494,26 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                                   </Table.Td>
                                   <Table.Td className="numeric-data">
                                     {person.effective_hours.toFixed(1)}h
+                                  </Table.Td>
+                                  <Table.Td>
+                                    {person.absence_days > 0 ? (
+                                      <Tooltip
+                                        label={`${person.absence_hours.toFixed(0)}h deducted from capacity`}
+                                        withArrow
+                                      >
+                                        <Badge
+                                          size="sm"
+                                          variant="light"
+                                          color="blue"
+                                        >
+                                          {person.absence_days}d absent
+                                        </Badge>
+                                      </Tooltip>
+                                    ) : (
+                                      <Text size="sm" c="dimmed">
+                                        —
+                                      </Text>
+                                    )}
                                   </Table.Td>
                                 </Table.Tr>
                               ))}
