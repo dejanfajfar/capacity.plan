@@ -10,6 +10,11 @@ import type {
   CreateAssignmentInput,
   Absence,
   CreateAbsenceInput,
+  Overhead,
+  CreateOverheadInput,
+  OverheadAssignment,
+  OverheadAssignmentWithDetails,
+  CreateOverheadAssignmentInput,
   ProjectRequirement,
   CreateProjectRequirementInput,
   OptimizationResult,
@@ -220,6 +225,70 @@ export async function updateAbsence(
 
 export async function deleteAbsence(id: number): Promise<void> {
   return await invoke("delete_absence", { id });
+}
+
+// ============================================================================
+// Overhead Commands
+// ============================================================================
+
+export async function listOverheads(
+  planningPeriodId: number,
+): Promise<Overhead[]> {
+  return await invoke("list_overheads", { planningPeriodId });
+}
+
+export async function createOverhead(
+  input: CreateOverheadInput,
+): Promise<Overhead> {
+  return await invoke("create_overhead", { input });
+}
+
+export async function updateOverhead(
+  id: number,
+  input: CreateOverheadInput,
+): Promise<Overhead> {
+  return await invoke("update_overhead", { id, input });
+}
+
+export async function deleteOverhead(id: number): Promise<void> {
+  return await invoke("delete_overhead", { id });
+}
+
+// ============================================================================
+// Overhead Assignment Commands
+// ============================================================================
+
+export async function listOverheadAssignments(
+  overheadId: number,
+): Promise<OverheadAssignment[]> {
+  return await invoke("list_overhead_assignments", { overheadId });
+}
+
+export async function listPersonOverheadAssignments(
+  personId: number,
+  planningPeriodId: number,
+): Promise<OverheadAssignmentWithDetails[]> {
+  return await invoke("list_person_overhead_assignments", {
+    personId,
+    planningPeriodId,
+  });
+}
+
+export async function createOverheadAssignment(
+  input: CreateOverheadAssignmentInput,
+): Promise<OverheadAssignment> {
+  return await invoke("create_overhead_assignment", { input });
+}
+
+export async function updateOverheadAssignment(
+  id: number,
+  input: CreateOverheadAssignmentInput,
+): Promise<OverheadAssignment> {
+  return await invoke("update_overhead_assignment", { id, input });
+}
+
+export async function deleteOverheadAssignment(id: number): Promise<void> {
+  return await invoke("delete_overhead_assignment", { id });
 }
 
 // ============================================================================

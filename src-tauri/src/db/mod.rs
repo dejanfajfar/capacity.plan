@@ -153,6 +153,41 @@ async fn run_migrations(pool: &DbPool) -> Result<(), sqlx::Error> {
     .execute(pool)
     .await?;
 
+    // Create overheads table
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS overheads (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            planning_period_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (planning_period_id) REFERENCES planning_periods(id) ON DELETE CASCADE
+        )
+        "#,
+    )
+    .execute(pool)
+    .await?;
+
+    // Create overhead_assignments table
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS overhead_assignments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            overhead_id INTEGER NOT NULL,
+            person_id INTEGER NOT NULL,
+            effort_hours REAL NOT NULL,
+            effort_period TEXT NOT NULL CHECK(effort_period IN ('daily', 'weekly')),
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (overhead_id) REFERENCES overheads(id) ON DELETE CASCADE,
+            FOREIGN KEY (person_id) REFERENCES people(id) ON DELETE CASCADE,
+            UNIQUE(overhead_id, person_id)
+        )
+        "#,
+    )
+    .execute(pool)
+    .await?;
+
     // Create indexes
     sqlx::query("CREATE INDEX IF NOT EXISTS idx_assignments_person ON assignments(person_id)")
         .execute(pool)
@@ -167,6 +202,20 @@ async fn run_migrations(pool: &DbPool) -> Result<(), sqlx::Error> {
         .await?;
 
     sqlx::query("CREATE INDEX IF NOT EXISTS idx_absences_person ON absences(person_id)")
+        .execute(pool)
+        .await?;
+
+    sqlx::query(
+        "CREATE INDEX IF NOT EXISTS idx_overheads_planning_period ON overheads(planning_period_id)",
+    )
+    .execute(pool)
+    .await?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_overhead_assignments_overhead ON overhead_assignments(overhead_id)")
+        .execute(pool)
+        .await?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_overhead_assignments_person ON overhead_assignments(person_id)")
         .execute(pool)
         .await?;
 

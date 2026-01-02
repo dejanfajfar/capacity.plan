@@ -1,7 +1,5 @@
 use crate::db::DbPool;
-use crate::models::{
-    Absence as ModelAbsence, Assignment, Person, PlanningPeriod, ProjectRequirement,
-};
+use crate::models::{Absence as ModelAbsence, Assignment, Person, PlanningPeriod, ProjectRequirement};
 use chrono::NaiveDate;
 use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
@@ -56,6 +54,7 @@ pub struct PersonCapacity {
     pub absence_days: i64,
     pub absence_hours: f64,
     pub base_available_hours: f64,
+    pub overhead_hours: f64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -89,6 +88,7 @@ pub struct PersonAssignmentSummary {
     pub effective_hours: f64,
     pub absence_days: i64,
     pub absence_hours: f64,
+    pub overhead_hours: f64,
 }
 
 #[derive(Debug)]
@@ -97,6 +97,7 @@ pub struct PersonAvailableHoursBreakdown {
     pub base_hours: f64,
     pub absence_days: i64,
     pub absence_hours: f64,
+    pub overhead_hours: f64,
 }
 
 // Core calculation functions
@@ -150,13 +151,33 @@ pub async fn calculate_person_available_hours(
     let total_absence_days: i64 = absences.iter().map(|a| a.days).sum();
     let absence_hours = total_absence_days as f64 * hours_per_day;
 
-    // Calculate available working days and hours after absences
-    let available_working_days = working_days - total_absence_days as f64;
-    let available_hours = (available_working_days * hours_per_day).max(0.0);
+    // Get overhead assignments for this person within the planning period
+    let overhead_assignments = sqlx::query_as::<_, crate::models::OverheadAssignment>(
+        "SELECT oa.* FROM overhead_assignments oa
+         JOIN overheads o ON oa.overhead_id = o.id
+         WHERE oa.person_id = ? AND o.planning_period_id = ?",
+    )
+    .bind(person.id)
+    .bind(planning_period.id)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| format!("Failed to fetch overhead assignments: {}", e))?;
+
+    let mut overhead_hours = 0.0;
+    for assignment in overhead_assignments {
+        if assignment.effort_period == "weekly" {
+            overhead_hours += assignment.effort_hours * total_weeks;
+        } else if assignment.effort_period == "daily" {
+            overhead_hours += assignment.effort_hours * working_days;
+        }
+    }
+
+    // Calculate available working days and hours after absences and overhead
+    let available_hours = (base_hours - absence_hours - overhead_hours).max(0.0);
 
     debug!(
-        "Person {} available hours: {} (base: {}, working days: {}, absence days: {}, absence hours: {}, hours/day: {})",
-        person.name, available_hours, base_hours, working_days, total_absence_days, absence_hours, hours_per_day
+        "Person {} available hours: {} (base: {}, working days: {}, absence days: {}, absence hours: {}, overhead hours: {}, hours/day: {})",
+        person.name, available_hours, base_hours, working_days, total_absence_days, absence_hours, overhead_hours, hours_per_day
     );
 
     Ok(PersonAvailableHoursBreakdown {
@@ -164,6 +185,7 @@ pub async fn calculate_person_available_hours(
         base_hours,
         absence_days: total_absence_days,
         absence_hours,
+        overhead_hours,
     })
 }
 

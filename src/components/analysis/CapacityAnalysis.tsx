@@ -15,6 +15,7 @@ import {
   Alert,
   Accordion,
   Tooltip,
+  Center,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import {
@@ -25,9 +26,12 @@ import {
   IconAlertTriangle,
   IconX,
   IconCalendarOff,
+  IconClock,
+  IconInfoCircle,
 } from "@tabler/icons-react";
 import { optimizeAssignments, getCapacityOverview } from "../../lib/tauri";
 import type { CapacityOverview, OptimizationResult } from "../../types";
+import { CapacityPieChart } from "./CapacityPieChart";
 
 interface CapacityAnalysisProps {
   periodId: number;
@@ -298,32 +302,72 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                     </Accordion.Control>
                     <Accordion.Panel>
                       <Stack gap="md">
-                        {/* Absence Summary */}
-                        {person.absence_days > 0 && (
+                        {/* Capacity Deductions Summary */}
+                        {(person.absence_days > 0 ||
+                          person.overhead_hours > 0) && (
                           <Alert
-                            icon={<IconCalendarOff size={16} />}
+                            icon={<IconInfoCircle size={16} />}
                             color="blue"
                             variant="light"
                           >
-                            <Group gap="xs">
-                              <Text size="sm">
-                                <strong>{person.absence_days}</strong>{" "}
-                                {person.absence_days === 1 ? "day" : "days"}{" "}
-                                absent (
-                                <strong className="numeric-data">
-                                  {person.absence_hours.toFixed(0)}h
-                                </strong>{" "}
-                                deducted from capacity)
+                            <Stack gap="xs">
+                              {person.absence_days > 0 && (
+                                <Text size="sm">
+                                  <IconCalendarOff
+                                    size={14}
+                                    style={{
+                                      display: "inline",
+                                      verticalAlign: "middle",
+                                    }}
+                                  />{" "}
+                                  <strong>{person.absence_days}</strong>{" "}
+                                  {person.absence_days === 1 ? "day" : "days"}{" "}
+                                  absent (
+                                  <strong className="numeric-data">
+                                    {person.absence_hours.toFixed(0)}h
+                                  </strong>{" "}
+                                  deducted)
+                                </Text>
+                              )}
+                              {person.overhead_hours > 0 && (
+                                <Text size="sm">
+                                  <IconClock
+                                    size={14}
+                                    style={{
+                                      display: "inline",
+                                      verticalAlign: "middle",
+                                    }}
+                                  />{" "}
+                                  Overhead:{" "}
+                                  <strong className="numeric-data">
+                                    {person.overhead_hours.toFixed(0)}h
+                                  </strong>{" "}
+                                  deducted
+                                </Text>
+                              )}
+                              <Text size="xs" c="dimmed" mt={4}>
+                                Base: {person.base_available_hours.toFixed(0)}h
+                                → Available:{" "}
+                                {person.total_available_hours.toFixed(0)}h
                               </Text>
-                            </Group>
-                            <Text size="xs" c="dimmed" mt={4}>
-                              Base capacity:{" "}
-                              {person.base_available_hours.toFixed(0)}h →
-                              Available:{" "}
-                              {person.total_available_hours.toFixed(0)}h
-                            </Text>
+                            </Stack>
                           </Alert>
                         )}
+
+                        {/* Capacity Breakdown Pie Chart */}
+                        <Paper withBorder p="md" bg="gray.0">
+                          <Title order={5} mb="md">
+                            Capacity Breakdown
+                          </Title>
+                          <Center>
+                            <CapacityPieChart
+                              absenceHours={person.absence_hours}
+                              overheadHours={person.overhead_hours}
+                              availableHours={person.total_available_hours}
+                              baseHours={person.base_available_hours}
+                            />
+                          </Center>
+                        </Paper>
 
                         <div>
                           <Text size="sm" fw={500}>
@@ -476,7 +520,7 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                                 <Table.Th>Allocation</Table.Th>
                                 <Table.Th>Productivity</Table.Th>
                                 <Table.Th>Effective Hours</Table.Th>
-                                <Table.Th>Absences</Table.Th>
+                                <Table.Th>Deductions</Table.Th>
                               </Table.Tr>
                             </Table.Thead>
                             <Table.Tbody>
@@ -496,24 +540,38 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                                     {person.effective_hours.toFixed(1)}h
                                   </Table.Td>
                                   <Table.Td>
-                                    {person.absence_days > 0 ? (
-                                      <Tooltip
-                                        label={`${person.absence_hours.toFixed(0)}h deducted from capacity`}
-                                        withArrow
-                                      >
+                                    <Stack gap={4}>
+                                      {person.absence_days > 0 && (
+                                        <Tooltip
+                                          label={`${person.absence_hours.toFixed(0)}h deducted from capacity`}
+                                          withArrow
+                                        >
+                                          <Badge
+                                            size="sm"
+                                            variant="light"
+                                            color="blue"
+                                          >
+                                            {person.absence_days}d absent
+                                          </Badge>
+                                        </Tooltip>
+                                      )}
+                                      {person.overhead_hours > 0 && (
                                         <Badge
                                           size="sm"
                                           variant="light"
-                                          color="blue"
+                                          color="orange"
                                         >
-                                          {person.absence_days}d absent
+                                          {person.overhead_hours.toFixed(0)}h
+                                          overhead
                                         </Badge>
-                                      </Tooltip>
-                                    ) : (
-                                      <Text size="sm" c="dimmed">
-                                        —
-                                      </Text>
-                                    )}
+                                      )}
+                                      {person.absence_days === 0 &&
+                                        person.overhead_hours === 0 && (
+                                          <Text size="sm" c="dimmed">
+                                            —
+                                          </Text>
+                                        )}
+                                    </Stack>
                                   </Table.Td>
                                 </Table.Tr>
                               ))}

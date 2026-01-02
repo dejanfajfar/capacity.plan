@@ -96,10 +96,6 @@ export function PersonOverview({ person, onEdit }: PersonOverviewProps) {
               </Badge>
             </div>
           </Group>
-          <Text size="xs" c="dimmed">
-            Additional statistics (assignments, absences, utilization) will be
-            displayed here in future updates.
-          </Text>
         </Stack>
       </Paper>
     </Stack>

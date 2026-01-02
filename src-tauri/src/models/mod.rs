@@ -56,6 +56,25 @@ pub struct Absence {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub struct Overhead {
+    pub id: i64,
+    pub planning_period_id: i64,
+    pub name: String,
+    pub description: Option<String>,
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub struct OverheadAssignment {
+    pub id: i64,
+    pub overhead_id: i64,
+    pub person_id: i64,
+    pub effort_hours: f64,
+    pub effort_period: String, // 'daily' or 'weekly'
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct ProjectRequirement {
     pub id: i64,
     pub project_id: i64,
@@ -105,6 +124,21 @@ pub struct CreateAbsenceInput {
     pub end_date: String,
     pub days: i64,
     pub reason: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CreateOverheadInput {
+    pub planning_period_id: i64,
+    pub name: String,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CreateOverheadAssignmentInput {
+    pub overhead_id: i64,
+    pub person_id: i64,
+    pub effort_hours: f64,
+    pub effort_period: String, // 'daily' or 'weekly'
 }
 
 #[derive(Debug, Deserialize)]

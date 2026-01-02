@@ -17,6 +17,7 @@ import {
   IconClipboardList,
   IconChartBar,
   IconArrowLeft,
+  IconClock,
 } from "@tabler/icons-react";
 import { listPlanningPeriods } from "../lib/tauri";
 import type { PlanningPeriod } from "../types";
@@ -24,6 +25,7 @@ import { PeriodOverview } from "../components/period/PeriodOverview";
 import { ProjectRequirementManager } from "../components/requirements/ProjectRequirementManager";
 import { AssignmentManager } from "../components/assignments/AssignmentManager";
 import { CapacityAnalysis } from "../components/analysis/CapacityAnalysis";
+import { OverheadManager } from "../components/overheads/OverheadManager";
 
 export function PlanningPeriodDetailPage() {
   const { periodId } = useParams<{ periodId: string }>();
@@ -124,6 +126,12 @@ export function PlanningPeriodDetailPage() {
                   Assignments
                 </Tabs.Tab>
                 <Tabs.Tab
+                  value="overheads"
+                  leftSection={<IconClock size={16} />}
+                >
+                  Overheads
+                </Tabs.Tab>
+                <Tabs.Tab
                   value="analysis"
                   leftSection={<IconChartBar size={16} />}
                 >
@@ -141,6 +149,10 @@ export function PlanningPeriodDetailPage() {
 
               <Tabs.Panel value="assignments" pt="lg">
                 <AssignmentManager periodId={period.id} period={period} />
+              </Tabs.Panel>
+
+              <Tabs.Panel value="overheads" pt="lg">
+                <OverheadManager periodId={period.id} />
               </Tabs.Panel>
 
               <Tabs.Panel value="analysis" pt="lg">

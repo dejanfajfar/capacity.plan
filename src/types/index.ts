@@ -50,6 +50,34 @@ export interface Absence {
   created_at: string;
 }
 
+export interface Overhead {
+  id: number;
+  planning_period_id: number;
+  name: string;
+  description: string | null;
+  created_at: string;
+}
+
+export interface OverheadAssignment {
+  id: number;
+  overhead_id: number;
+  person_id: number;
+  effort_hours: number;
+  effort_period: "daily" | "weekly";
+  created_at: string;
+}
+
+export interface OverheadAssignmentWithDetails {
+  id: number;
+  overhead_id: number;
+  overhead_name: string;
+  overhead_description: string | null;
+  person_id: number;
+  effort_hours: number;
+  effort_period: "daily" | "weekly";
+  created_at: string;
+}
+
 export interface ProjectRequirement {
   id: number;
   project_id: number;
@@ -73,6 +101,7 @@ export interface PersonCapacity {
   absence_days: number;
   absence_hours: number;
   base_available_hours: number;
+  overhead_hours: number;
 }
 
 export interface ProjectStaffing {
@@ -103,6 +132,7 @@ export interface PersonAssignmentSummary {
   effective_hours: number;
   absence_days: number;
   absence_hours: number;
+  overhead_hours: number;
 }
 
 export interface OptimizationResult {
@@ -181,6 +211,19 @@ export interface CreateAbsenceInput {
   end_date: string;
   days: number;
   reason?: string;
+}
+
+export interface CreateOverheadInput {
+  planning_period_id: number;
+  name: string;
+  description?: string;
+}
+
+export interface CreateOverheadAssignmentInput {
+  overhead_id: number;
+  person_id: number;
+  effort_hours: number;
+  effort_period: "daily" | "weekly";
 }
 
 export interface CreateProjectRequirementInput {
