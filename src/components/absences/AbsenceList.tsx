@@ -20,7 +20,7 @@ export function AbsenceList({ absences, onEdit, onDelete }: AbsenceListProps) {
   // Sort by start_date DESC (most recent first)
   const sortedAbsences = [...absences].sort(
     (a, b) =>
-      new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
+      new Date(b.start_date).getTime() - new Date(a.start_date).getTime(),
   );
 
   return (
