@@ -6,6 +6,7 @@ import {
   Stack,
   NumberInput,
   Select,
+  MultiSelect,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import type {
@@ -56,23 +57,21 @@ export function OverheadAssignmentForm({
     }
   };
 
-  const form = useForm<CreateOverheadAssignmentInput>({
+  const form = useForm<{
+    overhead_id: number;
+    person_ids: number[];
+    effort_hours: number;
+    effort_period: "daily" | "weekly";
+  }>({
     initialValues: {
       overhead_id: overheadId,
-      person_id: 0,
+      person_ids: [],
       effort_hours: 1,
       effort_period: "weekly",
     },
     validate: {
-      person_id: (value) => {
-        if (value <= 0) return "Please select a person";
-        // Check if person is already assigned (only for create mode)
-        if (
-          !assignment &&
-          existingAssignments.some((a) => a.person_id === value)
-        ) {
-          return "This person is already assigned to this overhead";
-        }
+      person_ids: (value) => {
+        if (value.length === 0) return "Please select at least one person";
         return null;
       },
       effort_hours: (value) => {
@@ -91,19 +90,19 @@ export function OverheadAssignmentForm({
   useEffect(() => {
     if (opened) {
       if (assignment) {
-        // Edit mode - populate with assignment's data
+        // Edit mode - populate with assignment's data (single person)
         form.setValues({
           overhead_id: assignment.overhead_id,
-          person_id: assignment.person_id,
+          person_ids: [assignment.person_id], // Wrap in array for consistency
           effort_hours: assignment.effort_hours,
           effort_period: assignment.effort_period as "daily" | "weekly",
         });
         form.clearErrors();
       } else {
-        // Create mode - reset to defaults and ensure overhead_id is current
+        // Create mode - reset to defaults (multiple people possible)
         form.setValues({
           overhead_id: overheadId,
-          person_id: 0,
+          person_ids: [],
           effort_hours: 1,
           effort_period: "weekly",
         });
@@ -112,11 +111,33 @@ export function OverheadAssignmentForm({
     }
   }, [opened, assignment, overheadId]);
 
-  const handleSubmit = async (values: CreateOverheadAssignmentInput) => {
+  const handleSubmit = async (values: {
+    overhead_id: number;
+    person_ids: number[];
+    effort_hours: number;
+    effort_period: "daily" | "weekly";
+  }) => {
     console.log("Submitting overhead assignment:", values);
     setLoading(true);
     try {
-      await onSubmit(values);
+      if (assignment) {
+        // Edit mode: single person (convert back to CreateOverheadAssignmentInput)
+        await onSubmit({
+          overhead_id: values.overhead_id,
+          person_id: values.person_ids[0], // Take first (only) person
+          effort_hours: values.effort_hours,
+          effort_period: values.effort_period,
+        });
+      } else {
+        // Create mode: multiple people - pass extended object with person_ids
+        await onSubmit({
+          overhead_id: values.overhead_id,
+          person_id: 0, // Not used in create mode with multiple people
+          effort_hours: values.effort_hours,
+          effort_period: values.effort_period,
+          person_ids: values.person_ids, // Pass the array
+        } as any); // Type assertion for extended interface
+      }
       form.reset();
       onClose();
     } catch (error) {
@@ -126,32 +147,60 @@ export function OverheadAssignmentForm({
     }
   };
 
-  const personOptions = people.map((person) => ({
-    value: String(person.id),
-    label: `${person.name} (${person.email})`,
-    disabled:
-      !assignment && existingAssignments.some((a) => a.person_id === person.id),
-  }));
+  // Filter out already-assigned people (only for create mode)
+  const assignedPersonIds = new Set(
+    assignment ? [] : existingAssignments.map((a) => a.person_id),
+  );
+
+  const personOptions = people
+    .filter((person) => !assignedPersonIds.has(person.id))
+    .map((person) => ({
+      value: String(person.id),
+      label: `${person.name} (${person.email})`,
+    }));
 
   return (
     <Modal opened={opened} onClose={onClose} title={title} size="md">
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack gap="md">
-          <Select
-            label="Person"
-            placeholder="Select a person"
-            required
-            searchable
-            data={personOptions}
-            disabled={loadingData || !!assignment}
-            value={
-              form.values.person_id > 0 ? String(form.values.person_id) : null
-            }
-            onChange={(value) =>
-              form.setFieldValue("person_id", value ? parseInt(value) : 0)
-            }
-            error={form.errors.person_id}
-          />
+          {/* Person Selection - MultiSelect for create, disabled Select for edit */}
+          {assignment ? (
+            // Edit mode: Show single person (disabled)
+            <Select
+              label="Person"
+              placeholder="Select a person"
+              required
+              searchable
+              data={people.map((person) => ({
+                value: String(person.id),
+                label: `${person.name} (${person.email})`,
+              }))}
+              disabled={true}
+              value={
+                form.values.person_ids.length > 0
+                  ? String(form.values.person_ids[0])
+                  : null
+              }
+            />
+          ) : (
+            // Create mode: MultiSelect for multiple people
+            <MultiSelect
+              label="People"
+              placeholder="Select one or more people"
+              required
+              searchable
+              data={personOptions}
+              disabled={loadingData}
+              value={form.values.person_ids.map(String)}
+              onChange={(values) =>
+                form.setFieldValue(
+                  "person_ids",
+                  values.map((v) => parseInt(v)),
+                )
+              }
+              error={form.errors.person_ids}
+            />
+          )}
 
           <NumberInput
             label="Effort (hours)"
@@ -180,7 +229,11 @@ export function OverheadAssignmentForm({
               Cancel
             </Button>
             <Button type="submit" loading={loading}>
-              {assignment ? "Update" : "Assign"}
+              {assignment
+                ? "Update"
+                : form.values.person_ids.length > 1
+                  ? `Assign ${form.values.person_ids.length} People`
+                  : "Assign"}
             </Button>
           </Group>
         </Stack>

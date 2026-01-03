@@ -205,23 +205,67 @@ export function OverheadManager({ periodId }: OverheadManagerProps) {
 
   // Assignment CRUD handlers
   const handleCreateAssignment = async (
-    values: CreateOverheadAssignmentInput,
+    values: CreateOverheadAssignmentInput & { person_ids?: number[] },
   ) => {
     try {
-      await createOverheadAssignment(values);
+      // Check if this is a multi-person assignment
+      const personIds = values.person_ids || [values.person_id];
+
+      let successCount = 0;
+      let failedCount = 0;
+      const errors: string[] = [];
+
+      // Create assignment for each person
+      for (const personId of personIds) {
+        try {
+          await createOverheadAssignment({
+            overhead_id: values.overhead_id,
+            person_id: personId,
+            effort_hours: values.effort_hours,
+            effort_period: values.effort_period,
+          });
+          successCount++;
+        } catch (error) {
+          failedCount++;
+          const personName =
+            people.find((p) => p.id === personId)?.name ||
+            `Person #${personId}`;
+          errors.push(personName);
+          console.error(`Failed to assign ${personName}:`, error);
+        }
+      }
+
+      // Reload assignments
       if (selectedOverhead) {
         await loadAssignments(selectedOverhead.id);
       }
-      notifications.show({
-        title: "Success",
-        message: "Person assigned successfully",
-        color: "green",
-      });
+
+      // Show success notification
+      if (successCount > 0) {
+        const message =
+          successCount === 1
+            ? "Person assigned successfully"
+            : `Assigned ${successCount} ${successCount === 1 ? "person" : "people"} successfully`;
+
+        notifications.show({
+          title: "Success",
+          message:
+            failedCount > 0
+              ? `${message}. Failed to assign: ${errors.join(", ")}`
+              : message,
+          color: failedCount > 0 ? "yellow" : "green",
+        });
+      }
+
+      // If all failed, show error and throw
+      if (failedCount === personIds.length) {
+        throw new Error("Failed to assign any people to overhead");
+      }
     } catch (error) {
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "Failed to assign person to overhead";
+          : "Failed to assign people to overhead";
       notifications.show({
         title: "Error",
         message: errorMessage,
