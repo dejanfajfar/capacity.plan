@@ -1500,7 +1500,8 @@ pub async fn get_capacity_overview(
                 0.0
             };
 
-            let is_viable = staffing_percentage >= 100.0;
+            // Use tolerance for floating-point comparison (99.95% rounds to 100.0%)
+            let is_viable = staffing_percentage >= 99.95;
             let shortfall = if !is_viable {
                 requirement.required_hours - total_effective_hours
             } else {
@@ -1728,7 +1729,8 @@ pub async fn get_project_staffing(
         0.0
     };
 
-    let is_viable = staffing_percentage >= 100.0;
+    // Use tolerance for floating-point comparison (99.95% rounds to 100.0%)
+    let is_viable = staffing_percentage >= 99.95;
     let shortfall = if !is_viable {
         requirement.required_hours - total_effective_hours
     } else {

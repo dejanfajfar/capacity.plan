@@ -100,13 +100,20 @@ export function OverheadAssignmentForm({
         });
         form.clearErrors();
       } else {
-        // Create mode - reset to defaults
-        form.reset();
+        // Create mode - reset to defaults and ensure overhead_id is current
+        form.setValues({
+          overhead_id: overheadId,
+          person_id: 0,
+          effort_hours: 1,
+          effort_period: "weekly",
+        });
+        form.clearErrors();
       }
     }
-  }, [opened, assignment]);
+  }, [opened, assignment, overheadId]);
 
   const handleSubmit = async (values: CreateOverheadAssignmentInput) => {
+    console.log("Submitting overhead assignment:", values);
     setLoading(true);
     try {
       await onSubmit(values);

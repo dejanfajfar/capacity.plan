@@ -116,14 +116,11 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
   };
 
   const getStaffingColor = (percentage: number) => {
-    if (percentage >= 100) return "green";
+    // Use tolerance for floating-point comparison
+    // Consider >= 99.95 as 100% (will round to 100.0% when displayed)
+    if (percentage >= 99.95) return "green";
     if (percentage >= 80) return "yellow";
     return "red";
-  };
-
-  const getStaffingIcon = (isViable: boolean) => {
-    if (isViable) return <IconCheck size={16} />;
-    return <IconX size={16} />;
   };
 
   return (
@@ -258,116 +255,112 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                             {person.total_available_hours.toFixed(0)}h available
                           </Text>
                         </div>
-                        <Group gap="md" wrap="nowrap">
-                          <div style={{ width: 200 }}>
-                            <Progress
-                              value={person.utilization_percentage}
-                              color={getUtilizationColor(
-                                person.utilization_percentage,
-                              )}
-                              size="lg"
-                            />
-                            <Text
-                              size="xs"
-                              ta="center"
-                              mt={4}
-                              className="numeric-data"
-                            >
-                              {person.utilization_percentage.toFixed(1)}%
-                              utilized
-                            </Text>
-                          </div>
-                          <Badge
-                            color={
-                              person.utilization_percentage > 100
-                                ? "red" // Overcommitted
-                                : person.utilization_percentage >= 96
-                                  ? "red" // At capacity
-                                  : person.utilization_percentage >= 50
-                                    ? "green" // OK
-                                    : "orange" // Underutilized
-                            }
-                            variant="filled"
+                        <div style={{ width: 200 }}>
+                          <Progress
+                            value={person.utilization_percentage}
+                            color={getUtilizationColor(
+                              person.utilization_percentage,
+                            )}
+                            size="lg"
+                          />
+                          <Text
+                            size="xs"
+                            ta="center"
+                            mt={4}
+                            className="numeric-data"
                           >
-                            {person.utilization_percentage > 100
-                              ? "Overcommitted"
-                              : person.utilization_percentage >= 96
-                                ? "Capacity"
-                                : person.utilization_percentage >= 50
-                                  ? "OK"
-                                  : "Underutilized"}
-                          </Badge>
-                        </Group>
+                            {person.utilization_percentage.toFixed(1)}% utilized
+                          </Text>
+                        </div>
                       </Group>
                     </Accordion.Control>
                     <Accordion.Panel>
                       <Stack gap="md">
-                        {/* Capacity Deductions Summary */}
-                        {(person.absence_days > 0 ||
-                          person.overhead_hours > 0) && (
-                          <Alert
-                            icon={<IconInfoCircle size={16} />}
-                            color="blue"
-                            variant="light"
-                          >
-                            <Stack gap="xs">
-                              {person.absence_days > 0 && (
-                                <Text size="sm">
-                                  <IconCalendarOff
-                                    size={14}
-                                    style={{
-                                      display: "inline",
-                                      verticalAlign: "middle",
-                                    }}
-                                  />{" "}
-                                  <strong>{person.absence_days}</strong>{" "}
-                                  {person.absence_days === 1 ? "day" : "days"}{" "}
-                                  absent (
-                                  <strong className="numeric-data">
-                                    {person.absence_hours.toFixed(0)}h
-                                  </strong>{" "}
-                                  deducted)
-                                </Text>
-                              )}
-                              {person.overhead_hours > 0 && (
-                                <Text size="sm">
-                                  <IconClock
-                                    size={14}
-                                    style={{
-                                      display: "inline",
-                                      verticalAlign: "middle",
-                                    }}
-                                  />{" "}
-                                  Overhead:{" "}
-                                  <strong className="numeric-data">
-                                    {person.overhead_hours.toFixed(0)}h
-                                  </strong>{" "}
-                                  deducted
-                                </Text>
-                              )}
-                              <Text size="xs" c="dimmed" mt={4}>
-                                Base: {person.base_available_hours.toFixed(0)}h
-                                → Available:{" "}
-                                {person.total_available_hours.toFixed(0)}h
-                              </Text>
-                            </Stack>
-                          </Alert>
-                        )}
+                        {/* Capacity Deductions Summary and Pie Chart - Two Column Layout */}
+                        <Grid gutter="md" align="flex-start">
+                          {/* Capacity Deductions Summary */}
+                          {(person.absence_days > 0 ||
+                            person.overhead_hours > 0) && (
+                            <Grid.Col span={{ base: 12, md: 6 }}>
+                              <Alert
+                                icon={<IconInfoCircle size={16} />}
+                                color="blue"
+                                variant="light"
+                              >
+                                <Stack gap="xs">
+                                  {person.absence_days > 0 && (
+                                    <Text size="sm">
+                                      <IconCalendarOff
+                                        size={14}
+                                        style={{
+                                          display: "inline",
+                                          verticalAlign: "middle",
+                                        }}
+                                      />{" "}
+                                      <strong>{person.absence_days}</strong>{" "}
+                                      {person.absence_days === 1
+                                        ? "day"
+                                        : "days"}{" "}
+                                      absent (
+                                      <strong className="numeric-data">
+                                        {person.absence_hours.toFixed(0)}h
+                                      </strong>{" "}
+                                      deducted)
+                                    </Text>
+                                  )}
+                                  {person.overhead_hours > 0 && (
+                                    <Text size="sm">
+                                      <IconClock
+                                        size={14}
+                                        style={{
+                                          display: "inline",
+                                          verticalAlign: "middle",
+                                        }}
+                                      />{" "}
+                                      Overhead:{" "}
+                                      <strong className="numeric-data">
+                                        {person.overhead_hours.toFixed(0)}h
+                                      </strong>{" "}
+                                      deducted
+                                    </Text>
+                                  )}
+                                  <Text size="xs" c="dimmed" mt={4}>
+                                    Base:{" "}
+                                    {person.base_available_hours.toFixed(0)}h →
+                                    Available:{" "}
+                                    {person.total_available_hours.toFixed(0)}h
+                                  </Text>
+                                </Stack>
+                              </Alert>
+                            </Grid.Col>
+                          )}
 
-                        {/* Capacity Breakdown Pie Chart */}
-                        <Paper withBorder p="md" bg="gray.0">
-                          <Title order={5} mb="md">
-                            Capacity Breakdown
-                          </Title>
-                          <Center>
-                            <CapacityPieChart
-                              absenceHours={person.absence_hours}
-                              overheadHours={person.overhead_hours}
-                              availableHours={person.total_available_hours}
-                              baseHours={person.base_available_hours}
-                            />
-                          </Center>
-                        </Paper>
+                          {/* Capacity Breakdown Pie Chart */}
+                          <Grid.Col
+                            span={{
+                              base: 12,
+                              md:
+                                person.absence_days > 0 ||
+                                person.overhead_hours > 0
+                                  ? 6
+                                  : 12,
+                            }}
+                          >
+                            <Paper withBorder p="md" bg="gray.0">
+                              <Title order={5} mb="md">
+                                Capacity Breakdown
+                              </Title>
+                              <Center>
+                                <CapacityPieChart
+                                  absenceHours={person.absence_hours}
+                                  overheadHours={person.overhead_hours}
+                                  availableHours={person.total_available_hours}
+                                  baseHours={person.base_available_hours}
+                                />
+                              </Center>
+                            </Paper>
+                          </Grid.Col>
+                        </Grid>
 
                         <div>
                           <Text size="sm" fw={500}>
@@ -451,34 +444,23 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                             {project.required_hours.toFixed(0)}h required
                           </Text>
                         </div>
-                        <Group gap="md" wrap="nowrap">
-                          <div style={{ width: 200 }}>
-                            <Progress
-                              value={Math.min(project.staffing_percentage, 100)}
-                              color={getStaffingColor(
-                                project.staffing_percentage,
-                              )}
-                              size="lg"
-                            />
-                            <Text
-                              size="xs"
-                              ta="center"
-                              mt={4}
-                              className="numeric-data"
-                            >
-                              {project.staffing_percentage.toFixed(1)}% staffed
-                            </Text>
-                          </div>
-                          <Badge
+                        <div style={{ width: 200 }}>
+                          <Progress
+                            value={Math.min(project.staffing_percentage, 100)}
                             color={getStaffingColor(
                               project.staffing_percentage,
                             )}
-                            variant="filled"
-                            leftSection={getStaffingIcon(project.is_viable)}
+                            size="lg"
+                          />
+                          <Text
+                            size="xs"
+                            ta="center"
+                            mt={4}
+                            className="numeric-data"
                           >
-                            {project.is_viable ? "Viable" : "Under-Staffed"}
-                          </Badge>
-                        </Group>
+                            {project.staffing_percentage.toFixed(1)}% staffed
+                          </Text>
+                        </div>
                       </Group>
                     </Accordion.Control>
                     <Accordion.Panel>

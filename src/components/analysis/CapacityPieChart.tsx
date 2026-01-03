@@ -1,4 +1,4 @@
-import { Text } from "@mantine/core";
+import { Text, useMantineTheme } from "@mantine/core";
 import { PieChart } from "@mantine/charts";
 
 interface CapacityPieChartProps {
@@ -16,6 +16,8 @@ export function CapacityPieChart({
   baseHours,
   size = 200,
 }: CapacityPieChartProps) {
+  const theme = useMantineTheme();
+
   // Handle edge case: no capacity data
   if (baseHours === 0) {
     return (
@@ -26,11 +28,11 @@ export function CapacityPieChart({
   }
 
   // Transform data into Mantine PieChart format
-  // Only include segments with non-zero values
+  // Use theme colors instead of hardcoded hex values
   const data = [
-    { name: "Absence", value: absenceHours, color: "#339af0" },
-    { name: "Overhead", value: overheadHours, color: "#fd7e14" },
-    { name: "Available", value: availableHours, color: "#51cf66" },
+    { name: "Absence", value: absenceHours, color: theme.colors.blue[5] },
+    { name: "Overhead", value: overheadHours, color: theme.colors.orange[5] },
+    { name: "Available", value: availableHours, color: theme.colors.green[5] },
   ].filter((item) => item.value > 0);
 
   // If no data segments, show message
