@@ -47,6 +47,7 @@ pub struct CapacityOverview {
 pub struct PersonCapacity {
     pub person_id: i64,
     pub person_name: String,
+    pub person_email: String,
     pub total_available_hours: f64,
     pub total_allocated_hours: f64,
     pub total_effective_hours: f64,

@@ -1432,6 +1432,7 @@ pub async fn get_capacity_overview(
         people_capacity.push(PersonCapacity {
             person_id: person.id,
             person_name: person.name.clone(),
+            person_email: person.email.clone(),
             total_available_hours: breakdown.available_hours,
             total_allocated_hours,
             total_effective_hours,
@@ -1621,7 +1622,8 @@ pub async fn get_person_capacity(
 
     let capacity = PersonCapacity {
         person_id: person.id,
-        person_name: person.name,
+        person_name: person.name.clone(),
+        person_email: person.email,
         total_available_hours: breakdown.available_hours,
         total_allocated_hours,
         total_effective_hours,

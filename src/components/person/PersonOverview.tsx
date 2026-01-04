@@ -1,5 +1,14 @@
-import { Stack, Paper, Text, Group, Badge, Button } from "@mantine/core";
+import {
+  Stack,
+  Paper,
+  Text,
+  Group,
+  Badge,
+  Button,
+  Avatar,
+} from "@mantine/core";
 import { IconMail, IconClock, IconEdit } from "@tabler/icons-react";
+import { useGravatarUrl } from "../../lib/gravatar";
 import type { Person } from "../../types";
 
 interface PersonOverviewProps {
@@ -8,6 +17,12 @@ interface PersonOverviewProps {
 }
 
 export function PersonOverview({ person, onEdit }: PersonOverviewProps) {
+  const avatarUrl = useGravatarUrl(person.email, {
+    size: 200,
+    default: "initials",
+    name: person.name,
+  });
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
@@ -16,9 +31,26 @@ export function PersonOverview({ person, onEdit }: PersonOverviewProps) {
     <Stack gap="lg">
       <div>
         <Group justify="space-between" align="center">
-          <Text size="lg" fw={600}>
-            Person Details
-          </Text>
+          <Group gap="md">
+            <Avatar src={avatarUrl} alt={person.name} size={120} radius="xl" />
+            <div>
+              <Text size="xl" fw={600}>
+                {person.name}
+              </Text>
+              <Group gap="xs" mt="xs">
+                <IconMail size={16} />
+                <Text
+                  size="sm"
+                  component="a"
+                  href={`mailto:${person.email}`}
+                  style={{ textDecoration: "none" }}
+                  c="blue"
+                >
+                  {person.email}
+                </Text>
+              </Group>
+            </div>
+          </Group>
           <Button
             leftSection={<IconEdit size={16} />}
             variant="light"
@@ -31,32 +63,9 @@ export function PersonOverview({ person, onEdit }: PersonOverviewProps) {
 
       <Paper withBorder p="lg">
         <Stack gap="md">
-          <div>
-            <Text size="sm" c="dimmed" mb={4}>
-              Name
-            </Text>
-            <Text size="md" fw={500}>
-              {person.name}
-            </Text>
-          </div>
-
-          <div>
-            <Text size="sm" c="dimmed" mb={4}>
-              Email
-            </Text>
-            <Group gap="xs">
-              <IconMail size={16} />
-              <Text
-                size="md"
-                component="a"
-                href={`mailto:${person.email}`}
-                style={{ textDecoration: "none" }}
-                c="blue"
-              >
-                {person.email}
-              </Text>
-            </Group>
-          </div>
+          <Text size="md" fw={600}>
+            Details
+          </Text>
 
           <div>
             <Text size="sm" c="dimmed" mb={4}>

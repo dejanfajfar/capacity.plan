@@ -92,6 +92,7 @@ export interface ProjectRequirement {
 export interface PersonCapacity {
   person_id: number;
   person_name: string;
+  person_email: string;
   total_available_hours: number;
   total_allocated_hours: number;
   total_effective_hours: number;

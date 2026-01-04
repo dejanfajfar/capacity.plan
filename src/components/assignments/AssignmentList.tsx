@@ -1,5 +1,14 @@
-import { ActionIcon, Badge, Group, Table, Text, Tooltip } from "@mantine/core";
+import {
+  ActionIcon,
+  Avatar,
+  Badge,
+  Group,
+  Table,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import { IconEdit, IconTrash, IconPin } from "@tabler/icons-react";
+import { useGravatarUrl } from "../../lib/gravatar";
 import type { Assignment, Person, Project } from "../../types";
 
 interface AssignmentListProps {
@@ -8,6 +17,101 @@ interface AssignmentListProps {
   projects: Project[];
   onEdit: (assignment: Assignment) => void;
   onDelete: (id: number) => void;
+}
+
+interface AssignmentRowProps {
+  assignment: Assignment;
+  person: Person | undefined;
+  project: Project | undefined;
+  onEdit: (assignment: Assignment) => void;
+  onDelete: (id: number) => void;
+}
+
+function AssignmentRow({
+  assignment,
+  person,
+  project,
+  onEdit,
+  onDelete,
+}: AssignmentRowProps) {
+  const avatarUrl = useGravatarUrl(person?.email || "", {
+    size: 80,
+    default: "initials",
+    name: person?.name,
+  });
+
+  return (
+    <Table.Tr key={assignment.id}>
+      <Table.Td>
+        <Group gap="sm">
+          <Avatar src={avatarUrl} alt={person?.name} size="sm" radius="xl" />
+          <Text>{person?.name || "Unknown"}</Text>
+        </Group>
+      </Table.Td>
+      <Table.Td>{project?.name || "Unknown"}</Table.Td>
+      <Table.Td className="numeric-data">
+        {(assignment.productivity_factor * 100).toFixed(0)}%
+      </Table.Td>
+      <Table.Td>
+        <Text size="sm">
+          {new Date(assignment.start_date).toLocaleDateString()} -{" "}
+          {new Date(assignment.end_date).toLocaleDateString()}
+        </Text>
+      </Table.Td>
+      <Table.Td>
+        <Group gap="xs">
+          {assignment.is_pinned &&
+          assignment.pinned_allocation_percentage !== null ? (
+            <>
+              <Text className="numeric-data">
+                {assignment.pinned_allocation_percentage.toFixed(1)}%
+              </Text>
+              <Badge size="xs" color="blue" leftSection={<IconPin size={12} />}>
+                Pinned
+              </Badge>
+            </>
+          ) : assignment.calculated_allocation_percentage !== null ? (
+            <Tooltip label="Calculated by optimization" withArrow>
+              <Text className="numeric-data">
+                {assignment.calculated_allocation_percentage.toFixed(1)}%
+              </Text>
+            </Tooltip>
+          ) : (
+            <Text c="dimmed">Not calculated</Text>
+          )}
+        </Group>
+      </Table.Td>
+      <Table.Td>
+        {assignment.calculated_effective_hours !== null ? (
+          <Text className="numeric-data">
+            {assignment.calculated_effective_hours.toFixed(1)}h
+          </Text>
+        ) : (
+          <Text c="dimmed">-</Text>
+        )}
+      </Table.Td>
+      <Table.Td>
+        <ActionIcon.Group>
+          <ActionIcon
+            variant="subtle"
+            color="blue"
+            onClick={() => onEdit(assignment)}
+            title="Edit assignment"
+          >
+            <IconEdit size={18} />
+          </ActionIcon>
+          <ActionIcon
+            variant="subtle"
+            color="red"
+            onClick={() => onDelete(assignment.id)}
+            title="Delete assignment"
+          >
+            <IconTrash size={18} />
+          </ActionIcon>
+        </ActionIcon.Group>
+      </Table.Td>
+    </Table.Tr>
+  );
 }
 
 export function AssignmentList({
@@ -25,9 +129,9 @@ export function AssignmentList({
     );
   }
 
-  // Create lookup maps for person and project names
-  const personMap = new Map(people.map((p) => [p.id, p.name]));
-  const projectMap = new Map(projects.map((p) => [p.id, p.name]));
+  // Create lookup maps for person and project
+  const personMap = new Map(people.map((p) => [p.id, p]));
+  const projectMap = new Map(projects.map((p) => [p.id, p]));
 
   return (
     <Table striped highlightOnHover>
@@ -44,79 +148,14 @@ export function AssignmentList({
       </Table.Thead>
       <Table.Tbody>
         {assignments.map((assignment) => (
-          <Table.Tr key={assignment.id}>
-            <Table.Td>
-              {personMap.get(assignment.person_id) || "Unknown"}
-            </Table.Td>
-            <Table.Td>
-              {projectMap.get(assignment.project_id) || "Unknown"}
-            </Table.Td>
-            <Table.Td className="numeric-data">
-              {(assignment.productivity_factor * 100).toFixed(0)}%
-            </Table.Td>
-            <Table.Td>
-              <Text size="sm">
-                {new Date(assignment.start_date).toLocaleDateString()} -{" "}
-                {new Date(assignment.end_date).toLocaleDateString()}
-              </Text>
-            </Table.Td>
-            <Table.Td>
-              <Group gap="xs">
-                {assignment.is_pinned &&
-                assignment.pinned_allocation_percentage !== null ? (
-                  <>
-                    <Text className="numeric-data">
-                      {assignment.pinned_allocation_percentage.toFixed(1)}%
-                    </Text>
-                    <Badge
-                      size="xs"
-                      color="blue"
-                      leftSection={<IconPin size={12} />}
-                    >
-                      Pinned
-                    </Badge>
-                  </>
-                ) : assignment.calculated_allocation_percentage !== null ? (
-                  <Tooltip label="Calculated by optimization" withArrow>
-                    <Text className="numeric-data">
-                      {assignment.calculated_allocation_percentage.toFixed(1)}%
-                    </Text>
-                  </Tooltip>
-                ) : (
-                  <Text c="dimmed">Not calculated</Text>
-                )}
-              </Group>
-            </Table.Td>
-            <Table.Td>
-              {assignment.calculated_effective_hours !== null ? (
-                <Text className="numeric-data">
-                  {assignment.calculated_effective_hours.toFixed(1)}h
-                </Text>
-              ) : (
-                <Text c="dimmed">-</Text>
-              )}
-            </Table.Td>
-            <Table.Td>
-              <ActionIcon.Group>
-                <ActionIcon
-                  variant="subtle"
-                  color="blue"
-                  onClick={() => onEdit(assignment)}
-                  title="Edit assignment"
-                >
-                  <IconEdit size={18} />
-                </ActionIcon>
-                <ActionIcon
-                  variant="subtle"
-                  color="red"
-                  onClick={() => onDelete(assignment.id)}
-                  title="Delete assignment"
-                >
-                  <IconTrash size={18} />
-                </ActionIcon>
-              </ActionIcon.Group>
-            </Table.Td>
-          </Table.Tr>
+          <AssignmentRow
+            key={assignment.id}
+            assignment={assignment}
+            person={personMap.get(assignment.person_id)}
+            project={projectMap.get(assignment.project_id)}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
         ))}
       </Table.Tbody>
     </Table>

@@ -16,6 +16,7 @@ import {
   Accordion,
   Tooltip,
   Center,
+  Avatar,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import {
@@ -30,11 +31,195 @@ import {
   IconInfoCircle,
 } from "@tabler/icons-react";
 import { optimizeAssignments, getCapacityOverview } from "../../lib/tauri";
+import { useGravatarUrl } from "../../lib/gravatar";
 import type { CapacityOverview, OptimizationResult } from "../../types";
 import { CapacityPieChart } from "./CapacityPieChart";
 
 interface CapacityAnalysisProps {
   periodId: number;
+}
+
+interface PersonCapacityRowProps {
+  person: import("../../types").PersonCapacity;
+  getUtilizationColor: (utilization: number) => string;
+}
+
+function PersonCapacityRow({
+  person,
+  getUtilizationColor,
+}: PersonCapacityRowProps) {
+  const avatarUrl = useGravatarUrl(person.person_email, {
+    size: 80,
+    default: "initials",
+    name: person.person_name,
+  });
+
+  return (
+    <Accordion.Item key={person.person_id} value={person.person_id.toString()}>
+      <Accordion.Control>
+        <Group justify="space-between" wrap="nowrap">
+          <Group gap="sm">
+            <Avatar
+              src={avatarUrl}
+              alt={person.person_name}
+              size="md"
+              radius="xl"
+            />
+            <div>
+              <Text fw={500}>{person.person_name}</Text>
+              <Text size="sm" c="dimmed" className="numeric-data">
+                {person.total_available_hours.toFixed(0)}h available
+              </Text>
+            </div>
+          </Group>
+          <div style={{ width: 200 }}>
+            <Progress
+              value={person.utilization_percentage}
+              color={getUtilizationColor(person.utilization_percentage)}
+              size="lg"
+            />
+            <Text size="xs" ta="center" mt={4} className="numeric-data">
+              {person.utilization_percentage.toFixed(1)}% utilized
+            </Text>
+          </div>
+        </Group>
+      </Accordion.Control>
+      <Accordion.Panel>
+        <Stack gap="md">
+          {/* Capacity Deductions Summary and Pie Chart - Two Column Layout */}
+          <Grid gutter="md" align="flex-start">
+            {/* Capacity Deductions Summary */}
+            {(person.absence_days > 0 || person.overhead_hours > 0) && (
+              <Grid.Col span={{ base: 12, md: 6 }}>
+                <Alert
+                  icon={<IconInfoCircle size={16} />}
+                  color="blue"
+                  variant="light"
+                >
+                  <Stack gap="xs">
+                    {person.absence_days > 0 && (
+                      <Text size="sm">
+                        <IconCalendarOff
+                          size={14}
+                          style={{
+                            display: "inline",
+                            verticalAlign: "middle",
+                          }}
+                        />{" "}
+                        <strong>{person.absence_days}</strong>{" "}
+                        {person.absence_days === 1 ? "day" : "days"} absent (
+                        <strong className="numeric-data">
+                          {person.absence_hours.toFixed(0)}h
+                        </strong>{" "}
+                        deducted)
+                      </Text>
+                    )}
+                    {person.overhead_hours > 0 && (
+                      <Text size="sm">
+                        <IconClock
+                          size={14}
+                          style={{
+                            display: "inline",
+                            verticalAlign: "middle",
+                          }}
+                        />{" "}
+                        Overhead:{" "}
+                        <strong className="numeric-data">
+                          {person.overhead_hours.toFixed(0)}h
+                        </strong>{" "}
+                        deducted
+                      </Text>
+                    )}
+                    <Text size="xs" c="dimmed" mt={4}>
+                      Base: {person.base_available_hours.toFixed(0)}h →
+                      Available: {person.total_available_hours.toFixed(0)}h
+                    </Text>
+                  </Stack>
+                </Alert>
+              </Grid.Col>
+            )}
+
+            {/* Capacity Breakdown Pie Chart */}
+            <Grid.Col
+              span={{
+                base: 12,
+                md:
+                  person.absence_days > 0 || person.overhead_hours > 0 ? 6 : 12,
+              }}
+            >
+              <Paper withBorder p="md" bg="gray.0">
+                <Title order={5} mb="md">
+                  Capacity Breakdown
+                </Title>
+                <Center>
+                  <CapacityPieChart
+                    absenceHours={person.absence_hours}
+                    overheadHours={person.overhead_hours}
+                    availableHours={person.total_available_hours}
+                    baseHours={person.base_available_hours}
+                  />
+                </Center>
+              </Paper>
+            </Grid.Col>
+          </Grid>
+
+          <div>
+            <Text size="sm" fw={500}>
+              Assignments:
+            </Text>
+            <Table mt="xs">
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Project</Table.Th>
+                  <Table.Th>Allocation</Table.Th>
+                  <Table.Th>Effective Hours</Table.Th>
+                  <Table.Th>Status</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {person.assignments.map((assignment) => (
+                  <Table.Tr key={assignment.assignment_id}>
+                    <Table.Td>{assignment.project_name}</Table.Td>
+                    <Table.Td className="numeric-data">
+                      {assignment.allocation_percentage.toFixed(1)}%
+                    </Table.Td>
+                    <Table.Td className="numeric-data">
+                      {assignment.effective_hours.toFixed(1)}h
+                    </Table.Td>
+                    <Table.Td>
+                      {assignment.is_pinned && (
+                        <Badge size="sm" variant="light">
+                          Pinned
+                        </Badge>
+                      )}
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </div>
+          <Group gap="lg">
+            <div>
+              <Text size="sm" c="dimmed">
+                Total Effective Hours
+              </Text>
+              <Text size="lg" fw={500} className="numeric-data">
+                {person.total_effective_hours.toFixed(1)}h
+              </Text>
+            </div>
+            <div>
+              <Text size="sm" c="dimmed">
+                Total Allocated Hours
+              </Text>
+              <Text size="lg" fw={500} className="numeric-data">
+                {person.total_allocated_hours.toFixed(1)}h
+              </Text>
+            </div>
+          </Group>
+        </Stack>
+      </Accordion.Panel>
+    </Accordion.Item>
+  );
 }
 
 export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
@@ -243,184 +428,11 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
               </Title>
               <Accordion variant="contained">
                 {overview.people_capacity.map((person) => (
-                  <Accordion.Item
+                  <PersonCapacityRow
                     key={person.person_id}
-                    value={person.person_id.toString()}
-                  >
-                    <Accordion.Control>
-                      <Group justify="space-between" wrap="nowrap">
-                        <div>
-                          <Text fw={500}>{person.person_name}</Text>
-                          <Text size="sm" c="dimmed" className="numeric-data">
-                            {person.total_available_hours.toFixed(0)}h available
-                          </Text>
-                        </div>
-                        <div style={{ width: 200 }}>
-                          <Progress
-                            value={person.utilization_percentage}
-                            color={getUtilizationColor(
-                              person.utilization_percentage,
-                            )}
-                            size="lg"
-                          />
-                          <Text
-                            size="xs"
-                            ta="center"
-                            mt={4}
-                            className="numeric-data"
-                          >
-                            {person.utilization_percentage.toFixed(1)}% utilized
-                          </Text>
-                        </div>
-                      </Group>
-                    </Accordion.Control>
-                    <Accordion.Panel>
-                      <Stack gap="md">
-                        {/* Capacity Deductions Summary and Pie Chart - Two Column Layout */}
-                        <Grid gutter="md" align="flex-start">
-                          {/* Capacity Deductions Summary */}
-                          {(person.absence_days > 0 ||
-                            person.overhead_hours > 0) && (
-                            <Grid.Col span={{ base: 12, md: 6 }}>
-                              <Alert
-                                icon={<IconInfoCircle size={16} />}
-                                color="blue"
-                                variant="light"
-                              >
-                                <Stack gap="xs">
-                                  {person.absence_days > 0 && (
-                                    <Text size="sm">
-                                      <IconCalendarOff
-                                        size={14}
-                                        style={{
-                                          display: "inline",
-                                          verticalAlign: "middle",
-                                        }}
-                                      />{" "}
-                                      <strong>{person.absence_days}</strong>{" "}
-                                      {person.absence_days === 1
-                                        ? "day"
-                                        : "days"}{" "}
-                                      absent (
-                                      <strong className="numeric-data">
-                                        {person.absence_hours.toFixed(0)}h
-                                      </strong>{" "}
-                                      deducted)
-                                    </Text>
-                                  )}
-                                  {person.overhead_hours > 0 && (
-                                    <Text size="sm">
-                                      <IconClock
-                                        size={14}
-                                        style={{
-                                          display: "inline",
-                                          verticalAlign: "middle",
-                                        }}
-                                      />{" "}
-                                      Overhead:{" "}
-                                      <strong className="numeric-data">
-                                        {person.overhead_hours.toFixed(0)}h
-                                      </strong>{" "}
-                                      deducted
-                                    </Text>
-                                  )}
-                                  <Text size="xs" c="dimmed" mt={4}>
-                                    Base:{" "}
-                                    {person.base_available_hours.toFixed(0)}h →
-                                    Available:{" "}
-                                    {person.total_available_hours.toFixed(0)}h
-                                  </Text>
-                                </Stack>
-                              </Alert>
-                            </Grid.Col>
-                          )}
-
-                          {/* Capacity Breakdown Pie Chart */}
-                          <Grid.Col
-                            span={{
-                              base: 12,
-                              md:
-                                person.absence_days > 0 ||
-                                person.overhead_hours > 0
-                                  ? 6
-                                  : 12,
-                            }}
-                          >
-                            <Paper withBorder p="md" bg="gray.0">
-                              <Title order={5} mb="md">
-                                Capacity Breakdown
-                              </Title>
-                              <Center>
-                                <CapacityPieChart
-                                  absenceHours={person.absence_hours}
-                                  overheadHours={person.overhead_hours}
-                                  availableHours={person.total_available_hours}
-                                  baseHours={person.base_available_hours}
-                                />
-                              </Center>
-                            </Paper>
-                          </Grid.Col>
-                        </Grid>
-
-                        <div>
-                          <Text size="sm" fw={500}>
-                            Assignments:
-                          </Text>
-                          <Table mt="xs">
-                            <Table.Thead>
-                              <Table.Tr>
-                                <Table.Th>Project</Table.Th>
-                                <Table.Th>Allocation</Table.Th>
-                                <Table.Th>Effective Hours</Table.Th>
-                                <Table.Th>Status</Table.Th>
-                              </Table.Tr>
-                            </Table.Thead>
-                            <Table.Tbody>
-                              {person.assignments.map((assignment) => (
-                                <Table.Tr key={assignment.assignment_id}>
-                                  <Table.Td>{assignment.project_name}</Table.Td>
-                                  <Table.Td className="numeric-data">
-                                    {assignment.allocation_percentage.toFixed(
-                                      1,
-                                    )}
-                                    %
-                                  </Table.Td>
-                                  <Table.Td className="numeric-data">
-                                    {assignment.effective_hours.toFixed(1)}h
-                                  </Table.Td>
-                                  <Table.Td>
-                                    {assignment.is_pinned && (
-                                      <Badge size="sm" variant="light">
-                                        Pinned
-                                      </Badge>
-                                    )}
-                                  </Table.Td>
-                                </Table.Tr>
-                              ))}
-                            </Table.Tbody>
-                          </Table>
-                        </div>
-                        <Group gap="lg">
-                          <div>
-                            <Text size="sm" c="dimmed">
-                              Total Effective Hours
-                            </Text>
-                            <Text size="lg" fw={500} className="numeric-data">
-                              {person.total_effective_hours.toFixed(1)}h
-                            </Text>
-                          </div>
-                          <div>
-                            <Text size="sm" c="dimmed">
-                              Total Allocated Hours
-                            </Text>
-                            <Text size="lg" fw={500} className="numeric-data">
-                              {person.total_allocated_hours.toFixed(1)}h
-                            </Text>
-                          </div>
-                        </Group>
-                      </Stack>
-                    </Accordion.Panel>
-                  </Accordion.Item>
+                    person={person}
+                    getUtilizationColor={getUtilizationColor}
+                  />
                 ))}
               </Accordion>
             </div>

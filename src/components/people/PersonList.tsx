@@ -1,5 +1,6 @@
-import { ActionIcon, Table, Text } from "@mantine/core";
+import { ActionIcon, Avatar, Group, Table, Text } from "@mantine/core";
 import { IconEdit, IconTrash, IconEye } from "@tabler/icons-react";
+import { useGravatarUrl } from "../../lib/gravatar";
 import type { Person } from "../../types";
 
 interface PersonListProps {
@@ -7,6 +8,68 @@ interface PersonListProps {
   onEdit: (person: Person) => void;
   onDelete: (id: number) => void;
   onView: (personId: number) => void;
+}
+
+interface PersonRowProps {
+  person: Person;
+  onEdit: (person: Person) => void;
+  onDelete: (id: number) => void;
+  onView: (personId: number) => void;
+}
+
+function PersonRow({ person, onEdit, onDelete, onView }: PersonRowProps) {
+  const avatarUrl = useGravatarUrl(person.email, {
+    size: 80,
+    default: "initials",
+    name: person.name,
+  });
+
+  return (
+    <Table.Tr
+      key={person.id}
+      style={{ cursor: "pointer" }}
+      onClick={() => onView(person.id)}
+    >
+      <Table.Td>
+        <Group gap="sm">
+          <Avatar src={avatarUrl} alt={person.name} size="md" radius="xl" />
+          <Text>{person.name}</Text>
+        </Group>
+      </Table.Td>
+      <Table.Td>{person.email}</Table.Td>
+      <Table.Td className="numeric-data">
+        {person.available_hours_per_week} hrs
+      </Table.Td>
+      <Table.Td onClick={(e) => e.stopPropagation()}>
+        <ActionIcon.Group>
+          <ActionIcon
+            variant="subtle"
+            color="blue"
+            onClick={() => onView(person.id)}
+            title="View details"
+          >
+            <IconEye size={18} />
+          </ActionIcon>
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            onClick={() => onEdit(person)}
+            title="Edit person"
+          >
+            <IconEdit size={18} />
+          </ActionIcon>
+          <ActionIcon
+            variant="subtle"
+            color="red"
+            onClick={() => onDelete(person.id)}
+            title="Delete person"
+          >
+            <IconTrash size={18} />
+          </ActionIcon>
+        </ActionIcon.Group>
+      </Table.Td>
+    </Table.Tr>
+  );
 }
 
 export function PersonList({
@@ -35,45 +98,13 @@ export function PersonList({
       </Table.Thead>
       <Table.Tbody>
         {people.map((person) => (
-          <Table.Tr
+          <PersonRow
             key={person.id}
-            style={{ cursor: "pointer" }}
-            onClick={() => onView(person.id)}
-          >
-            <Table.Td>{person.name}</Table.Td>
-            <Table.Td>{person.email}</Table.Td>
-            <Table.Td className="numeric-data">
-              {person.available_hours_per_week} hrs
-            </Table.Td>
-            <Table.Td onClick={(e) => e.stopPropagation()}>
-              <ActionIcon.Group>
-                <ActionIcon
-                  variant="subtle"
-                  color="blue"
-                  onClick={() => onView(person.id)}
-                  title="View details"
-                >
-                  <IconEye size={18} />
-                </ActionIcon>
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  onClick={() => onEdit(person)}
-                  title="Edit person"
-                >
-                  <IconEdit size={18} />
-                </ActionIcon>
-                <ActionIcon
-                  variant="subtle"
-                  color="red"
-                  onClick={() => onDelete(person.id)}
-                  title="Delete person"
-                >
-                  <IconTrash size={18} />
-                </ActionIcon>
-              </ActionIcon.Group>
-            </Table.Td>
-          </Table.Tr>
+            person={person}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onView={onView}
+          />
         ))}
       </Table.Tbody>
     </Table>

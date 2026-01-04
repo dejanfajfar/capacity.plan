@@ -1,5 +1,6 @@
-import { ActionIcon, Badge, Table, Text } from "@mantine/core";
+import { ActionIcon, Avatar, Badge, Group, Table, Text } from "@mantine/core";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { useGravatarUrl } from "../../lib/gravatar";
 import type { OverheadAssignment, Person } from "../../types";
 
 interface OverheadAssignmentListProps {
@@ -7,6 +8,78 @@ interface OverheadAssignmentListProps {
   people: Person[];
   onEdit: (assignment: OverheadAssignment) => void;
   onDelete: (id: number) => void;
+}
+
+interface OverheadAssignmentRowProps {
+  assignment: OverheadAssignment;
+  person: Person | undefined;
+  onEdit: (assignment: OverheadAssignment) => void;
+  onDelete: (id: number) => void;
+}
+
+function OverheadAssignmentRow({
+  assignment,
+  person,
+  onEdit,
+  onDelete,
+}: OverheadAssignmentRowProps) {
+  const avatarUrl = useGravatarUrl(person?.email || "", {
+    size: 80,
+    default: "initials",
+    name: person?.name,
+  });
+
+  return (
+    <Table.Tr key={assignment.id}>
+      <Table.Td>
+        <Group gap="sm">
+          <Avatar src={avatarUrl} alt={person?.name} size="sm" radius="xl" />
+          <div>
+            <Text size="sm" fw={500}>
+              {person?.name || `Person #${assignment.person_id}`}
+            </Text>
+            {person?.email && (
+              <Text size="xs" c="dimmed">
+                {person.email}
+              </Text>
+            )}
+          </div>
+        </Group>
+      </Table.Td>
+      <Table.Td>
+        <Text size="sm">{assignment.effort_hours}h</Text>
+      </Table.Td>
+      <Table.Td>
+        <Badge
+          size="sm"
+          variant="light"
+          color={assignment.effort_period === "daily" ? "blue" : "green"}
+        >
+          {assignment.effort_period === "daily" ? "Per Day" : "Per Week"}
+        </Badge>
+      </Table.Td>
+      <Table.Td>
+        <ActionIcon.Group>
+          <ActionIcon
+            variant="subtle"
+            color="blue"
+            onClick={() => onEdit(assignment)}
+            title="Edit assignment"
+          >
+            <IconEdit size={18} />
+          </ActionIcon>
+          <ActionIcon
+            variant="subtle"
+            color="red"
+            onClick={() => onDelete(assignment.id)}
+            title="Delete assignment"
+          >
+            <IconTrash size={18} />
+          </ActionIcon>
+        </ActionIcon.Group>
+      </Table.Td>
+    </Table.Tr>
+  );
 }
 
 export function OverheadAssignmentList({
@@ -46,59 +119,15 @@ export function OverheadAssignmentList({
         </Table.Tr>
       </Table.Thead>
       <Table.Tbody>
-        {sortedAssignments.map((assignment) => {
-          const person = peopleMap.get(assignment.person_id);
-          return (
-            <Table.Tr key={assignment.id}>
-              <Table.Td>
-                <Text size="sm" fw={500}>
-                  {person?.name || `Person #${assignment.person_id}`}
-                </Text>
-                {person?.email && (
-                  <Text size="xs" c="dimmed">
-                    {person.email}
-                  </Text>
-                )}
-              </Table.Td>
-              <Table.Td>
-                <Text size="sm">{assignment.effort_hours}h</Text>
-              </Table.Td>
-              <Table.Td>
-                <Badge
-                  size="sm"
-                  variant="light"
-                  color={
-                    assignment.effort_period === "daily" ? "blue" : "green"
-                  }
-                >
-                  {assignment.effort_period === "daily"
-                    ? "Per Day"
-                    : "Per Week"}
-                </Badge>
-              </Table.Td>
-              <Table.Td>
-                <ActionIcon.Group>
-                  <ActionIcon
-                    variant="subtle"
-                    color="blue"
-                    onClick={() => onEdit(assignment)}
-                    title="Edit assignment"
-                  >
-                    <IconEdit size={18} />
-                  </ActionIcon>
-                  <ActionIcon
-                    variant="subtle"
-                    color="red"
-                    onClick={() => onDelete(assignment.id)}
-                    title="Delete assignment"
-                  >
-                    <IconTrash size={18} />
-                  </ActionIcon>
-                </ActionIcon.Group>
-              </Table.Td>
-            </Table.Tr>
-          );
-        })}
+        {sortedAssignments.map((assignment) => (
+          <OverheadAssignmentRow
+            key={assignment.id}
+            assignment={assignment}
+            person={peopleMap.get(assignment.person_id)}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        ))}
       </Table.Tbody>
     </Table>
   );
