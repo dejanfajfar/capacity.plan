@@ -1,4 +1,4 @@
-![Logo][https://github.com/dejanfajfar/capacity.plan/blob/2639b86a909b5fa923171bd03194164b8d9dd9ac/doc/Logo%20gemini.png]
+![Logo](https://github.com/dejanfajfar/capacity.plan/blob/2639b86a909b5fa923171bd03194164b8d9dd9ac/doc/Logo%20gemini.png)
 
 
 # Capacity Planner
