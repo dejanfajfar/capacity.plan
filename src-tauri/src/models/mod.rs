@@ -246,3 +246,20 @@ pub struct CountryDependencies {
     pub holiday_count: i64,
     pub people_count: i64,
 }
+
+// ============================================================================
+// Extended Models for Commands
+// ============================================================================
+
+// Extended overhead assignment model with overhead details for UI display
+#[derive(Debug, Serialize, sqlx::FromRow)]
+pub struct OverheadAssignmentWithDetails {
+    pub id: i64,
+    pub overhead_id: i64,
+    pub overhead_name: String,
+    pub overhead_description: Option<String>,
+    pub person_id: i64,
+    pub effort_hours: f64,
+    pub effort_period: String,
+    pub created_at: String,
+}
