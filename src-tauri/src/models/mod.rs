@@ -15,6 +15,7 @@ pub struct Person {
     pub name: String,
     pub email: String,
     pub available_hours_per_week: f64,
+    pub country_id: Option<i64>, // Optional reference to country
     pub created_at: String,
 }
 
@@ -98,6 +99,7 @@ pub struct CreatePersonInput {
     pub name: String,
     pub email: String,
     pub available_hours_per_week: f64,
+    pub country_id: Option<i64>, // Optional country assignment
 }
 
 #[derive(Debug, Deserialize)]
@@ -180,4 +182,67 @@ pub struct ProjectDependencies {
 pub struct PlanningPeriodDependencies {
     pub requirement_count: i64,
     pub assignment_count: i64,
+}
+
+// ============================================================================
+// Country Models
+// ============================================================================
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub struct Country {
+    pub id: i64,
+    pub iso_code: String, // 3-letter ISO 3166-1 alpha-3 code (e.g., "USA", "GBR")
+    pub name: String,
+    pub created_at: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CreateCountryInput {
+    pub iso_code: String,
+    pub name: String,
+}
+
+// ============================================================================
+// Holiday Models
+// ============================================================================
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub struct Holiday {
+    pub id: i64,
+    pub country_id: i64,
+    pub name: Option<String>, // Optional holiday name
+    pub start_date: String,   // ISO 8601 date format
+    pub end_date: String,     // ISO 8601 date format
+    pub created_at: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CreateHolidayInput {
+    pub country_id: i64,
+    pub name: Option<String>,
+    pub start_date: String,
+    pub end_date: String,
+}
+
+// Extended model with country information for UI display
+#[derive(Debug, Serialize, sqlx::FromRow)]
+pub struct HolidayWithCountry {
+    pub id: i64,
+    pub country_id: i64,
+    pub country_iso_code: String,
+    pub country_name: String,
+    pub name: Option<String>,
+    pub start_date: String,
+    pub end_date: String,
+    pub created_at: String,
+}
+
+// ============================================================================
+// Country Dependency Information
+// ============================================================================
+
+#[derive(Debug, Serialize)]
+pub struct CountryDependencies {
+    pub holiday_count: i64,
+    pub people_count: i64,
 }

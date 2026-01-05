@@ -17,6 +17,12 @@ import type {
   CreateOverheadAssignmentInput,
   ProjectRequirement,
   CreateProjectRequirementInput,
+  Country,
+  CreateCountryInput,
+  CountryDependencies,
+  Holiday,
+  HolidayWithCountry,
+  CreateHolidayInput,
   OptimizationResult,
   CapacityOverview,
   PersonCapacity,
@@ -323,6 +329,82 @@ export async function getProjectStaffing(
   planningPeriodId: number,
 ): Promise<ProjectStaffing> {
   return await invoke("get_project_staffing", { projectId, planningPeriodId });
+}
+
+// ============================================================================
+// Country Commands
+// ============================================================================
+
+export async function listCountries(): Promise<Country[]> {
+  return await invoke("list_countries");
+}
+
+export async function createCountry(
+  input: CreateCountryInput,
+): Promise<Country> {
+  return await invoke("create_country", { input });
+}
+
+export async function updateCountry(
+  id: number,
+  input: CreateCountryInput,
+): Promise<Country> {
+  return await invoke("update_country", { id, input });
+}
+
+export async function deleteCountry(id: number): Promise<void> {
+  return await invoke("delete_country", { id });
+}
+
+export async function checkCountryDependencies(
+  id: number,
+): Promise<CountryDependencies> {
+  return await invoke("check_country_dependencies", { id });
+}
+
+// ============================================================================
+// Holiday Commands
+// ============================================================================
+
+export async function listHolidays(
+  countryId?: number,
+): Promise<HolidayWithCountry[]> {
+  return await invoke("list_holidays", { countryId });
+}
+
+export async function listHolidaysForPerson(
+  personId: number,
+  startDate: string,
+  endDate: string,
+): Promise<Holiday[]> {
+  return await invoke("list_holidays_for_person", {
+    personId,
+    startDate,
+    endDate,
+  });
+}
+
+export async function createHoliday(
+  input: CreateHolidayInput,
+): Promise<Holiday> {
+  return await invoke("create_holiday", { input });
+}
+
+export async function updateHoliday(
+  id: number,
+  input: CreateHolidayInput,
+): Promise<Holiday> {
+  return await invoke("update_holiday", { id, input });
+}
+
+export async function deleteHoliday(id: number): Promise<void> {
+  return await invoke("delete_holiday", { id });
+}
+
+export async function batchCreateHolidays(
+  holidays: CreateHolidayInput[],
+): Promise<void> {
+  return await invoke("batch_create_holidays", { holidays });
 }
 
 // ============================================================================

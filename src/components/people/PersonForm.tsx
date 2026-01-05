@@ -6,9 +6,11 @@ import {
   Group,
   Stack,
   NumberInput,
+  Select,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import type { Person, CreatePersonInput } from "../../types";
+import type { Person, CreatePersonInput, Country } from "../../types";
+import { listCountries } from "../../lib/tauri";
 
 interface PersonFormProps {
   opened: boolean;
@@ -26,12 +28,14 @@ export function PersonForm({
   title,
 }: PersonFormProps) {
   const [loading, setLoading] = useState(false);
+  const [countries, setCountries] = useState<Country[]>([]);
 
   const form = useForm<CreatePersonInput>({
     initialValues: {
       name: "",
       email: "",
       available_hours_per_week: 40,
+      country_id: null,
     },
     validate: {
       name: (value) => (!value ? "Name is required" : null),
@@ -50,6 +54,22 @@ export function PersonForm({
     },
   });
 
+  // Load countries when modal opens
+  useEffect(() => {
+    if (opened) {
+      loadCountries();
+    }
+  }, [opened]);
+
+  const loadCountries = async () => {
+    try {
+      const data = await listCountries();
+      setCountries(data);
+    } catch (error) {
+      console.error("Failed to load countries:", error);
+    }
+  };
+
   // Update form values when modal opens or person changes
   useEffect(() => {
     if (opened) {
@@ -59,6 +79,7 @@ export function PersonForm({
           name: person.name,
           email: person.email,
           available_hours_per_week: person.available_hours_per_week,
+          country_id: person.country_id,
         });
         form.clearErrors();
       } else {
@@ -98,6 +119,25 @@ export function PersonForm({
             required
             type="email"
             {...form.getInputProps("email")}
+          />
+
+          <Select
+            label="Country"
+            placeholder="Select country (optional)"
+            description="Determines which holidays apply to this person"
+            data={countries.map((c) => ({
+              value: c.id.toString(),
+              label: `${c.iso_code} - ${c.name}`,
+            }))}
+            value={form.values.country_id?.toString() || null}
+            onChange={(value) =>
+              form.setFieldValue(
+                "country_id",
+                value ? parseInt(value, 10) : null,
+              )
+            }
+            clearable
+            searchable
           />
 
           <NumberInput

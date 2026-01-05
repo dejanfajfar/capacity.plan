@@ -1,6 +1,6 @@
 use crate::db::DbPool;
 use crate::models::{
-    Absence as ModelAbsence, Assignment, Person, PlanningPeriod, ProjectRequirement,
+    Absence as ModelAbsence, Assignment, Holiday, Person, PlanningPeriod, ProjectRequirement,
 };
 use chrono::NaiveDate;
 use log::{debug, info, warn};
@@ -56,6 +56,8 @@ pub struct PersonCapacity {
     pub assignments: Vec<AssignmentSummary>,
     pub absence_days: i64,
     pub absence_hours: f64,
+    pub holiday_days: i64,  // NEW
+    pub holiday_hours: f64, // NEW
     pub base_available_hours: f64,
     pub overhead_hours: f64,
 }
@@ -91,6 +93,8 @@ pub struct PersonAssignmentSummary {
     pub effective_hours: f64,
     pub absence_days: i64,
     pub absence_hours: f64,
+    pub holiday_days: i64,  // NEW
+    pub holiday_hours: f64, // NEW
     pub overhead_hours: f64,
 }
 
@@ -100,6 +104,8 @@ pub struct PersonAvailableHoursBreakdown {
     pub base_hours: f64,
     pub absence_days: i64,
     pub absence_hours: f64,
+    pub holiday_days: i64,  // NEW
+    pub holiday_hours: f64, // NEW
     pub overhead_hours: f64,
 }
 
@@ -154,6 +160,50 @@ pub async fn calculate_person_available_hours(
     let total_absence_days: i64 = absences.iter().map(|a| a.days).sum();
     let absence_hours = total_absence_days as f64 * hours_per_day;
 
+    // Get holidays for this person's country within the planning period
+    let (total_holiday_days, holiday_hours) = if let Some(country_id) = person.country_id {
+        let holidays = sqlx::query_as::<_, Holiday>(
+            "SELECT * FROM holidays 
+             WHERE country_id = ? 
+             AND start_date <= ? 
+             AND end_date >= ?",
+        )
+        .bind(country_id)
+        .bind(&planning_period.end_date)
+        .bind(&planning_period.start_date)
+        .fetch_all(pool)
+        .await
+        .map_err(|e| format!("Failed to fetch holidays: {}", e))?;
+
+        // Calculate total holiday days, accounting for partial overlaps
+        let mut total_holiday_days = 0i64;
+        for holiday in holidays {
+            let holiday_start = NaiveDate::parse_from_str(&holiday.start_date, "%Y-%m-%d")
+                .map_err(|e| format!("Invalid holiday start date: {}", e))?;
+            let holiday_end = NaiveDate::parse_from_str(&holiday.end_date, "%Y-%m-%d")
+                .map_err(|e| format!("Invalid holiday end date: {}", e))?;
+
+            // Calculate the overlap between holiday and planning period
+            let overlap_start = holiday_start.max(start);
+            let overlap_end = holiday_end.min(end);
+
+            if overlap_start <= overlap_end {
+                let holiday_days_in_period = (overlap_end - overlap_start).num_days() + 1;
+                // Only count working days (assume holidays are on working days)
+                // Simple approximation: 5/7 of days are working days
+                let working_holiday_days =
+                    (holiday_days_in_period as f64 * 5.0 / 7.0).round() as i64;
+                total_holiday_days += working_holiday_days;
+            }
+        }
+
+        let holiday_hours = total_holiday_days as f64 * hours_per_day;
+        (total_holiday_days, holiday_hours)
+    } else {
+        // Person has no country assigned, so no holidays
+        (0, 0.0)
+    };
+
     // Get overhead assignments for this person within the planning period
     let overhead_assignments = sqlx::query_as::<_, crate::models::OverheadAssignment>(
         "SELECT oa.* FROM overhead_assignments oa
@@ -175,12 +225,12 @@ pub async fn calculate_person_available_hours(
         }
     }
 
-    // Calculate available working days and hours after absences and overhead
-    let available_hours = (base_hours - absence_hours - overhead_hours).max(0.0);
+    // Calculate available working days and hours after absences, holidays, and overhead
+    let available_hours = (base_hours - absence_hours - holiday_hours - overhead_hours).max(0.0);
 
     debug!(
-        "Person {} available hours: {} (base: {}, working days: {}, absence days: {}, absence hours: {}, overhead hours: {}, hours/day: {})",
-        person.name, available_hours, base_hours, working_days, total_absence_days, absence_hours, overhead_hours, hours_per_day
+        "Person {} available hours: {} (base: {}, working days: {}, absence days: {}, absence hours: {}, holiday days: {}, holiday hours: {}, overhead hours: {}, hours/day: {})",
+        person.name, available_hours, base_hours, working_days, total_absence_days, absence_hours, total_holiday_days, holiday_hours, overhead_hours, hours_per_day
     );
 
     Ok(PersonAvailableHoursBreakdown {
@@ -188,6 +238,8 @@ pub async fn calculate_person_available_hours(
         base_hours,
         absence_days: total_absence_days,
         absence_hours,
+        holiday_days: total_holiday_days,
+        holiday_hours,
         overhead_hours,
     })
 }

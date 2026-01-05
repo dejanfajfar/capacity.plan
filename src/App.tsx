@@ -11,6 +11,7 @@ import { PeopleManagementPage } from "./pages/PeopleManagement";
 import { PersonDetailPage } from "./pages/PersonDetail";
 import { ProjectsManagementPage } from "./pages/ProjectsManagement";
 import { PlanningPeriodDetailPage } from "./pages/PlanningPeriodDetail";
+import { HolidaysManagementPage } from "./pages/HolidaysManagement";
 import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
 import { oneDarkTheme, solarizedLightTheme } from "./theme";
 
@@ -34,6 +35,7 @@ function AppContent() {
               <Route path="people" element={<PeopleManagementPage />} />
               <Route path="people/:personId" element={<PersonDetailPage />} />
               <Route path="projects" element={<ProjectsManagementPage />} />
+              <Route path="holidays" element={<HolidaysManagementPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

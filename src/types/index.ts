@@ -13,6 +13,7 @@ export interface Person {
   name: string;
   email: string;
   available_hours_per_week: number;
+  country_id: number | null; // NEW: Optional country assignment
   created_at: string;
 }
 
@@ -101,6 +102,8 @@ export interface PersonCapacity {
   assignments: AssignmentSummary[];
   absence_days: number;
   absence_hours: number;
+  holiday_days: number; // NEW
+  holiday_hours: number; // NEW
   base_available_hours: number;
   overhead_hours: number;
 }
@@ -133,6 +136,8 @@ export interface PersonAssignmentSummary {
   effective_hours: number;
   absence_days: number;
   absence_hours: number;
+  holiday_days: number; // NEW
+  holiday_hours: number; // NEW
   overhead_hours: number;
 }
 
@@ -189,6 +194,7 @@ export interface CreatePersonInput {
   name: string;
   email: string;
   available_hours_per_week: number;
+  country_id?: number | null; // NEW: Optional country assignment
 }
 
 export interface CreateProjectInput {
@@ -249,6 +255,52 @@ export interface ProjectDependencies {
 export interface PlanningPeriodDependencies {
   requirement_count: number;
   assignment_count: number;
+}
+
+// ============================================================================
+// Country Types
+// ============================================================================
+
+export interface Country {
+  id: number;
+  iso_code: string; // 3-letter ISO 3166-1 alpha-3 code
+  name: string;
+  created_at: string;
+}
+
+export interface CreateCountryInput {
+  iso_code: string;
+  name: string;
+}
+
+export interface CountryDependencies {
+  holiday_count: number;
+  people_count: number;
+}
+
+// ============================================================================
+// Holiday Types
+// ============================================================================
+
+export interface Holiday {
+  id: number;
+  country_id: number;
+  name: string | null; // Optional holiday name
+  start_date: string; // ISO 8601
+  end_date: string;
+  created_at: string;
+}
+
+export interface HolidayWithCountry extends Holiday {
+  country_iso_code: string;
+  country_name: string;
+}
+
+export interface CreateHolidayInput {
+  country_id: number;
+  name?: string;
+  start_date: string;
+  end_date: string;
 }
 
 // UI-specific types

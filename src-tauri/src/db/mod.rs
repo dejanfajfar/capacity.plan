@@ -238,6 +238,59 @@ async fn run_migrations(pool: &DbPool) -> Result<(), sqlx::Error> {
 
     debug!("Priority column migration completed");
 
+    // Create countries table
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS countries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            iso_code TEXT NOT NULL UNIQUE,
+            name TEXT NOT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+        "#,
+    )
+    .execute(pool)
+    .await?;
+
+    // Create holidays table
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS holidays (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            country_id INTEGER NOT NULL,
+            name TEXT,
+            start_date TEXT NOT NULL,
+            end_date TEXT NOT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (country_id) REFERENCES countries(id) ON DELETE CASCADE
+        )
+        "#,
+    )
+    .execute(pool)
+    .await?;
+
+    // Add country_id column to people table if it doesn't exist
+    // People can be assigned to a country; when country is deleted, country_id becomes NULL
+    sqlx::query("ALTER TABLE people ADD COLUMN country_id INTEGER REFERENCES countries(id) ON DELETE SET NULL")
+        .execute(pool)
+        .await
+        .ok(); // Ignore error if column already exists (SQLite limitation)
+
+    debug!("Country and holidays tables migration completed");
+
+    // Create indexes for holidays and countries
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_holidays_country ON holidays(country_id)")
+        .execute(pool)
+        .await?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_holidays_dates ON holidays(start_date, end_date)")
+        .execute(pool)
+        .await?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_people_country ON people(country_id)")
+        .execute(pool)
+        .await?;
+
     info!("Database migrations completed successfully");
     Ok(())
 }

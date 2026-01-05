@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   Stack,
   Paper,
@@ -7,9 +8,10 @@ import {
   Button,
   Avatar,
 } from "@mantine/core";
-import { IconMail, IconClock, IconEdit } from "@tabler/icons-react";
+import { IconMail, IconClock, IconEdit, IconWorld } from "@tabler/icons-react";
 import { useGravatarUrl } from "../../lib/gravatar";
-import type { Person } from "../../types";
+import { listCountries } from "../../lib/tauri";
+import type { Person, Country } from "../../types";
 
 interface PersonOverviewProps {
   person: Person;
@@ -17,11 +19,38 @@ interface PersonOverviewProps {
 }
 
 export function PersonOverview({ person, onEdit }: PersonOverviewProps) {
+  const [country, setCountry] = useState<Country | null>(null);
+  const [loadingCountry, setLoadingCountry] = useState(true);
+
   const avatarUrl = useGravatarUrl(person.email, {
     size: 200,
     default: "initials",
     name: person.name,
   });
+
+  useEffect(() => {
+    loadCountry();
+  }, [person.country_id]);
+
+  const loadCountry = async () => {
+    if (!person.country_id) {
+      setCountry(null);
+      setLoadingCountry(false);
+      return;
+    }
+
+    try {
+      setLoadingCountry(true);
+      const countries = await listCountries();
+      const found = countries.find((c) => c.id === person.country_id);
+      setCountry(found || null);
+    } catch (error) {
+      console.error("Failed to load country:", error);
+      setCountry(null);
+    } finally {
+      setLoadingCountry(false);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
@@ -76,6 +105,28 @@ export function PersonOverview({ person, onEdit }: PersonOverviewProps) {
               <Text size="md" className="numeric-data">
                 {person.available_hours_per_week} hrs
               </Text>
+            </Group>
+          </div>
+
+          <div>
+            <Text size="sm" c="dimmed" mb={4}>
+              Country
+            </Text>
+            <Group gap="xs">
+              <IconWorld size={16} />
+              {loadingCountry ? (
+                <Text size="md" c="dimmed">
+                  Loading...
+                </Text>
+              ) : country ? (
+                <Text size="md">
+                  {country.iso_code} - {country.name}
+                </Text>
+              ) : (
+                <Text size="md" c="dimmed">
+                  No country selected
+                </Text>
+              )}
             </Group>
           </div>
 
