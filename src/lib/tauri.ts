@@ -324,3 +324,12 @@ export async function getProjectStaffing(
 ): Promise<ProjectStaffing> {
   return await invoke("get_project_staffing", { projectId, planningPeriodId });
 }
+
+// ============================================================================
+// App Commands
+// ============================================================================
+
+export async function getAppVersion(): Promise<string> {
+  const { getVersion } = await import("@tauri-apps/api/app");
+  return await getVersion();
+}

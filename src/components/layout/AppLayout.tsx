@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   AppShell,
   Burger,
@@ -5,6 +6,7 @@ import {
   Text,
   NavLink,
   ActionIcon,
+  Box,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Outlet, Link, useLocation } from "react-router-dom";
@@ -21,6 +23,21 @@ export function AppLayout() {
   const [opened, { toggle }] = useDisclosure();
   const location = useLocation();
   const { colorScheme, toggleColorScheme } = useTheme();
+  const [version, setVersion] = useState<string>("");
+
+  useEffect(() => {
+    async function fetchVersion() {
+      try {
+        const { getAppVersion } = await import("../../lib/tauri");
+        const appVersion = await getAppVersion();
+        setVersion(appVersion);
+      } catch (error) {
+        console.error("Failed to fetch app version:", error);
+        setVersion("");
+      }
+    }
+    fetchVersion();
+  }, []);
 
   const navItems = [
     {
@@ -85,6 +102,16 @@ export function AppLayout() {
             />
           ))}
         </AppShell.Section>
+
+        {version && (
+          <AppShell.Section>
+            <Box px="md" py="sm">
+              <Text size="xs" c="dimmed">
+                v{version}
+              </Text>
+            </Box>
+          </AppShell.Section>
+        )}
       </AppShell.Navbar>
 
       <AppShell.Main>
