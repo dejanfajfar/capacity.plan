@@ -1,6 +1,5 @@
 ![Logo](https://github.com/dejanfajfar/capacity.plan/blob/2639b86a909b5fa923171bd03194164b8d9dd9ac/doc/Logo%20gemini.png)
 
-
 # Capacity Planner
 
 [![CI](https://github.com/dejanfajfar/capacity.plan/actions/workflows/ci.yml/badge.svg)](https://github.com/dejanfajfar/capacity.plan/actions/workflows/ci.yml)
@@ -76,27 +75,51 @@ This project uses GitHub Actions for continuous integration and automated releas
   - TypeScript type checking
   - Rust linting (clippy, fmt)
   - Build verification
-- **Release Workflow** - Creates production builds
+- **Release Workflow** - Creates production builds with automated versioning
   - Windows (x64): MSI installer + portable EXE
   - macOS (Universal): DMG installer for Intel and Apple Silicon
-  - Triggered manually or by pushing version tags (e.g., `v0.1.0`)
+  - Triggered manually (requires version input) or by pushing version tags (e.g., `v0.1.0`)
+  - Automatically updates version in all config files from git tag
+  - Validates semantic versioning format (MAJOR.MINOR.PATCH)
 - **Test Workflow** - Runs automated tests (when available)
 
 ### Creating a Release
 
-**Option 1: Manual trigger**
+The release workflow automatically extracts the version from git tags and updates all configuration files during the build process. This ensures installer filenames always match the release version.
+
+**Option 1: Git tag (Recommended)**
+
+1. Create and push a version tag:
+
+   ```bash
+   git tag v0.1.5
+   git push origin v0.1.5
+   ```
+
+2. The workflow will:
+   - Validate the version format (must be semantic versioning: v0.1.0)
+   - Update `package.json`, `Cargo.toml`, and `tauri.conf.json` with version `0.1.5`
+   - Build installers with correct version in filename (e.g., `capacity-planner_0.1.5_x64_en-US.msi`)
+   - Create a GitHub release with artifacts attached
+
+**Option 2: Manual trigger**
 
 1. Go to Actions → Release → Run workflow
-2. Download artifacts from the workflow run
+2. Enter the version (e.g., `v0.1.5` or `0.1.5`)
+3. The workflow validates the version and builds with that version
+4. Download artifacts from the workflow run
 
-**Option 2: Git tag**
+**Version Format Requirements**:
 
-```bash
-git tag v0.1.0
-git push --tags
-```
+- Must follow semantic versioning: `MAJOR.MINOR.PATCH`
+- Examples: `v0.1.0`, `v1.2.3`, `v2.0.0-beta.1`
+- The `v` prefix is optional for manual triggers but required for tags
 
-The release will be created automatically with installers attached.
+**Important Notes**:
+
+- Version numbers in the repository files (`package.json`, `Cargo.toml`, `tauri.conf.json`) can remain at `0.1.0`
+- The workflow updates these files automatically during CI builds
+- Installer filenames will always match the release tag version
 
 ## Key Concepts
 
