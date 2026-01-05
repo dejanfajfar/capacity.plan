@@ -37,8 +37,9 @@ pub async fn init_database() -> Result<DbPool, sqlx::Error> {
 }
 
 fn get_app_data_dir() -> PathBuf {
-    let home = std::env::var("HOME").expect("HOME environment variable not set");
-    PathBuf::from(home).join(".capacity-planner")
+    dirs::home_dir()
+        .expect("Failed to get home directory")
+        .join(".capacity-planner")
 }
 
 async fn run_migrations(pool: &DbPool) -> Result<(), sqlx::Error> {
