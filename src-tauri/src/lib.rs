@@ -1,3 +1,4 @@
+mod api;
 mod capacity;
 mod commands;
 mod db;
@@ -9,15 +10,17 @@ use commands::{
     check_person_dependencies, check_planning_period_dependencies, check_project_dependencies,
     create_absence, create_assignment, create_country, create_holiday, create_overhead,
     create_overhead_assignment, create_person, create_planning_period, create_project,
-    delete_absence, delete_assignment, delete_country, delete_holiday, delete_overhead,
-    delete_overhead_assignment, delete_person, delete_planning_period, delete_project,
-    delete_project_requirement, get_capacity_overview, get_person_capacity,
-    get_project_requirement, get_project_staffing, list_absences, list_assignments, list_countries,
-    list_holidays, list_holidays_for_person, list_overhead_assignments, list_overheads,
-    list_people, list_person_overhead_assignments, list_planning_periods,
-    list_project_requirements, list_projects, optimize_assignments, update_absence,
-    update_assignment, update_country, update_holiday, update_overhead, update_overhead_assignment,
-    update_person, update_planning_period, update_project, upsert_project_requirement,
+    delete_absence, delete_assignment, delete_all_countries_and_holidays, delete_country,
+    delete_holiday, delete_overhead, delete_overhead_assignment, delete_person,
+    delete_planning_period, delete_project, delete_project_requirement,
+    fetch_available_countries_for_import, get_capacity_overview, get_person_capacity,
+    get_project_requirement, get_project_staffing, import_countries_from_api,
+    import_holidays_from_api, list_absences, list_assignments, list_countries, list_holidays,
+    list_holidays_for_person, list_overhead_assignments, list_overheads, list_people,
+    list_person_overhead_assignments, list_planning_periods, list_project_requirements,
+    list_projects, optimize_assignments, preview_holiday_import, update_absence, update_assignment,
+    update_country, update_holiday, update_overhead, update_overhead_assignment, update_person,
+    update_planning_period, update_project, upsert_project_requirement,
 };
 use db::init_database;
 use tauri::Manager;
@@ -82,12 +85,17 @@ pub fn run() {
             update_country,
             delete_country,
             check_country_dependencies,
+            fetch_available_countries_for_import,
+            import_countries_from_api,
+            delete_all_countries_and_holidays,
             list_holidays,
             list_holidays_for_person,
             create_holiday,
             update_holiday,
             delete_holiday,
             batch_create_holidays,
+            preview_holiday_import,
+            import_holidays_from_api,
             optimize_assignments,
             get_capacity_overview,
             get_person_capacity,

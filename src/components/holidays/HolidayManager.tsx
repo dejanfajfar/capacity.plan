@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { Button, Stack, Group, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { modals } from "@mantine/modals";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconDownload } from "@tabler/icons-react";
 import { HolidayList } from "./HolidayList";
 import { HolidayForm } from "./HolidayForm";
+import { HolidayImportDialog } from "./HolidayImportDialog";
 import {
   listHolidays,
   createHoliday,
@@ -23,6 +24,7 @@ export function HolidayManager() {
   const [holidays, setHolidays] = useState<HolidayWithCountry[]>([]);
   const [countries, setCountries] = useState<Country[]>([]);
   const [formOpened, setFormOpened] = useState(false);
+  const [importOpened, setImportOpened] = useState(false);
   const [selectedHoliday, setSelectedHoliday] = useState<Holiday | null>(null);
   const [selectedCountryId, setSelectedCountryId] = useState<string | null>(
     null,
@@ -172,13 +174,23 @@ export function HolidayManager() {
         <Text size="lg" fw={500}>
           Holidays
         </Text>
-        <Button
-          leftSection={<IconPlus size={18} />}
-          onClick={() => setFormOpened(true)}
-          disabled={countries.length === 0}
-        >
-          Add Holiday
-        </Button>
+        <Group gap="xs">
+          <Button
+            leftSection={<IconDownload size={18} />}
+            onClick={() => setImportOpened(true)}
+            disabled={countries.length === 0}
+            variant="light"
+          >
+            Import from API
+          </Button>
+          <Button
+            leftSection={<IconPlus size={18} />}
+            onClick={() => setFormOpened(true)}
+            disabled={countries.length === 0}
+          >
+            Add Holiday
+          </Button>
+        </Group>
       </Group>
 
       {countries.length === 0 ? (
@@ -203,6 +215,13 @@ export function HolidayManager() {
         holiday={selectedHoliday}
         countries={countries}
         title={selectedHoliday ? "Edit Holiday" : "Create Holiday"}
+      />
+
+      <HolidayImportDialog
+        opened={importOpened}
+        onClose={() => setImportOpened(false)}
+        countries={countries}
+        onImportComplete={loadHolidays}
       />
     </Stack>
   );

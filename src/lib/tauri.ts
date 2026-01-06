@@ -23,6 +23,9 @@ import type {
   Holiday,
   HolidayWithCountry,
   CreateHolidayInput,
+  NagerDateCountry,
+  HolidayImportPreview,
+  ImportHolidaysResult,
   OptimizationResult,
   CapacityOverview,
   PersonCapacity,
@@ -362,6 +365,22 @@ export async function checkCountryDependencies(
   return await invoke("check_country_dependencies", { id });
 }
 
+export async function fetchAvailableCountriesForImport(): Promise<
+  NagerDateCountry[]
+> {
+  return await invoke("fetch_available_countries_for_import");
+}
+
+export async function importCountriesFromApi(
+  countryCodes: string[],
+): Promise<Country[]> {
+  return await invoke("import_countries_from_api", { countryCodes });
+}
+
+export async function deleteAllCountriesAndHolidays(): Promise<void> {
+  return await invoke("delete_all_countries_and_holidays");
+}
+
 // ============================================================================
 // Holiday Commands
 // ============================================================================
@@ -405,6 +424,20 @@ export async function batchCreateHolidays(
   holidays: CreateHolidayInput[],
 ): Promise<void> {
   return await invoke("batch_create_holidays", { holidays });
+}
+
+export async function previewHolidayImport(
+  countryCode: string,
+  year: number,
+): Promise<HolidayImportPreview> {
+  return await invoke("preview_holiday_import", { countryCode, year });
+}
+
+export async function importHolidaysFromApi(
+  countryCode: string,
+  years: number[],
+): Promise<ImportHolidaysResult[]> {
+  return await invoke("import_holidays_from_api", { countryCode, years });
 }
 
 // ============================================================================

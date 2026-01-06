@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { Button, Stack, Group, Alert, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { modals } from "@mantine/modals";
-import { IconPlus, IconAlertTriangle } from "@tabler/icons-react";
+import { IconPlus, IconAlertTriangle, IconDownload } from "@tabler/icons-react";
 import { CountryList } from "./CountryList";
 import { CountryForm } from "./CountryForm";
+import { CountryMultiSelectImport } from "./CountryMultiSelectImport";
 import {
   listCountries,
   createCountry,
@@ -19,6 +20,7 @@ import type { Country, CreateCountryInput } from "../../types";
 export function CountryManager() {
   const [countries, setCountries] = useState<Country[]>([]);
   const [formOpened, setFormOpened] = useState(false);
+  const [importOpened, setImportOpened] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [holidayCounts, setHolidayCounts] = useState<Map<number, number>>(
     new Map(),
@@ -193,12 +195,21 @@ export function CountryManager() {
         <Text size="lg" fw={500}>
           Countries
         </Text>
-        <Button
-          leftSection={<IconPlus size={18} />}
-          onClick={() => setFormOpened(true)}
-        >
-          Add Country
-        </Button>
+        <Group gap="xs">
+          <Button
+            leftSection={<IconDownload size={18} />}
+            onClick={() => setImportOpened(true)}
+            variant="light"
+          >
+            Import from API
+          </Button>
+          <Button
+            leftSection={<IconPlus size={18} />}
+            onClick={() => setFormOpened(true)}
+          >
+            Add Country
+          </Button>
+        </Group>
       </Group>
 
       <CountryList
@@ -215,6 +226,15 @@ export function CountryManager() {
         onSubmit={selectedCountry ? handleUpdate : handleCreate}
         country={selectedCountry}
         title={selectedCountry ? "Edit Country" : "Create Country"}
+      />
+
+      <CountryMultiSelectImport
+        opened={importOpened}
+        onClose={() => setImportOpened(false)}
+        onImportComplete={() => {
+          loadCountries();
+          loadCounts();
+        }}
       />
     </Stack>
   );

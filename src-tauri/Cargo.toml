@@ -29,4 +29,5 @@ thiserror = "2.0"
 log = "0.4"
 simplelog = "0.12"
 dirs = "6.0"
+reqwest = { version = "0.12", features = ["json"] }
 

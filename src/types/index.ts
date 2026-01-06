@@ -263,7 +263,7 @@ export interface PlanningPeriodDependencies {
 
 export interface Country {
   id: number;
-  iso_code: string; // 3-letter ISO 3166-1 alpha-3 code
+  iso_code: string; // 2-letter ISO 3166-1 alpha-2 code (e.g., "US", "GB", "DE")
   name: string;
   created_at: string;
 }
@@ -316,4 +316,37 @@ export interface PersonWithCapacity extends Person {
 export interface AssignmentWithDetails extends Assignment {
   person?: Person;
   project?: Project;
+}
+
+// ============================================================================
+// Holiday Import Types (API Integration)
+// ============================================================================
+
+export interface NagerDateCountry {
+  countryCode: string; // 2-letter alpha-2 code (e.g., "AT", "US")
+  name: string; // English name (e.g., "Austria")
+}
+
+export interface HolidayPreviewItem {
+  date: string; // ISO 8601 date
+  name: string; // English name
+  local_name: string; // Local language name (e.g., German for Austria)
+  is_duplicate: boolean; // Already exists in database
+}
+
+export interface HolidayImportPreview {
+  country_code: string;
+  country_name: string;
+  year: number;
+  holidays: HolidayPreviewItem[];
+  total_count: number;
+  duplicate_count: number;
+  new_count: number;
+}
+
+export interface ImportHolidaysResult {
+  country_code: string;
+  year: number;
+  imported_count: number;
+  skipped_count: number;
 }

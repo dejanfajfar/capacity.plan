@@ -263,3 +263,34 @@ pub struct OverheadAssignmentWithDetails {
     pub effort_period: String,
     pub created_at: String,
 }
+
+// ============================================================================
+// Holiday Import Models
+// ============================================================================
+
+#[derive(Debug, Serialize)]
+pub struct HolidayPreviewItem {
+    pub date: String,
+    pub name: String,
+    pub local_name: String,
+    pub is_duplicate: bool,
+}
+
+#[derive(Debug, Serialize)]
+pub struct HolidayImportPreview {
+    pub country_code: String,
+    pub country_name: String,
+    pub year: i32,
+    pub holidays: Vec<HolidayPreviewItem>,
+    pub total_count: usize,
+    pub duplicate_count: usize,
+    pub new_count: usize,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ImportHolidaysResult {
+    pub country_code: String,
+    pub year: i32,
+    pub imported_count: usize,
+    pub skipped_count: usize,
+}

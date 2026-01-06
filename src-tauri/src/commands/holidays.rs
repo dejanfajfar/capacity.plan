@@ -1,6 +1,11 @@
+use crate::api;
 use crate::db::DbPool;
-use crate::models::{CreateHolidayInput, Holiday, HolidayWithCountry, Person};
+use crate::models::{
+    Country, CreateHolidayInput, Holiday, HolidayImportPreview, HolidayPreviewItem,
+    HolidayWithCountry, ImportHolidaysResult, Person,
+};
 use log::{debug, error, info, warn};
+use std::collections::HashSet;
 
 #[tauri::command]
 pub async fn list_holidays(
@@ -296,3 +301,178 @@ pub async fn batch_create_holidays(
     info!("Successfully batch created holidays");
     Ok(())
 }
+
+/// Preview holiday import from API for a specific country and year
+#[tauri::command]
+pub async fn preview_holiday_import(
+    pool: tauri::State<'_, DbPool>,
+    country_code: String,
+    year: i32,
+) -> Result<HolidayImportPreview, String> {
+    info!("Previewing holiday import for {} in {}", country_code, year);
+    
+    let country_code_upper = country_code.to_uppercase();
+    
+    // Get country from database
+    let country = sqlx::query_as::<_, Country>("SELECT * FROM countries WHERE iso_code = ?")
+        .bind(&country_code_upper)
+        .fetch_optional(pool.inner())
+        .await
+        .map_err(|e| {
+            error!("Failed to fetch country: {}", e);
+            e.to_string()
+        })?
+        .ok_or_else(|| format!("Country with code '{}' not found in database", country_code_upper))?;
+    
+    // Fetch holidays from API
+    let api_holidays = api::fetch_public_holidays(&country_code_upper, year).await?;
+    
+    // Get existing holidays for this country and year
+    let existing_holidays = sqlx::query_as::<_, Holiday>(
+        "SELECT * FROM holidays WHERE country_id = ? AND start_date >= ? AND start_date < ?",
+    )
+    .bind(country.id)
+    .bind(format!("{}-01-01", year))
+    .bind(format!("{}-01-01", year + 1))
+    .fetch_all(pool.inner())
+    .await
+    .map_err(|e| {
+        error!("Failed to fetch existing holidays: {}", e);
+        e.to_string()
+    })?;
+    
+    let existing_dates: HashSet<String> = existing_holidays
+        .iter()
+        .map(|h| h.start_date.clone())
+        .collect();
+    
+    // Build preview items
+    let mut holidays = Vec::new();
+    let mut duplicate_count = 0;
+    
+    for api_holiday in api_holidays {
+        let is_duplicate = existing_dates.contains(&api_holiday.date);
+        if is_duplicate {
+            duplicate_count += 1;
+        }
+        
+        holidays.push(HolidayPreviewItem {
+            date: api_holiday.date.clone(),
+            name: api_holiday.name.clone(),
+            local_name: api_holiday.local_name.clone(),
+            is_duplicate,
+        });
+    }
+    
+    let total_count = holidays.len();
+    let new_count = total_count - duplicate_count;
+    
+    Ok(HolidayImportPreview {
+        country_code: country_code_upper,
+        country_name: country.name,
+        year,
+        holidays,
+        total_count,
+        duplicate_count,
+        new_count,
+    })
+}
+
+/// Import holidays from API for a specific country and multiple years
+#[tauri::command]
+pub async fn import_holidays_from_api(
+    pool: tauri::State<'_, DbPool>,
+    country_code: String,
+    years: Vec<i32>,
+) -> Result<Vec<ImportHolidaysResult>, String> {
+    info!("Importing holidays for {} across {} years", country_code, years.len());
+    
+    let country_code_upper = country_code.to_uppercase();
+    
+    // Get country from database
+    let country = sqlx::query_as::<_, Country>("SELECT * FROM countries WHERE iso_code = ?")
+        .bind(&country_code_upper)
+        .fetch_optional(pool.inner())
+        .await
+        .map_err(|e| {
+            error!("Failed to fetch country: {}", e);
+            e.to_string()
+        })?
+        .ok_or_else(|| format!("Country with code '{}' not found in database", country_code_upper))?;
+    
+    let mut results = Vec::new();
+    
+    for year in years {
+        info!("Importing holidays for {} in {}", country_code_upper, year);
+        
+        // Fetch holidays from API
+        let api_holidays = match api::fetch_public_holidays(&country_code_upper, year).await {
+            Ok(holidays) => holidays,
+            Err(e) => {
+                error!("Failed to fetch holidays for {} ({}): {}", country_code_upper, year, e);
+                continue; // Skip this year but continue with others
+            }
+        };
+        
+        // Get existing holidays for this country and year
+        let existing_holidays = sqlx::query_as::<_, Holiday>(
+            "SELECT * FROM holidays WHERE country_id = ? AND start_date >= ? AND start_date < ?",
+        )
+        .bind(country.id)
+        .bind(format!("{}-01-01", year))
+        .bind(format!("{}-01-01", year + 1))
+        .fetch_all(pool.inner())
+        .await
+        .map_err(|e| {
+            error!("Failed to fetch existing holidays: {}", e);
+            e.to_string()
+        })?;
+        
+        let existing_dates: HashSet<String> = existing_holidays
+            .iter()
+            .map(|h| h.start_date.clone())
+            .collect();
+        
+        // Import non-duplicate holidays
+        let mut imported_count = 0;
+        let mut skipped_count = 0;
+        
+        for api_holiday in api_holidays {
+            if existing_dates.contains(&api_holiday.date) {
+                debug!("Skipping duplicate holiday: {} on {}", api_holiday.local_name, api_holiday.date);
+                skipped_count += 1;
+                continue;
+            }
+            
+            // Insert holiday (single-day holiday: start_date = end_date)
+            sqlx::query(
+                "INSERT INTO holidays (country_id, name, start_date, end_date) VALUES (?, ?, ?, ?)",
+            )
+            .bind(country.id)
+            .bind(&api_holiday.local_name)
+            .bind(&api_holiday.date)
+            .bind(&api_holiday.date) // Single day holiday
+            .execute(pool.inner())
+            .await
+            .map_err(|e| {
+                error!("Failed to insert holiday: {}", e);
+                e.to_string()
+            })?;
+            
+            imported_count += 1;
+        }
+        
+        info!("Imported {} holidays for {} ({}), skipped {} duplicates", 
+              imported_count, country_code_upper, year, skipped_count);
+        
+        results.push(ImportHolidaysResult {
+            country_code: country_code_upper.clone(),
+            year,
+            imported_count,
+            skipped_count,
+        });
+    }
+    
+    Ok(results)
+}
+
