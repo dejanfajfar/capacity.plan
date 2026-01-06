@@ -37,8 +37,6 @@ pub struct Assignment {
     pub productivity_factor: f64,
     pub start_date: String,
     pub end_date: String,
-    pub is_pinned: bool,
-    pub pinned_allocation_percentage: Option<f64>,
     pub calculated_allocation_percentage: Option<f64>,
     pub calculated_effective_hours: Option<f64>,
     pub last_calculated_at: Option<String>,

@@ -1,13 +1,5 @@
-import {
-  ActionIcon,
-  Avatar,
-  Badge,
-  Group,
-  Table,
-  Text,
-  Tooltip,
-} from "@mantine/core";
-import { IconEdit, IconTrash, IconPin } from "@tabler/icons-react";
+import { ActionIcon, Avatar, Group, Table, Text, Tooltip } from "@mantine/core";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useGravatarUrl } from "../../lib/gravatar";
 import type { Assignment, Person, Project } from "../../types";
 
@@ -60,17 +52,7 @@ function AssignmentRow({
       </Table.Td>
       <Table.Td>
         <Group gap="xs">
-          {assignment.is_pinned &&
-          assignment.pinned_allocation_percentage !== null ? (
-            <>
-              <Text className="numeric-data">
-                {assignment.pinned_allocation_percentage.toFixed(1)}%
-              </Text>
-              <Badge size="xs" color="blue" leftSection={<IconPin size={12} />}>
-                Pinned
-              </Badge>
-            </>
-          ) : assignment.calculated_allocation_percentage !== null ? (
+          {assignment.calculated_allocation_percentage !== null ? (
             <Tooltip label="Calculated by optimization" withArrow>
               <Text className="numeric-data">
                 {assignment.calculated_allocation_percentage.toFixed(1)}%

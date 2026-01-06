@@ -81,7 +81,6 @@ pub struct AssignmentSummary {
     pub project_name: String,
     pub allocation_percentage: f64,
     pub effective_hours: f64,
-    pub is_pinned: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -360,10 +359,8 @@ pub async fn optimize_assignments_proportional(
 
     #[derive(Debug)]
     struct PersonState {
-        person_id: i64,
         available_hours: f64,
-        pinned_total_percentage: f64,       // Sum across ALL projects
-        remaining_capacity_percentage: f64, // 100.0 - pinned_total
+        remaining_percentage: f64, // Starts at 100.0, decreases as we allocate
     }
 
     let mut person_states: HashMap<i64, PersonState> = HashMap::new();
@@ -373,41 +370,13 @@ pub async fn optimize_assignments_proportional(
         person_states.insert(
             *person_id,
             PersonState {
-                person_id: *person_id,
                 available_hours: *available_hours,
-                pinned_total_percentage: 0.0,
-                remaining_capacity_percentage: 100.0,
+                remaining_percentage: 100.0,
             },
         );
     }
 
-    // Calculate total pinned allocations per person (across ALL projects)
-    for assignment in &assignments {
-        if assignment.is_pinned {
-            if let Some(pinned_pct) = assignment.pinned_allocation_percentage {
-                let state = person_states.get_mut(&assignment.person_id).unwrap();
-                state.pinned_total_percentage += pinned_pct;
-            }
-        }
-    }
-
-    // Calculate remaining capacity and warn if over-pinned
-    for state in person_states.values_mut() {
-        state.remaining_capacity_percentage = (100.0 - state.pinned_total_percentage).max(0.0);
-
-        if state.pinned_total_percentage > 100.0 {
-            let person_name = people_map
-                .get(&state.person_id)
-                .map(|p| p.name.clone())
-                .unwrap_or_else(|| format!("Person {}", state.person_id));
-            warnings.push(format!(
-                    "{} has {:.1}% pinned allocations (exceeds 100%). No additional capacity available.",
-                    person_name, state.pinned_total_percentage
-                ));
-        }
-    }
-
-    debug!("Pass 1 complete: Calculated per-person remaining capacity");
+    debug!("Pass 1 complete: Initialized person capacity states");
 
     // ========================================================================
     // PASS 2: Allocate projects by priority (high to low)
@@ -469,42 +438,7 @@ pub async fn optimize_assignments_proportional(
                 project_id, requirement.required_hours
             );
 
-            // Separate pinned and unpinned assignments FOR THIS PROJECT
-            let mut pinned_hours_this_project = 0.0;
-            let mut unpinned_assignments = Vec::new();
-
-            for assignment in project_assignments {
-                if assignment.is_pinned {
-                    let available = person_available_hours
-                        .get(&assignment.person_id)
-                        .unwrap_or(&0.0);
-                    let pinned_pct = assignment.pinned_allocation_percentage.unwrap_or(0.0);
-                    let effective = calculate_assignment_effective_hours(
-                        *available,
-                        pinned_pct,
-                        assignment.productivity_factor,
-                    );
-                    pinned_hours_this_project += effective;
-
-                    // Store pinned calculation
-                    calculations.push(AssignmentCalculation {
-                        assignment_id: assignment.id,
-                        calculated_allocation_percentage: pinned_pct,
-                        calculated_effective_hours: effective,
-                    });
-                } else {
-                    unpinned_assignments.push(assignment);
-                }
-            }
-
-            let remaining_hours_needed =
-                (requirement.required_hours - pinned_hours_this_project).max(0.0);
-            debug!(
-                "  Pinned: {:.1}h, Remaining needed: {:.1}h",
-                pinned_hours_this_project, remaining_hours_needed
-            );
-
-            // Calculate available capacity from unpinned assignments
+            // Calculate available capacity from all assignments for this project
             #[derive(Debug)]
             struct AssignmentCapacity<'a> {
                 assignment: &'a Assignment,
@@ -517,10 +451,10 @@ pub async fn optimize_assignments_proportional(
             let mut assignment_capacities = Vec::new();
             let mut total_available_hours = 0.0;
 
-            for assignment in &unpinned_assignments {
+            for assignment in project_assignments {
                 let state = person_states.get(&assignment.person_id).unwrap();
                 let available = state.available_hours;
-                let remaining_pct = state.remaining_capacity_percentage;
+                let remaining_pct = state.remaining_percentage;
 
                 // Max this person can contribute to THIS project
                 let max_hours =
@@ -539,8 +473,8 @@ pub async fn optimize_assignments_proportional(
             debug!("  Total available capacity: {:.1}h", total_available_hours);
 
             // Distribute proportionally, capped by available capacity
-            let hours_to_distribute = remaining_hours_needed.min(total_available_hours);
-            let mut project_total_effective = pinned_hours_this_project;
+            let hours_to_distribute = requirement.required_hours.min(total_available_hours);
+            let mut project_total_effective = 0.0;
 
             if total_available_hours > 0.0 {
                 for cap in assignment_capacities {
@@ -566,9 +500,8 @@ pub async fn optimize_assignments_proportional(
 
                     // Update person's remaining capacity
                     let state = person_states.get_mut(&cap.assignment.person_id).unwrap();
-                    state.remaining_capacity_percentage -= allocation_pct;
-                    state.remaining_capacity_percentage =
-                        state.remaining_capacity_percentage.max(0.0);
+                    state.remaining_percentage -= allocation_pct;
+                    state.remaining_percentage = state.remaining_percentage.max(0.0);
 
                     calculations.push(AssignmentCalculation {
                         assignment_id: cap.assignment.id,
@@ -578,7 +511,7 @@ pub async fn optimize_assignments_proportional(
 
                     debug!("    Assignment {}: {:.1}% allocation, {:.1}h effective, {:.1}% remaining capacity",
                            cap.assignment.id, allocation_pct, effective_hours,
-                           state.remaining_capacity_percentage);
+                           state.remaining_percentage);
                 }
             }
 

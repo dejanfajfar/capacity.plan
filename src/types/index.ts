@@ -33,8 +33,6 @@ export interface Assignment {
   productivity_factor: number; // 0.0 to 1.0
   start_date: string;
   end_date: string;
-  is_pinned: boolean;
-  pinned_allocation_percentage: number | null;
   calculated_allocation_percentage: number | null;
   calculated_effective_hours: number | null;
   last_calculated_at: string | null;
@@ -125,7 +123,6 @@ export interface AssignmentSummary {
   project_name: string;
   allocation_percentage: number;
   effective_hours: number;
-  is_pinned: boolean;
 }
 
 export interface PersonAssignmentSummary {

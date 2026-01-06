@@ -77,11 +77,7 @@ pub async fn get_capacity_overview(
         let mut assignment_summaries = Vec::new();
 
         for assignment in &person_assignments {
-            let allocation_pct = if assignment.is_pinned {
-                assignment.pinned_allocation_percentage.unwrap_or(0.0)
-            } else {
-                assignment.calculated_allocation_percentage.unwrap_or(0.0)
-            };
+            let allocation_pct = assignment.calculated_allocation_percentage.unwrap_or(0.0);
 
             let allocated_hours = breakdown.available_hours * (allocation_pct / 100.0);
             let effective_hours = assignment.calculated_effective_hours.unwrap_or(0.0);
@@ -101,7 +97,6 @@ pub async fn get_capacity_overview(
                 project_name,
                 allocation_percentage: allocation_pct,
                 effective_hours,
-                is_pinned: assignment.is_pinned,
             });
         }
 
@@ -159,11 +154,7 @@ pub async fn get_capacity_overview(
                         calculate_person_available_hours(person, &planning_period, pool.inner())
                             .await?;
 
-                    let allocation_pct = if assignment.is_pinned {
-                        assignment.pinned_allocation_percentage.unwrap_or(0.0)
-                    } else {
-                        assignment.calculated_allocation_percentage.unwrap_or(0.0)
-                    };
+                    let allocation_pct = assignment.calculated_allocation_percentage.unwrap_or(0.0);
 
                     let allocated_hours = breakdown.available_hours * (allocation_pct / 100.0);
                     let effective_hours = assignment.calculated_effective_hours.unwrap_or(0.0);
@@ -276,11 +267,7 @@ pub async fn get_person_capacity(
     let mut assignment_summaries = Vec::new();
 
     for assignment in assignments {
-        let allocation_pct = if assignment.is_pinned {
-            assignment.pinned_allocation_percentage.unwrap_or(0.0)
-        } else {
-            assignment.calculated_allocation_percentage.unwrap_or(0.0)
-        };
+        let allocation_pct = assignment.calculated_allocation_percentage.unwrap_or(0.0);
 
         let allocated_hours = breakdown.available_hours * (allocation_pct / 100.0);
         let effective_hours = assignment.calculated_effective_hours.unwrap_or(0.0);
@@ -301,7 +288,6 @@ pub async fn get_person_capacity(
             project_name,
             allocation_percentage: allocation_pct,
             effective_hours,
-            is_pinned: assignment.is_pinned,
         });
     }
 
@@ -394,11 +380,7 @@ pub async fn get_project_staffing(
         let breakdown =
             calculate_person_available_hours(&person, &planning_period, pool.inner()).await?;
 
-        let allocation_pct = if assignment.is_pinned {
-            assignment.pinned_allocation_percentage.unwrap_or(0.0)
-        } else {
-            assignment.calculated_allocation_percentage.unwrap_or(0.0)
-        };
+        let allocation_pct = assignment.calculated_allocation_percentage.unwrap_or(0.0);
 
         let allocated_hours = breakdown.available_hours * (allocation_pct / 100.0);
         let effective_hours = assignment.calculated_effective_hours.unwrap_or(0.0);

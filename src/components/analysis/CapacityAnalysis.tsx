@@ -86,130 +86,10 @@ function PersonCapacityRow({
       </Accordion.Control>
       <Accordion.Panel>
         <Stack gap="md">
-          {/* Warning for people without country assignment or holidays overlap */}
-          {person.holiday_days === 0 && person.absence_days > 0 && (
-            <Alert
-              icon={<IconInfoCircle size={16} />}
-              color="blue"
-              variant="light"
-            >
-              <Text size="sm">
-                No holidays are being counted for this person. This could mean:
-              </Text>
-              <ul style={{ marginTop: 4, marginBottom: 0, paddingLeft: 20 }}>
-                <li>No country is assigned</li>
-                <li>No holidays exist in this period</li>
-                <li>All holidays overlap with absence periods</li>
-              </ul>
-            </Alert>
-          )}
-
-          {person.holiday_days === 0 && person.absence_days === 0 && (
-            <Alert
-              icon={<IconAlertCircle size={16} />}
-              color="yellow"
-              variant="light"
-            >
-              <Text size="sm">
-                <strong>No country holidays calculated</strong> - This person
-                may not have a country assigned. Assign a country to include
-                public holidays in capacity calculations.
-              </Text>
-            </Alert>
-          )}
-
-          {/* Capacity Deductions Summary and Pie Chart - Two Column Layout */}
+          {/* Two Column Layout: Pie Chart LEFT, Warnings/Info RIGHT */}
           <Grid gutter="md" align="flex-start">
-            {/* Capacity Deductions Summary */}
-            {(person.absence_days > 0 ||
-              person.holiday_days > 0 ||
-              person.overhead_hours > 0) && (
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <Alert
-                  icon={<IconInfoCircle size={16} />}
-                  color="blue"
-                  variant="light"
-                >
-                  <Stack gap="xs">
-                    {person.absence_days > 0 && (
-                      <Text size="sm">
-                        <IconCalendarOff
-                          size={14}
-                          style={{
-                            display: "inline",
-                            verticalAlign: "middle",
-                          }}
-                        />{" "}
-                        <strong>{person.absence_days}</strong>{" "}
-                        {person.absence_days === 1 ? "day" : "days"} absent (
-                        <strong className="numeric-data">
-                          {person.absence_hours.toFixed(0)}h
-                        </strong>{" "}
-                        deducted)
-                      </Text>
-                    )}
-                    {person.holiday_days > 0 && (
-                      <Text size="sm">
-                        <IconCalendarOff
-                          size={14}
-                          style={{
-                            display: "inline",
-                            verticalAlign: "middle",
-                          }}
-                        />{" "}
-                        <strong>{person.holiday_days}</strong>{" "}
-                        {person.holiday_days === 1 ? "day" : "days"} holiday (
-                        <strong className="numeric-data">
-                          {person.holiday_hours.toFixed(0)}h
-                        </strong>{" "}
-                        deducted)
-                      </Text>
-                    )}
-                    {person.overhead_hours > 0 && (
-                      <Text size="sm">
-                        <IconClock
-                          size={14}
-                          style={{
-                            display: "inline",
-                            verticalAlign: "middle",
-                          }}
-                        />{" "}
-                        Overhead:{" "}
-                        <strong className="numeric-data">
-                          {person.overhead_hours.toFixed(0)}h
-                        </strong>{" "}
-                        deducted
-                      </Text>
-                    )}
-                    <Text size="xs" c="dimmed" mt={4}>
-                      Base: {person.base_available_hours.toFixed(0)}h →
-                      Available: {person.total_available_hours.toFixed(0)}h
-                      {person.holiday_days > 0 &&
-                        " (includes country holidays)"}
-                    </Text>
-                    {person.absence_days > 0 && (
-                      <Text size="xs" c="dimmed" mt={2} fs="italic">
-                        Note: Holidays overlapping with absences are not counted
-                        separately.
-                      </Text>
-                    )}
-                  </Stack>
-                </Alert>
-              </Grid.Col>
-            )}
-
-            {/* Capacity Breakdown Pie Chart */}
-            <Grid.Col
-              span={{
-                base: 12,
-                md:
-                  person.absence_days > 0 ||
-                  person.holiday_days > 0 ||
-                  person.overhead_hours > 0
-                    ? 6
-                    : 12,
-              }}
-            >
+            {/* LEFT: Capacity Breakdown Pie Chart (ALWAYS visible) */}
+            <Grid.Col span={{ base: 12, md: 6 }}>
               <Paper withBorder p="md" bg="gray.0">
                 <Title order={5} mb="md">
                   Capacity Breakdown
@@ -225,6 +105,141 @@ function PersonCapacityRow({
                 </Center>
               </Paper>
             </Grid.Col>
+
+            {/* RIGHT: Warnings and Deductions Info */}
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <Stack gap="md">
+                {/* Warning: holidays overlap with absences (blue) */}
+                {person.holiday_days === 0 && person.absence_days > 0 && (
+                  <Alert
+                    icon={<IconInfoCircle size={16} />}
+                    color="blue"
+                    variant="light"
+                  >
+                    <Text size="sm">
+                      No holidays are being counted for this person. This could
+                      mean:
+                    </Text>
+                    <ul
+                      style={{ marginTop: 4, marginBottom: 0, paddingLeft: 20 }}
+                    >
+                      <li>No country is assigned</li>
+                      <li>No holidays exist in this period</li>
+                      <li>All holidays overlap with absence periods</li>
+                    </ul>
+                  </Alert>
+                )}
+
+                {/* Warning: no country assigned (yellow) */}
+                {person.holiday_days === 0 && person.absence_days === 0 && (
+                  <Alert
+                    icon={<IconAlertCircle size={16} />}
+                    color="yellow"
+                    variant="light"
+                  >
+                    <Text size="sm">
+                      <strong>No country holidays calculated</strong> - This
+                      person may not have a country assigned. Assign a country
+                      to include public holidays in capacity calculations.
+                    </Text>
+                  </Alert>
+                )}
+
+                {/* Capacity Deductions Summary (blue) */}
+                {(person.absence_days > 0 ||
+                  person.holiday_days > 0 ||
+                  person.overhead_hours > 0) && (
+                  <Alert
+                    icon={<IconInfoCircle size={16} />}
+                    color="blue"
+                    variant="light"
+                  >
+                    <Stack gap="xs">
+                      {person.absence_days > 0 && (
+                        <Text size="sm">
+                          <IconCalendarOff
+                            size={14}
+                            style={{
+                              display: "inline",
+                              verticalAlign: "middle",
+                            }}
+                          />{" "}
+                          <strong>{person.absence_days}</strong>{" "}
+                          {person.absence_days === 1 ? "day" : "days"} absent (
+                          <strong className="numeric-data">
+                            {person.absence_hours.toFixed(0)}h
+                          </strong>{" "}
+                          deducted)
+                        </Text>
+                      )}
+                      {person.holiday_days > 0 && (
+                        <Text size="sm">
+                          <IconCalendarOff
+                            size={14}
+                            style={{
+                              display: "inline",
+                              verticalAlign: "middle",
+                            }}
+                          />{" "}
+                          <strong>{person.holiday_days}</strong>{" "}
+                          {person.holiday_days === 1 ? "day" : "days"} holiday (
+                          <strong className="numeric-data">
+                            {person.holiday_hours.toFixed(0)}h
+                          </strong>{" "}
+                          deducted)
+                        </Text>
+                      )}
+                      {person.overhead_hours > 0 && (
+                        <Text size="sm">
+                          <IconClock
+                            size={14}
+                            style={{
+                              display: "inline",
+                              verticalAlign: "middle",
+                            }}
+                          />{" "}
+                          Overhead:{" "}
+                          <strong className="numeric-data">
+                            {person.overhead_hours.toFixed(0)}h
+                          </strong>{" "}
+                          deducted
+                        </Text>
+                      )}
+                      <Text size="xs" c="dimmed" mt={4}>
+                        Base: {person.base_available_hours.toFixed(0)}h →
+                        Available: {person.total_available_hours.toFixed(0)}h
+                        {person.holiday_days > 0 &&
+                          " (includes country holidays)"}
+                      </Text>
+                      {person.absence_days > 0 && (
+                        <Text size="xs" c="dimmed" mt={2} fs="italic">
+                          Note: Holidays overlapping with absences are not
+                          counted separately.
+                        </Text>
+                      )}
+                    </Stack>
+                  </Alert>
+                )}
+
+                {/* No deductions message (gray) */}
+                {person.absence_days === 0 &&
+                  person.holiday_days === 0 &&
+                  person.overhead_hours === 0 && (
+                    <Alert
+                      icon={<IconInfoCircle size={16} />}
+                      color="gray"
+                      variant="light"
+                    >
+                      <Text size="sm">
+                        No deductions have been made for this person.
+                      </Text>
+                      <Text size="xs" c="dimmed" mt={4}>
+                        Base capacity: {person.base_available_hours.toFixed(0)}h
+                      </Text>
+                    </Alert>
+                  )}
+              </Stack>
+            </Grid.Col>
           </Grid>
 
           <div>
@@ -237,7 +252,6 @@ function PersonCapacityRow({
                   <Table.Th>Project</Table.Th>
                   <Table.Th>Allocation</Table.Th>
                   <Table.Th>Effective Hours</Table.Th>
-                  <Table.Th>Status</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -249,13 +263,6 @@ function PersonCapacityRow({
                     </Table.Td>
                     <Table.Td className="numeric-data">
                       {assignment.effective_hours.toFixed(1)}h
-                    </Table.Td>
-                    <Table.Td>
-                      {assignment.is_pinned && (
-                        <Badge size="sm" variant="light">
-                          Pinned
-                        </Badge>
-                      )}
                     </Table.Td>
                   </Table.Tr>
                 ))}
