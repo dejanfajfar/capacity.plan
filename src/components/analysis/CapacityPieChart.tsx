@@ -3,6 +3,7 @@ import { PieChart } from "@mantine/charts";
 
 interface CapacityPieChartProps {
   absenceHours: number;
+  holidayHours: number;
   overheadHours: number;
   availableHours: number;
   baseHours: number;
@@ -11,6 +12,7 @@ interface CapacityPieChartProps {
 
 export function CapacityPieChart({
   absenceHours,
+  holidayHours,
   overheadHours,
   availableHours,
   baseHours,
@@ -30,7 +32,11 @@ export function CapacityPieChart({
   // Transform data into Mantine PieChart format
   // Use theme colors instead of hardcoded hex values
   const data = [
-    { name: "Absence", value: absenceHours, color: theme.colors.blue[5] },
+    {
+      name: "Absence",
+      value: absenceHours + holidayHours,
+      color: theme.colors.blue[5],
+    },
     { name: "Overhead", value: overheadHours, color: theme.colors.orange[5] },
     { name: "Available", value: availableHours, color: theme.colors.green[5] },
   ].filter((item) => item.value > 0);

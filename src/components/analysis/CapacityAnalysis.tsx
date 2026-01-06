@@ -86,10 +86,44 @@ function PersonCapacityRow({
       </Accordion.Control>
       <Accordion.Panel>
         <Stack gap="md">
+          {/* Warning for people without country assignment or holidays overlap */}
+          {person.holiday_days === 0 && person.absence_days > 0 && (
+            <Alert
+              icon={<IconInfoCircle size={16} />}
+              color="blue"
+              variant="light"
+            >
+              <Text size="sm">
+                No holidays are being counted for this person. This could mean:
+              </Text>
+              <ul style={{ marginTop: 4, marginBottom: 0, paddingLeft: 20 }}>
+                <li>No country is assigned</li>
+                <li>No holidays exist in this period</li>
+                <li>All holidays overlap with absence periods</li>
+              </ul>
+            </Alert>
+          )}
+
+          {person.holiday_days === 0 && person.absence_days === 0 && (
+            <Alert
+              icon={<IconAlertCircle size={16} />}
+              color="yellow"
+              variant="light"
+            >
+              <Text size="sm">
+                <strong>No country holidays calculated</strong> - This person
+                may not have a country assigned. Assign a country to include
+                public holidays in capacity calculations.
+              </Text>
+            </Alert>
+          )}
+
           {/* Capacity Deductions Summary and Pie Chart - Two Column Layout */}
           <Grid gutter="md" align="flex-start">
             {/* Capacity Deductions Summary */}
-            {(person.absence_days > 0 || person.overhead_hours > 0) && (
+            {(person.absence_days > 0 ||
+              person.holiday_days > 0 ||
+              person.overhead_hours > 0) && (
               <Grid.Col span={{ base: 12, md: 6 }}>
                 <Alert
                   icon={<IconInfoCircle size={16} />}
@@ -114,6 +148,23 @@ function PersonCapacityRow({
                         deducted)
                       </Text>
                     )}
+                    {person.holiday_days > 0 && (
+                      <Text size="sm">
+                        <IconCalendarOff
+                          size={14}
+                          style={{
+                            display: "inline",
+                            verticalAlign: "middle",
+                          }}
+                        />{" "}
+                        <strong>{person.holiday_days}</strong>{" "}
+                        {person.holiday_days === 1 ? "day" : "days"} holiday (
+                        <strong className="numeric-data">
+                          {person.holiday_hours.toFixed(0)}h
+                        </strong>{" "}
+                        deducted)
+                      </Text>
+                    )}
                     {person.overhead_hours > 0 && (
                       <Text size="sm">
                         <IconClock
@@ -133,7 +184,15 @@ function PersonCapacityRow({
                     <Text size="xs" c="dimmed" mt={4}>
                       Base: {person.base_available_hours.toFixed(0)}h →
                       Available: {person.total_available_hours.toFixed(0)}h
+                      {person.holiday_days > 0 &&
+                        " (includes country holidays)"}
                     </Text>
+                    {person.absence_days > 0 && (
+                      <Text size="xs" c="dimmed" mt={2} fs="italic">
+                        Note: Holidays overlapping with absences are not counted
+                        separately.
+                      </Text>
+                    )}
                   </Stack>
                 </Alert>
               </Grid.Col>
@@ -144,7 +203,11 @@ function PersonCapacityRow({
               span={{
                 base: 12,
                 md:
-                  person.absence_days > 0 || person.overhead_hours > 0 ? 6 : 12,
+                  person.absence_days > 0 ||
+                  person.holiday_days > 0 ||
+                  person.overhead_hours > 0
+                    ? 6
+                    : 12,
               }}
             >
               <Paper withBorder p="md" bg="gray.0">
@@ -154,6 +217,7 @@ function PersonCapacityRow({
                 <Center>
                   <CapacityPieChart
                     absenceHours={person.absence_hours}
+                    holidayHours={person.holiday_hours}
                     overheadHours={person.overhead_hours}
                     availableHours={person.total_available_hours}
                     baseHours={person.base_available_hours}
@@ -549,6 +613,20 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                                           </Badge>
                                         </Tooltip>
                                       )}
+                                      {person.holiday_days > 0 && (
+                                        <Tooltip
+                                          label={`${person.holiday_hours.toFixed(0)}h deducted from capacity (country holidays)`}
+                                          withArrow
+                                        >
+                                          <Badge
+                                            size="sm"
+                                            variant="light"
+                                            color="cyan"
+                                          >
+                                            {person.holiday_days}d holiday
+                                          </Badge>
+                                        </Tooltip>
+                                      )}
                                       {person.overhead_hours > 0 && (
                                         <Badge
                                           size="sm"
@@ -560,6 +638,7 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                                         </Badge>
                                       )}
                                       {person.absence_days === 0 &&
+                                        person.holiday_days === 0 &&
                                         person.overhead_hours === 0 && (
                                           <Text size="sm" c="dimmed">
                                             —

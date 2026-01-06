@@ -123,9 +123,14 @@ export function PersonOverview({ person, onEdit }: PersonOverviewProps) {
                   {country.iso_code} - {country.name}
                 </Text>
               ) : (
-                <Text size="md" c="dimmed">
-                  No country selected
-                </Text>
+                <Group gap="xs">
+                  <Text size="md" c="dimmed">
+                    No country selected
+                  </Text>
+                  <Badge color="yellow" variant="light" size="sm">
+                    Holidays not calculated
+                  </Badge>
+                </Group>
               )}
             </Group>
           </div>

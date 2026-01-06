@@ -189,10 +189,34 @@ pub async fn calculate_person_available_hours(
 
             if overlap_start <= overlap_end {
                 let holiday_days_in_period = (overlap_end - overlap_start).num_days() + 1;
+
+                // Calculate days that overlap with absences to avoid double-counting
+                let mut overlapping_absence_days = 0i64;
+
+                for absence in &absences {
+                    let absence_start = NaiveDate::parse_from_str(&absence.start_date, "%Y-%m-%d")
+                        .map_err(|e| format!("Invalid absence start date: {}", e))?;
+                    let absence_end = NaiveDate::parse_from_str(&absence.end_date, "%Y-%m-%d")
+                        .map_err(|e| format!("Invalid absence end date: {}", e))?;
+
+                    // Check if this absence overlaps with the holiday (within planning period)
+                    if overlap_start <= absence_end && overlap_end >= absence_start {
+                        // Calculate the overlapping range
+                        let abs_overlap_start = overlap_start.max(absence_start);
+                        let abs_overlap_end = overlap_end.min(absence_end);
+                        let overlap_days = (abs_overlap_end - abs_overlap_start).num_days() + 1;
+                        overlapping_absence_days += overlap_days;
+                    }
+                }
+
+                // Subtract overlapping days from holiday days (only count non-overlapping portion)
+                let effective_holiday_days =
+                    (holiday_days_in_period - overlapping_absence_days).max(0);
+
                 // Only count working days (assume holidays are on working days)
                 // Simple approximation: 5/7 of days are working days
                 let working_holiday_days =
-                    (holiday_days_in_period as f64 * 5.0 / 7.0).round() as i64;
+                    (effective_holiday_days as f64 * 5.0 / 7.0).round() as i64;
                 total_holiday_days += working_holiday_days;
             }
         }
