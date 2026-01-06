@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Button, Stack, Group, Text } from "@mantine/core";
+import { Button, Stack, Group, Text, Alert, Anchor } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { modals } from "@mantine/modals";
-import { IconPlus, IconDownload } from "@tabler/icons-react";
+import { IconPlus, IconDownload, IconInfoCircle } from "@tabler/icons-react";
 import { HolidayList } from "./HolidayList";
 import { HolidayForm } from "./HolidayForm";
 import { HolidayImportDialog } from "./HolidayImportDialog";
@@ -192,6 +192,19 @@ export function HolidayManager() {
           </Button>
         </Group>
       </Group>
+
+      <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
+        Holiday data provided by{" "}
+        <Anchor
+          href="https://date.nager.at"
+          target="_blank"
+          rel="noopener noreferrer"
+          fw={500}
+        >
+          Nager.Date API
+        </Anchor>{" "}
+        (106+ countries available)
+      </Alert>
 
       {countries.length === 0 ? (
         <Text c="dimmed" size="sm">
