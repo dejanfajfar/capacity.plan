@@ -30,9 +30,7 @@ pub async fn create_country(
     let iso_code = input.iso_code.trim().to_uppercase();
     if iso_code.len() != 2 || !iso_code.chars().all(|c| c.is_ascii_alphabetic()) {
         warn!("Invalid ISO code format: {}", iso_code);
-        return Err(
-            "ISO code must be exactly 2 uppercase letters (e.g., US, GB, DE)".to_string(),
-        );
+        return Err("ISO code must be exactly 2 uppercase letters (e.g., US, GB, DE)".to_string());
     }
 
     let result = sqlx::query("INSERT INTO countries (iso_code, name) VALUES (?, ?)")
@@ -77,9 +75,7 @@ pub async fn update_country(
     let iso_code = input.iso_code.trim().to_uppercase();
     if iso_code.len() != 2 || !iso_code.chars().all(|c| c.is_ascii_alphabetic()) {
         warn!("Invalid ISO code format: {}", iso_code);
-        return Err(
-            "ISO code must be exactly 2 uppercase letters (e.g., US, GB, DE)".to_string(),
-        );
+        return Err("ISO code must be exactly 2 uppercase letters (e.g., US, GB, DE)".to_string());
     }
 
     sqlx::query("UPDATE countries SET iso_code = ?, name = ? WHERE id = ?")
@@ -180,21 +176,21 @@ pub async fn import_countries_from_api(
     country_codes: Vec<String>,
 ) -> Result<Vec<Country>, String> {
     info!("Importing {} countries from API", country_codes.len());
-    
+
     // Fetch all available countries from API
     let available_countries = api::fetch_available_countries().await?;
-    
+
     let mut imported_countries = Vec::new();
-    
+
     for code in country_codes {
         let code_upper = code.to_uppercase();
-        
+
         // Find country info from API
         let api_country = available_countries
             .iter()
             .find(|c| c.country_code == code_upper)
             .ok_or_else(|| format!("Country code '{}' not found in API", code_upper))?;
-        
+
         // Check if already exists
         let existing = sqlx::query_as::<_, Country>("SELECT * FROM countries WHERE iso_code = ?")
             .bind(&api_country.country_code)
@@ -204,13 +200,13 @@ pub async fn import_countries_from_api(
                 error!("Failed to check existing country: {}", e);
                 e.to_string()
             })?;
-        
+
         if let Some(country) = existing {
             info!("Country {} already exists, skipping", country.name);
             imported_countries.push(country);
             continue;
         }
-        
+
         // Insert country
         let result = sqlx::query("INSERT INTO countries (iso_code, name) VALUES (?, ?)")
             .bind(&api_country.country_code)
@@ -221,9 +217,9 @@ pub async fn import_countries_from_api(
                 error!("Failed to insert country {}: {}", api_country.name, e);
                 e.to_string()
             })?;
-        
+
         let id = result.last_insert_rowid();
-        
+
         let country = sqlx::query_as::<_, Country>("SELECT * FROM countries WHERE id = ?")
             .bind(id)
             .fetch_one(pool.inner())
@@ -232,20 +228,25 @@ pub async fn import_countries_from_api(
                 error!("Failed to fetch created country: {}", e);
                 e.to_string()
             })?;
-        
+
         info!("Successfully imported country: {}", country.name);
         imported_countries.push(country);
     }
-    
-    info!("Successfully imported {} countries", imported_countries.len());
+
+    info!(
+        "Successfully imported {} countries",
+        imported_countries.len()
+    );
     Ok(imported_countries)
 }
 
 /// Deletes all countries and holidays (DESTRUCTIVE!)
 #[tauri::command]
-pub async fn delete_all_countries_and_holidays(pool: tauri::State<'_, DbPool>) -> Result<(), String> {
+pub async fn delete_all_countries_and_holidays(
+    pool: tauri::State<'_, DbPool>,
+) -> Result<(), String> {
     warn!("DESTRUCTIVE OPERATION: Deleting all countries and holidays");
-    
+
     // Clear people's country_id references
     sqlx::query("UPDATE people SET country_id = NULL")
         .execute(pool.inner())
@@ -254,7 +255,7 @@ pub async fn delete_all_countries_and_holidays(pool: tauri::State<'_, DbPool>) -
             error!("Failed to clear people country references: {}", e);
             e.to_string()
         })?;
-    
+
     // Delete all countries (CASCADE will delete all holidays)
     sqlx::query("DELETE FROM countries")
         .execute(pool.inner())
@@ -263,8 +264,7 @@ pub async fn delete_all_countries_and_holidays(pool: tauri::State<'_, DbPool>) -
             error!("Failed to delete countries: {}", e);
             e.to_string()
         })?;
-    
+
     info!("Successfully deleted all countries and holidays");
     Ok(())
 }
-

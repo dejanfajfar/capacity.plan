@@ -10,7 +10,7 @@ use commands::{
     check_person_dependencies, check_planning_period_dependencies, check_project_dependencies,
     create_absence, create_assignment, create_country, create_holiday, create_overhead,
     create_overhead_assignment, create_person, create_planning_period, create_project,
-    delete_absence, delete_assignment, delete_all_countries_and_holidays, delete_country,
+    delete_absence, delete_all_countries_and_holidays, delete_assignment, delete_country,
     delete_holiday, delete_overhead, delete_overhead_assignment, delete_person,
     delete_planning_period, delete_project, delete_project_requirement,
     fetch_available_countries_for_import, get_capacity_overview, get_person_capacity,
