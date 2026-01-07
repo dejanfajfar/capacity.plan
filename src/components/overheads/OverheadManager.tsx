@@ -6,16 +6,13 @@ import {
   LoadingOverlay,
   Paper,
   Text,
-  Grid,
   Title,
-  Divider,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { modals } from "@mantine/modals";
 import { IconPlus } from "@tabler/icons-react";
-import { OverheadList } from "./OverheadList";
+import { OverheadExpandableTable } from "./OverheadExpandableTable";
 import { OverheadForm } from "./OverheadForm";
-import { OverheadAssignmentList } from "./OverheadAssignmentList";
 import { OverheadAssignmentForm } from "./OverheadAssignmentForm";
 import {
   listOverheads,
@@ -45,18 +42,29 @@ export function OverheadManager({ periodId }: OverheadManagerProps) {
   const [people, setPeople] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Expandable table state
+  const [expandedOverheadIds, setExpandedOverheadIds] = useState<Set<number>>(
+    new Set(),
+  );
+  const [assignmentsByOverheadId, setAssignmentsByOverheadId] = useState<
+    Map<number, OverheadAssignment[]>
+  >(new Map());
+  const [loadingAssignmentIds, setLoadingAssignmentIds] = useState<Set<number>>(
+    new Set(),
+  );
+
   // Overhead form state
   const [overheadFormOpened, setOverheadFormOpened] = useState(false);
   const [selectedOverhead, setSelectedOverhead] = useState<Overhead | null>(
     null,
   );
 
-  // Assignment state
-  const [assignments, setAssignments] = useState<OverheadAssignment[]>([]);
-  const [loadingAssignments, setLoadingAssignments] = useState(false);
+  // Assignment form state
   const [assignmentFormOpened, setAssignmentFormOpened] = useState(false);
   const [selectedAssignment, setSelectedAssignment] =
     useState<OverheadAssignment | null>(null);
+  const [selectedOverheadForAssignment, setSelectedOverheadForAssignment] =
+    useState<Overhead | null>(null);
 
   useEffect(() => {
     loadData();
@@ -72,11 +80,6 @@ export function OverheadManager({ periodId }: OverheadManagerProps) {
 
       setOverheads(overheadsData);
       setPeople(peopleData);
-
-      // Auto-select first overhead if available
-      if (overheadsData.length > 0 && !selectedOverhead) {
-        handleSelectOverhead(overheadsData[0]);
-      }
     } catch (error) {
       notifications.show({
         title: "Error",
@@ -91,9 +94,11 @@ export function OverheadManager({ periodId }: OverheadManagerProps) {
 
   const loadAssignments = async (overheadId: number) => {
     try {
-      setLoadingAssignments(true);
+      setLoadingAssignmentIds((prev) => new Set(prev).add(overheadId));
       const assignmentsData = await listOverheadAssignments(overheadId);
-      setAssignments(assignmentsData);
+      setAssignmentsByOverheadId((prev) =>
+        new Map(prev).set(overheadId, assignmentsData),
+      );
     } catch (error) {
       notifications.show({
         title: "Error",
@@ -102,13 +107,29 @@ export function OverheadManager({ periodId }: OverheadManagerProps) {
       });
       console.error("Failed to load assignments:", error);
     } finally {
-      setLoadingAssignments(false);
+      setLoadingAssignmentIds((prev) => {
+        const next = new Set(prev);
+        next.delete(overheadId);
+        return next;
+      });
     }
   };
 
-  const handleSelectOverhead = (overhead: Overhead) => {
-    setSelectedOverhead(overhead);
-    loadAssignments(overhead.id);
+  const handleToggleExpand = async (overheadId: number) => {
+    const newExpanded = new Set(expandedOverheadIds);
+
+    if (newExpanded.has(overheadId)) {
+      // Collapse
+      newExpanded.delete(overheadId);
+    } else {
+      // Expand - load assignments if not already loaded
+      newExpanded.add(overheadId);
+      if (!assignmentsByOverheadId.has(overheadId)) {
+        await loadAssignments(overheadId);
+      }
+    }
+
+    setExpandedOverheadIds(newExpanded);
   };
 
   // Overhead CRUD handlers
@@ -116,8 +137,11 @@ export function OverheadManager({ periodId }: OverheadManagerProps) {
     try {
       const newOverhead = await createOverhead(values);
       await loadData();
-      setSelectedOverhead(newOverhead);
+
+      // Auto-expand newly created overhead and load its assignments
+      setExpandedOverheadIds(new Set([newOverhead.id]));
       await loadAssignments(newOverhead.id);
+
       notifications.show({
         title: "Success",
         message: "Overhead created successfully",
@@ -174,8 +198,19 @@ export function OverheadManager({ periodId }: OverheadManagerProps) {
         try {
           await deleteOverhead(id);
           await loadData();
-          setSelectedOverhead(null);
-          setAssignments([]);
+
+          // Remove from expanded state and assignments map
+          setExpandedOverheadIds((prev) => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+          });
+          setAssignmentsByOverheadId((prev) => {
+            const next = new Map(prev);
+            next.delete(id);
+            return next;
+          });
+
           notifications.show({
             title: "Success",
             message: "Overhead deleted successfully",
@@ -200,7 +235,7 @@ export function OverheadManager({ periodId }: OverheadManagerProps) {
 
   const handleCloseOverheadForm = () => {
     setOverheadFormOpened(false);
-    // Don't clear selectedOverhead here, keep it for viewing assignments
+    setSelectedOverhead(null);
   };
 
   // Assignment CRUD handlers
@@ -235,9 +270,9 @@ export function OverheadManager({ periodId }: OverheadManagerProps) {
         }
       }
 
-      // Reload assignments
-      if (selectedOverhead) {
-        await loadAssignments(selectedOverhead.id);
+      // Reload assignments for this overhead
+      if (selectedOverheadForAssignment) {
+        await loadAssignments(selectedOverheadForAssignment.id);
       }
 
       // Show success notification
@@ -282,9 +317,12 @@ export function OverheadManager({ periodId }: OverheadManagerProps) {
 
     try {
       await updateOverheadAssignment(selectedAssignment.id, values);
-      if (selectedOverhead) {
-        await loadAssignments(selectedOverhead.id);
+
+      // Reload assignments for this overhead
+      if (selectedOverheadForAssignment) {
+        await loadAssignments(selectedOverheadForAssignment.id);
       }
+
       notifications.show({
         title: "Success",
         message: "Assignment updated successfully",
@@ -317,9 +355,15 @@ export function OverheadManager({ periodId }: OverheadManagerProps) {
       onConfirm: async () => {
         try {
           await deleteOverheadAssignment(id);
-          if (selectedOverhead) {
-            await loadAssignments(selectedOverhead.id);
+
+          // Find which overhead this assignment belongs to and reload
+          for (const [overheadId, assignments] of assignmentsByOverheadId) {
+            if (assignments.some((a) => a.id === id)) {
+              await loadAssignments(overheadId);
+              break;
+            }
           }
+
           notifications.show({
             title: "Success",
             message: "Assignment removed successfully",
@@ -339,12 +383,23 @@ export function OverheadManager({ periodId }: OverheadManagerProps) {
 
   const handleEditAssignment = (assignment: OverheadAssignment) => {
     setSelectedAssignment(assignment);
+    // Find the overhead for this assignment
+    const overhead = overheads.find((o) => o.id === assignment.overhead_id);
+    setSelectedOverheadForAssignment(overhead || null);
+    setAssignmentFormOpened(true);
+  };
+
+  const handleAddAssignment = (overheadId: number) => {
+    const overhead = overheads.find((o) => o.id === overheadId);
+    setSelectedOverheadForAssignment(overhead || null);
+    setSelectedAssignment(null);
     setAssignmentFormOpened(true);
   };
 
   const handleCloseAssignmentForm = () => {
     setAssignmentFormOpened(false);
     setSelectedAssignment(null);
+    setSelectedOverheadForAssignment(null);
   };
 
   if (people.length === 0 && !loading) {
@@ -367,78 +422,37 @@ export function OverheadManager({ periodId }: OverheadManagerProps) {
         </Text>
       </Paper>
 
-      <Grid gutter="md">
-        {/* Left column: Overhead definitions */}
-        <Grid.Col span={{ base: 12, md: 5 }}>
-          <Paper p="md" withBorder pos="relative">
-            <LoadingOverlay visible={loading} />
+      <Paper p="md" withBorder pos="relative">
+        <LoadingOverlay visible={loading} />
 
-            <Group justify="space-between" mb="md">
-              <Title order={4}>Overhead Definitions</Title>
-              <Button
-                leftSection={<IconPlus size={18} />}
-                onClick={() => {
-                  setSelectedOverhead(null);
-                  setOverheadFormOpened(true);
-                }}
-                size="sm"
-              >
-                Add Overhead
-              </Button>
-            </Group>
+        <Group justify="space-between" mb="md">
+          <Title order={4}>Overhead Definitions</Title>
+          <Button
+            leftSection={<IconPlus size={18} />}
+            onClick={() => {
+              setSelectedOverhead(null);
+              setOverheadFormOpened(true);
+            }}
+            size="sm"
+          >
+            Add Overhead
+          </Button>
+        </Group>
 
-            <OverheadList
-              overheads={overheads}
-              onEdit={handleEditOverhead}
-              onDelete={handleDeleteOverhead}
-              onSelect={handleSelectOverhead}
-              selectedOverheadId={selectedOverhead?.id}
-            />
-          </Paper>
-        </Grid.Col>
-
-        {/* Right column: Assignments for selected overhead */}
-        <Grid.Col span={{ base: 12, md: 7 }}>
-          <Paper p="md" withBorder pos="relative">
-            <LoadingOverlay visible={loadingAssignments} />
-
-            {selectedOverhead ? (
-              <>
-                <Group justify="space-between" mb="md">
-                  <div>
-                    <Title order={4}>{selectedOverhead.name}</Title>
-                    {selectedOverhead.description && (
-                      <Text size="sm" c="dimmed" mt={4}>
-                        {selectedOverhead.description}
-                      </Text>
-                    )}
-                  </div>
-                  <Button
-                    leftSection={<IconPlus size={18} />}
-                    onClick={() => setAssignmentFormOpened(true)}
-                    size="sm"
-                  >
-                    Assign Person
-                  </Button>
-                </Group>
-
-                <Divider mb="md" />
-
-                <OverheadAssignmentList
-                  assignments={assignments}
-                  people={people}
-                  onEdit={handleEditAssignment}
-                  onDelete={handleDeleteAssignment}
-                />
-              </>
-            ) : (
-              <Text c="dimmed" ta="center" py="xl">
-                Select an overhead from the left to manage assignments
-              </Text>
-            )}
-          </Paper>
-        </Grid.Col>
-      </Grid>
+        <OverheadExpandableTable
+          overheads={overheads}
+          people={people}
+          expandedOverheadIds={expandedOverheadIds}
+          assignmentsByOverheadId={assignmentsByOverheadId}
+          loadingAssignmentIds={loadingAssignmentIds}
+          onToggleExpand={handleToggleExpand}
+          onEditOverhead={handleEditOverhead}
+          onDeleteOverhead={handleDeleteOverhead}
+          onAddAssignment={handleAddAssignment}
+          onEditAssignment={handleEditAssignment}
+          onDeleteAssignment={handleDeleteAssignment}
+        />
+      </Paper>
 
       <OverheadForm
         opened={overheadFormOpened}
@@ -457,7 +471,7 @@ export function OverheadManager({ periodId }: OverheadManagerProps) {
         }
       />
 
-      {selectedOverhead && (
+      {selectedOverheadForAssignment && (
         <OverheadAssignmentForm
           opened={assignmentFormOpened}
           onClose={handleCloseAssignmentForm}
@@ -465,8 +479,10 @@ export function OverheadManager({ periodId }: OverheadManagerProps) {
             selectedAssignment ? handleUpdateAssignment : handleCreateAssignment
           }
           assignment={selectedAssignment}
-          overheadId={selectedOverhead.id}
-          existingAssignments={assignments}
+          overheadId={selectedOverheadForAssignment.id}
+          existingAssignments={
+            assignmentsByOverheadId.get(selectedOverheadForAssignment.id) || []
+          }
           title={selectedAssignment ? "Edit Assignment" : "Assign Person"}
         />
       )}
