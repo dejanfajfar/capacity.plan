@@ -17,10 +17,11 @@ use commands::{
     get_project_requirement, get_project_staffing, import_countries_from_api,
     import_holidays_from_api, list_absences, list_assignments, list_countries, list_holidays,
     list_holidays_for_person, list_overhead_assignments, list_overheads, list_people,
-    list_person_overhead_assignments, list_planning_periods, list_project_requirements,
-    list_projects, optimize_assignments, preview_holiday_import, update_absence, update_assignment,
-    update_country, update_holiday, update_overhead, update_overhead_assignment, update_person,
-    update_planning_period, update_project, upsert_project_requirement,
+    list_people_with_countries, list_person_overhead_assignments, list_planning_periods,
+    list_project_requirements, list_projects, optimize_assignments, preview_holiday_import,
+    update_absence, update_assignment, update_country, update_holiday, update_overhead,
+    update_overhead_assignment, update_person, update_planning_period, update_project,
+    upsert_project_requirement,
 };
 use db::init_database;
 use tauri::Manager;
@@ -44,6 +45,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             list_people,
+            list_people_with_countries,
             create_person,
             update_person,
             delete_person,

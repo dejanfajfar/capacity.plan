@@ -194,6 +194,19 @@ pub struct Country {
     pub created_at: String,
 }
 
+// Extended person model with country information for UI display
+#[derive(Debug, Serialize, sqlx::FromRow)]
+pub struct PersonWithCountry {
+    pub id: i64,
+    pub name: String,
+    pub email: String,
+    pub available_hours_per_week: f64,
+    pub country_id: Option<i64>,
+    pub country_iso_code: Option<String>,
+    pub country_name: Option<String>,
+    pub created_at: String,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct CreateCountryInput {
     pub iso_code: String,

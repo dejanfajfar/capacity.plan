@@ -17,6 +17,11 @@ export interface Person {
   created_at: string;
 }
 
+export interface PersonWithCountry extends Person {
+  country_iso_code: string | null;
+  country_name: string | null;
+}
+
 export interface Project {
   id: number;
   name: string;

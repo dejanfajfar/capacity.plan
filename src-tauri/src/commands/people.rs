@@ -1,5 +1,5 @@
 use crate::db::DbPool;
-use crate::models::{CreatePersonInput, Person, PersonDependencies};
+use crate::models::{CreatePersonInput, Person, PersonDependencies, PersonWithCountry};
 use log::{debug, error, info};
 
 #[tauri::command]
@@ -15,6 +15,40 @@ pub async fn list_people(pool: tauri::State<'_, DbPool>) -> Result<Vec<Person>, 
         })?;
 
     info!("Successfully fetched {} people", people.len());
+    Ok(people)
+}
+
+#[tauri::command]
+pub async fn list_people_with_countries(
+    pool: tauri::State<'_, DbPool>,
+) -> Result<Vec<PersonWithCountry>, String> {
+    debug!("Fetching all people with country details");
+
+    let people = sqlx::query_as::<_, PersonWithCountry>(
+        "SELECT 
+            p.id,
+            p.name,
+            p.email,
+            p.available_hours_per_week,
+            p.country_id,
+            c.iso_code as country_iso_code,
+            c.name as country_name,
+            p.created_at
+         FROM people p
+         LEFT JOIN countries c ON p.country_id = c.id
+         ORDER BY p.name",
+    )
+    .fetch_all(pool.inner())
+    .await
+    .map_err(|e| {
+        error!("Failed to fetch people with countries: {}", e);
+        e.to_string()
+    })?;
+
+    info!(
+        "Successfully fetched {} people with country details",
+        people.len()
+    );
     Ok(people)
 }
 

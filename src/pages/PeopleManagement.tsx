@@ -17,20 +17,21 @@ import { useNavigate } from "react-router-dom";
 import { PersonList } from "../components/people/PersonList";
 import { PersonForm } from "../components/people/PersonForm";
 import {
-  listPeople,
+  listPeopleWithCountries,
   createPerson,
   updatePerson,
   deletePerson,
   checkPersonDependencies,
 } from "../lib/tauri";
-import type { Person, CreatePersonInput } from "../types";
+import type { PersonWithCountry, CreatePersonInput } from "../types";
 
 export function PeopleManagementPage() {
   const navigate = useNavigate();
-  const [people, setPeople] = useState<Person[]>([]);
+  const [people, setPeople] = useState<PersonWithCountry[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpened, setFormOpened] = useState(false);
-  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  const [selectedPerson, setSelectedPerson] =
+    useState<PersonWithCountry | null>(null);
 
   useEffect(() => {
     loadPeople();
@@ -39,7 +40,7 @@ export function PeopleManagementPage() {
   const loadPeople = async () => {
     try {
       setLoading(true);
-      const data = await listPeople();
+      const data = await listPeopleWithCountries();
       setPeople(data);
     } catch (error) {
       notifications.show({
@@ -170,7 +171,7 @@ export function PeopleManagementPage() {
     }
   };
 
-  const handleEdit = (person: Person) => {
+  const handleEdit = (person: PersonWithCountry) => {
     setSelectedPerson(person);
     setFormOpened(true);
   };

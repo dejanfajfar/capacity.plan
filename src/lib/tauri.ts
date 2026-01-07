@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
   Person,
+  PersonWithCountry,
   CreatePersonInput,
   PlanningPeriod,
   CreatePlanningPeriodInput,
@@ -41,6 +42,10 @@ import type {
 
 export async function listPeople(): Promise<Person[]> {
   return await invoke("list_people");
+}
+
+export async function listPeopleWithCountries(): Promise<PersonWithCountry[]> {
+  return await invoke("list_people_with_countries");
 }
 
 export async function createPerson(input: CreatePersonInput): Promise<Person> {

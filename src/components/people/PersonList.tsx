@@ -1,18 +1,18 @@
 import { ActionIcon, Avatar, Group, Table, Text } from "@mantine/core";
 import { IconEdit, IconTrash, IconEye } from "@tabler/icons-react";
 import { useGravatarUrl } from "../../lib/gravatar";
-import type { Person } from "../../types";
+import type { PersonWithCountry } from "../../types";
 
 interface PersonListProps {
-  people: Person[];
-  onEdit: (person: Person) => void;
+  people: PersonWithCountry[];
+  onEdit: (person: PersonWithCountry) => void;
   onDelete: (id: number) => void;
   onView: (personId: number) => void;
 }
 
 interface PersonRowProps {
-  person: Person;
-  onEdit: (person: Person) => void;
+  person: PersonWithCountry;
+  onEdit: (person: PersonWithCountry) => void;
   onDelete: (id: number) => void;
   onView: (personId: number) => void;
 }
@@ -39,6 +39,13 @@ function PersonRow({ person, onEdit, onDelete, onView }: PersonRowProps) {
       <Table.Td>{person.email}</Table.Td>
       <Table.Td className="numeric-data">
         {person.available_hours_per_week} hrs
+      </Table.Td>
+      <Table.Td>
+        {person.country_name ? (
+          <Text>{person.country_name}</Text>
+        ) : (
+          <Text c="dimmed">—</Text>
+        )}
       </Table.Td>
       <Table.Td onClick={(e) => e.stopPropagation()}>
         <ActionIcon.Group>
@@ -93,6 +100,7 @@ export function PersonList({
           <Table.Th>Name</Table.Th>
           <Table.Th>Email</Table.Th>
           <Table.Th>Available Hours/Week</Table.Th>
+          <Table.Th>Country</Table.Th>
           <Table.Th style={{ width: 100 }}>Actions</Table.Th>
         </Table.Tr>
       </Table.Thead>
