@@ -18,6 +18,12 @@ import type {
   PlanningPeriod,
 } from "../../types";
 import { listPeople, listProjects } from "../../lib/tauri";
+import {
+  PROFICIENCY_LEVELS,
+  DEFAULT_PROFICIENCY_FACTOR,
+  CUSTOM_PROFICIENCY_VALUE,
+  getProficiencyByFactor,
+} from "../../constants/proficiency";
 
 interface AssignmentFormProps {
   opened: boolean;
@@ -40,6 +46,10 @@ export function AssignmentForm({
   const [people, setPeople] = useState<Person[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [isCustomProficiency, setIsCustomProficiency] = useState(false);
+  const [selectedProficiency, setSelectedProficiency] = useState<string>(
+    "proficient",
+  );
 
   useEffect(() => {
     if (opened) {
@@ -68,7 +78,7 @@ export function AssignmentForm({
       person_id: 0,
       project_id: 0,
       planning_period_id: planningPeriod.id,
-      productivity_factor: 0.5,
+      productivity_factor: DEFAULT_PROFICIENCY_FACTOR,
       start_date: planningPeriod.start_date,
       end_date: planningPeriod.end_date,
     },
@@ -111,6 +121,17 @@ export function AssignmentForm({
     if (opened) {
       if (assignment) {
         // Edit mode - populate with assignment's data
+        const factor = assignment.productivity_factor;
+        const preset = getProficiencyByFactor(factor);
+
+        if (preset) {
+          setSelectedProficiency(preset.value);
+          setIsCustomProficiency(false);
+        } else {
+          setSelectedProficiency(CUSTOM_PROFICIENCY_VALUE);
+          setIsCustomProficiency(true);
+        }
+
         form.setValues({
           person_id: assignment.person_id,
           project_id: assignment.project_id,
@@ -122,11 +143,14 @@ export function AssignmentForm({
         form.clearErrors();
       } else {
         // Create mode - reset to defaults
+        setSelectedProficiency("proficient");
+        setIsCustomProficiency(false);
+
         form.setValues({
           person_id: 0,
           project_id: 0,
           planning_period_id: planningPeriod.id,
-          productivity_factor: 0.5,
+          productivity_factor: DEFAULT_PROFICIENCY_FACTOR,
           start_date: planningPeriod.start_date,
           end_date: planningPeriod.end_date,
         });
@@ -134,6 +158,24 @@ export function AssignmentForm({
       }
     }
   }, [opened, assignment, planningPeriod]);
+
+  // Handle proficiency selection change
+  const handleProficiencyChange = (value: string | null) => {
+    if (!value) return;
+
+    if (value === CUSTOM_PROFICIENCY_VALUE) {
+      setIsCustomProficiency(true);
+      setSelectedProficiency(value);
+      // Keep current factor value
+    } else {
+      setIsCustomProficiency(false);
+      setSelectedProficiency(value);
+      const level = PROFICIENCY_LEVELS.find((l) => l.value === value);
+      if (level) {
+        form.setFieldValue("productivity_factor", level.factor);
+      }
+    }
+  };
 
   const handleSubmit = async (values: CreateAssignmentInput) => {
     setLoading(true);
@@ -157,6 +199,15 @@ export function AssignmentForm({
     value: project.id.toString(),
     label: project.name,
   }));
+
+  // Build proficiency options for dropdown
+  const proficiencyOptions = [
+    ...PROFICIENCY_LEVELS.map((level) => ({
+      value: level.value,
+      label: `${level.label} (${(level.factor * 100).toFixed(0)}%)`,
+    })),
+    { value: CUSTOM_PROFICIENCY_VALUE, label: "Custom..." },
+  ];
 
   return (
     <Modal opened={opened} onClose={onClose} title={title} size="lg">
@@ -209,17 +260,29 @@ export function AssignmentForm({
             error={form.errors.project_id}
           />
 
-          <NumberInput
-            label="Productivity Factor"
-            placeholder="0.0 - 1.0"
-            description="Multiplier applied to available hours (0.5 = 50% productive time)"
+          <Select
+            label="Proficiency Level"
+            placeholder="Select proficiency level"
+            description="Person's expertise/familiarity with this project's technology/domain"
+            data={proficiencyOptions}
             required
-            min={0}
-            max={1}
-            step={0.1}
-            decimalScale={2}
-            {...form.getInputProps("productivity_factor")}
+            value={selectedProficiency}
+            onChange={handleProficiencyChange}
           />
+
+          {isCustomProficiency && (
+            <NumberInput
+              label="Custom Productivity Factor"
+              placeholder="0.0 - 1.0"
+              description="Multiplier applied to available hours (e.g., 0.5 = 50% productive time)"
+              required
+              min={0}
+              max={1}
+              step={0.05}
+              decimalScale={2}
+              {...form.getInputProps("productivity_factor")}
+            />
+          )}
 
           <Group grow>
             <TextInput

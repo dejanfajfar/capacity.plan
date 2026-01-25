@@ -139,11 +139,35 @@ The release workflow automatically extracts the version from git tags and update
 Available capacity for a person is calculated as:
 
 ```
-Base Hours = Available Hours/Week × Weeks in Period
-Deductions = Absence Hours + Overhead Hours
+Base Hours = Available Hours/Week × Weeks in Period × (Working Days / 7)
+Deductions = Absence Hours + Holiday Hours + Overhead Hours
 Available Hours = Base Hours - Deductions
 Effective Hours = Available Hours × Productivity Factor × Allocation %
 ```
+
+**Working Days**: People can work 1-7 days per week. The system accounts for their specific schedule when calculating capacity and only counts holidays that fall on their working days.
+
+### Proficiency Levels
+
+When assigning people to projects, you select a **proficiency level** that represents their expertise/familiarity with the project's technology, domain, or tools. This is expressed as a productivity factor (0.0 - 1.0) that multiplies their available hours.
+
+The system provides 7 preset proficiency levels:
+
+| Level | Factor | Description | When to Use |
+|-------|--------|-------------|-------------|
+| **Master** | 0.90 | Subject matter expert with deep mastery | Person is the architect/SME, mentors others, maintains highest productivity |
+| **Expert** | 0.80 | Deep expertise and experience | Person has years of experience, works independently, rarely needs guidance |
+| **Advanced** | 0.65 | Strong knowledge and experience | Person knows the domain well, works independently most of the time |
+| **Proficient** | 0.50 | Solid understanding and competence | Person is competent but not specialized (default/baseline) |
+| **Intermediate** | 0.35 | Developing skills and knowledge | Person is learning, needs regular guidance and code reviews |
+| **Beginner** | 0.20 | Basic familiarity only | Person has little experience, needs frequent support and mentoring |
+| **Trainee** | 0.10 | Shadowing/training mode | Person is in training, minimal direct output, focused on learning |
+
+**Custom Values**: You can also enter custom productivity factors (0.0 - 1.0) for special cases.
+
+**Rationale**: Even experts don't have 1.0 (100%) productivity because real work includes meetings, planning, context-switching, research, code reviews, and other non-coding activities. These presets are based on industry research for technical work capacity planning.
+
+**Example**: If a person has 40 hours available in a period and is assigned to a project at "Expert" level (0.80) with 50% allocation, their effective hours are: `40h × 0.80 × 0.50 = 16h`
 
 ### Optimization Algorithm
 

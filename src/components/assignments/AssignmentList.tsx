@@ -2,6 +2,7 @@ import { ActionIcon, Avatar, Group, Table, Text, Tooltip } from "@mantine/core";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useGravatarUrl } from "../../lib/gravatar";
 import type { Assignment, Person, Project } from "../../types";
+import { getProficiencyLabelWithPercentage } from "../../constants/proficiency";
 
 interface AssignmentListProps {
   assignments: Assignment[];
@@ -41,8 +42,15 @@ function AssignmentRow({
         </Group>
       </Table.Td>
       <Table.Td>{project?.name || "Unknown"}</Table.Td>
-      <Table.Td className="numeric-data">
-        {(assignment.productivity_factor * 100).toFixed(0)}%
+      <Table.Td>
+        <Tooltip
+          label={`Productivity factor: ${getProficiencyLabelWithPercentage(assignment.productivity_factor)}`}
+          withArrow
+        >
+          <Text size="sm">
+            {getProficiencyLabelWithPercentage(assignment.productivity_factor)}
+          </Text>
+        </Tooltip>
       </Table.Td>
       <Table.Td>
         <Text size="sm">
@@ -121,7 +129,7 @@ export function AssignmentList({
         <Table.Tr>
           <Table.Th>Person</Table.Th>
           <Table.Th>Project</Table.Th>
-          <Table.Th>Productivity</Table.Th>
+          <Table.Th>Proficiency</Table.Th>
           <Table.Th>Date Range</Table.Th>
           <Table.Th>Allocation %</Table.Th>
           <Table.Th>Effective Hours</Table.Th>

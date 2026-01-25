@@ -34,6 +34,7 @@ import { optimizeAssignments, getCapacityOverview } from "../../lib/tauri";
 import { useGravatarUrl } from "../../lib/gravatar";
 import type { CapacityOverview, OptimizationResult } from "../../types";
 import { CapacityPieChart } from "./CapacityPieChart";
+import { getProficiencyLabel } from "../../constants/proficiency";
 
 interface CapacityAnalysisProps {
   periodId: number;
@@ -595,11 +596,17 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                                   <Table.Td className="numeric-data">
                                     {person.allocation_percentage.toFixed(1)}%
                                   </Table.Td>
-                                  <Table.Td className="numeric-data">
-                                    {(person.productivity_factor * 100).toFixed(
-                                      0,
-                                    )}
-                                    %
+                                  <Table.Td>
+                                    <Tooltip
+                                      label={`${(person.productivity_factor * 100).toFixed(0)}%`}
+                                      withArrow
+                                    >
+                                      <Text size="sm">
+                                        {getProficiencyLabel(
+                                          person.productivity_factor,
+                                        )}
+                                      </Text>
+                                    </Tooltip>
                                   </Table.Td>
                                   <Table.Td className="numeric-data">
                                     {person.effective_hours.toFixed(1)}h
