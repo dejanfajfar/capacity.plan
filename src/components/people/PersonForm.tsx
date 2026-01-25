@@ -7,6 +7,7 @@ import {
   Stack,
   NumberInput,
   Select,
+  Checkbox,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import type { Person, CreatePersonInput, Country } from "../../types";
@@ -29,6 +30,13 @@ export function PersonForm({
 }: PersonFormProps) {
   const [loading, setLoading] = useState(false);
   const [countries, setCountries] = useState<Country[]>([]);
+  const [workingDaysArray, setWorkingDaysArray] = useState<string[]>([
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+  ]);
 
   const form = useForm<CreatePersonInput>({
     initialValues: {
@@ -36,6 +44,7 @@ export function PersonForm({
       email: "",
       available_hours_per_week: 40,
       country_id: null,
+      working_days: "Mon,Tue,Wed,Thu,Fri",
     },
     validate: {
       name: (value) => (!value ? "Name is required" : null),
@@ -75,25 +84,40 @@ export function PersonForm({
     if (opened) {
       if (person) {
         // Edit mode - populate with person's data
+        const workingDaysArr = person.working_days
+          ? person.working_days.split(",").map((d) => d.trim())
+          : ["Mon", "Tue", "Wed", "Thu", "Fri"];
+        setWorkingDaysArray(workingDaysArr);
+
         form.setValues({
           name: person.name,
           email: person.email,
           available_hours_per_week: person.available_hours_per_week,
           country_id: person.country_id,
+          working_days: person.working_days,
         });
         form.clearErrors();
       } else {
         // Create mode - reset to defaults
+        setWorkingDaysArray(["Mon", "Tue", "Wed", "Thu", "Fri"]);
         form.reset();
       }
     }
   }, [opened, person]);
 
   const handleSubmit = async (values: CreatePersonInput) => {
+    // Validate at least one working day is selected
+    if (workingDaysArray.length === 0) {
+      return;
+    }
+
     setLoading(true);
     try {
-      await onSubmit(values);
+      // Convert working days array to comma-separated string
+      const workingDaysString = workingDaysArray.join(",");
+      await onSubmit({ ...values, working_days: workingDaysString });
       form.reset();
+      setWorkingDaysArray(["Mon", "Tue", "Wed", "Thu", "Fri"]);
       onClose();
     } catch (error) {
       console.error("Failed to save person:", error);
@@ -149,6 +173,29 @@ export function PersonForm({
             step={1}
             {...form.getInputProps("available_hours_per_week")}
           />
+
+          <Checkbox.Group
+            label="Working Days"
+            description="Select the days this person works for the company"
+            required
+            value={workingDaysArray}
+            onChange={setWorkingDaysArray}
+            error={
+              workingDaysArray.length === 0
+                ? "At least one day must be selected"
+                : null
+            }
+          >
+            <Group mt="xs">
+              <Checkbox value="Mon" label="Monday" />
+              <Checkbox value="Tue" label="Tuesday" />
+              <Checkbox value="Wed" label="Wednesday" />
+              <Checkbox value="Thu" label="Thursday" />
+              <Checkbox value="Fri" label="Friday" />
+              <Checkbox value="Sat" label="Saturday" />
+              <Checkbox value="Sun" label="Sunday" />
+            </Group>
+          </Checkbox.Group>
 
           <Group justify="flex-end" mt="md">
             <Button variant="subtle" onClick={onClose} disabled={loading}>

@@ -2,10 +2,43 @@ use crate::db::DbPool;
 use crate::models::{
     Absence as ModelAbsence, Assignment, Holiday, Person, PlanningPeriod, ProjectRequirement,
 };
-use chrono::NaiveDate;
+use chrono::{Datelike, NaiveDate, Weekday};
 use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+// Helper functions for working days
+
+/// Parse working_days string (e.g., "Mon,Tue,Wed,Thu,Fri") and return count of working days
+fn parse_working_days_count(working_days: &str) -> usize {
+    working_days
+        .split(',')
+        .filter(|s| !s.trim().is_empty())
+        .count()
+}
+
+/// Parse working_days string and return a set of Weekday values
+fn parse_working_days_set(working_days: &str) -> Vec<Weekday> {
+    working_days
+        .split(',')
+        .filter_map(|day| match day.trim() {
+            "Mon" => Some(Weekday::Mon),
+            "Tue" => Some(Weekday::Tue),
+            "Wed" => Some(Weekday::Wed),
+            "Thu" => Some(Weekday::Thu),
+            "Fri" => Some(Weekday::Fri),
+            "Sat" => Some(Weekday::Sat),
+            "Sun" => Some(Weekday::Sun),
+            _ => None,
+        })
+        .collect()
+}
+
+/// Check if a given date falls on one of the person's working days
+fn is_working_day(date: &NaiveDate, working_days_set: &[Weekday]) -> bool {
+    let weekday = date.weekday();
+    working_days_set.contains(&weekday)
+}
 
 // Analytics types
 #[derive(Debug, Serialize, Deserialize)]
@@ -125,12 +158,20 @@ pub async fn calculate_person_available_hours(
     // Calculate total days in period
     let total_days = (end - start).num_days() + 1;
 
-    // Calculate working days (assume 5-day work week)
-    let total_weeks = total_days as f64 / 7.0;
-    let working_days = total_weeks * 5.0;
+    // Parse person's working days configuration
+    let working_days_count = parse_working_days_count(&person.working_days) as f64;
+    let working_days_set = parse_working_days_set(&person.working_days);
 
-    // Calculate hours per day
-    let hours_per_day = person.available_hours_per_week / 5.0;
+    // Calculate working days based on person's schedule
+    let total_weeks = total_days as f64 / 7.0;
+    let working_days = total_weeks * working_days_count;
+
+    // Calculate hours per day based on person's working days
+    let hours_per_day = if working_days_count > 0.0 {
+        person.available_hours_per_week / working_days_count
+    } else {
+        0.0
+    };
 
     // Calculate base hours (before absences)
     let base_hours = working_days * hours_per_day;
@@ -187,35 +228,37 @@ pub async fn calculate_person_available_hours(
             let overlap_end = holiday_end.min(end);
 
             if overlap_start <= overlap_end {
-                let holiday_days_in_period = (overlap_end - overlap_start).num_days() + 1;
+                // Count only holiday days that fall on person's working days
+                let mut working_holiday_days = 0i64;
+                let mut current_date = overlap_start;
 
-                // Calculate days that overlap with absences to avoid double-counting
-                let mut overlapping_absence_days = 0i64;
+                while current_date <= overlap_end {
+                    // Check if this date is a working day for this person
+                    if is_working_day(&current_date, &working_days_set) {
+                        // Check if this date overlaps with any absence
+                        let mut is_absent = false;
+                        for absence in &absences {
+                            let absence_start =
+                                NaiveDate::parse_from_str(&absence.start_date, "%Y-%m-%d")
+                                    .map_err(|e| format!("Invalid absence start date: {}", e))?;
+                            let absence_end =
+                                NaiveDate::parse_from_str(&absence.end_date, "%Y-%m-%d")
+                                    .map_err(|e| format!("Invalid absence end date: {}", e))?;
 
-                for absence in &absences {
-                    let absence_start = NaiveDate::parse_from_str(&absence.start_date, "%Y-%m-%d")
-                        .map_err(|e| format!("Invalid absence start date: {}", e))?;
-                    let absence_end = NaiveDate::parse_from_str(&absence.end_date, "%Y-%m-%d")
-                        .map_err(|e| format!("Invalid absence end date: {}", e))?;
+                            if current_date >= absence_start && current_date <= absence_end {
+                                is_absent = true;
+                                break;
+                            }
+                        }
 
-                    // Check if this absence overlaps with the holiday (within planning period)
-                    if overlap_start <= absence_end && overlap_end >= absence_start {
-                        // Calculate the overlapping range
-                        let abs_overlap_start = overlap_start.max(absence_start);
-                        let abs_overlap_end = overlap_end.min(absence_end);
-                        let overlap_days = (abs_overlap_end - abs_overlap_start).num_days() + 1;
-                        overlapping_absence_days += overlap_days;
+                        // Only count if not already covered by absence
+                        if !is_absent {
+                            working_holiday_days += 1;
+                        }
                     }
+                    current_date = current_date.succ_opt().unwrap();
                 }
 
-                // Subtract overlapping days from holiday days (only count non-overlapping portion)
-                let effective_holiday_days =
-                    (holiday_days_in_period - overlapping_absence_days).max(0);
-
-                // Only count working days (assume holidays are on working days)
-                // Simple approximation: 5/7 of days are working days
-                let working_holiday_days =
-                    (effective_holiday_days as f64 * 5.0 / 7.0).round() as i64;
                 total_holiday_days += working_holiday_days;
             }
         }

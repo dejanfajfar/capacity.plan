@@ -14,6 +14,7 @@ export interface Person {
   email: string;
   available_hours_per_week: number;
   country_id: number | null; // NEW: Optional country assignment
+  working_days: string; // Comma-separated day codes (e.g., "Mon,Tue,Wed,Thu,Fri")
   created_at: string;
 }
 
@@ -197,6 +198,7 @@ export interface CreatePersonInput {
   email: string;
   available_hours_per_week: number;
   country_id?: number | null; // NEW: Optional country assignment
+  working_days: string; // Comma-separated day codes (e.g., "Mon,Tue,Wed,Thu,Fri")
 }
 
 export interface CreateProjectInput {

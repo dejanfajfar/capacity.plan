@@ -291,6 +291,15 @@ async fn run_migrations(pool: &DbPool) -> Result<(), sqlx::Error> {
         .execute(pool)
         .await?;
 
+    // Add working_days column to people table if it doesn't exist
+    // Default to Mon-Fri (5-day work week) for backward compatibility
+    sqlx::query("ALTER TABLE people ADD COLUMN working_days TEXT DEFAULT 'Mon,Tue,Wed,Thu,Fri'")
+        .execute(pool)
+        .await
+        .ok(); // Ignore error if column already exists (SQLite limitation)
+
+    debug!("Working days migration completed");
+
     info!("Database migrations completed successfully");
     Ok(())
 }

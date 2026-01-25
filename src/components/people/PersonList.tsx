@@ -17,6 +17,58 @@ interface PersonRowProps {
   onView: (personId: number) => void;
 }
 
+// Helper function to format working days for display
+function formatWorkingDays(workingDays: string): string {
+  if (!workingDays) return "Mon-Fri";
+
+  const days = workingDays.split(",").map((d) => d.trim());
+  const allDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+  // Check if it's the standard Mon-Fri pattern
+  if (
+    days.length === 5 &&
+    days.includes("Mon") &&
+    days.includes("Tue") &&
+    days.includes("Wed") &&
+    days.includes("Thu") &&
+    days.includes("Fri")
+  ) {
+    return "Mon-Fri";
+  }
+
+  // Check if it's all 7 days
+  if (days.length === 7) {
+    return "All 7 days";
+  }
+
+  // Check for consecutive days
+  const dayIndices = days
+    .map((d) => allDays.indexOf(d))
+    .filter((i) => i !== -1)
+    .sort((a, b) => a - b);
+
+  if (dayIndices.length > 1) {
+    let isConsecutive = true;
+    for (let i = 1; i < dayIndices.length; i++) {
+      if (dayIndices[i] !== dayIndices[i - 1] + 1) {
+        isConsecutive = false;
+        break;
+      }
+    }
+
+    if (isConsecutive) {
+      return `${allDays[dayIndices[0]]}-${allDays[dayIndices[dayIndices.length - 1]]}`;
+    }
+  }
+
+  // Otherwise, just show the count or list
+  if (days.length <= 3) {
+    return days.join(", ");
+  }
+
+  return `${days.length} days/week`;
+}
+
 function PersonRow({ person, onEdit, onDelete, onView }: PersonRowProps) {
   const avatarUrl = useGravatarUrl(person.email, {
     size: 80,
@@ -39,6 +91,9 @@ function PersonRow({ person, onEdit, onDelete, onView }: PersonRowProps) {
       <Table.Td>{person.email}</Table.Td>
       <Table.Td className="numeric-data">
         {person.available_hours_per_week} hrs
+      </Table.Td>
+      <Table.Td>
+        <Text size="sm">{formatWorkingDays(person.working_days)}</Text>
       </Table.Td>
       <Table.Td>
         {person.country_name ? (
@@ -100,6 +155,7 @@ export function PersonList({
           <Table.Th>Name</Table.Th>
           <Table.Th>Email</Table.Th>
           <Table.Th>Available Hours/Week</Table.Th>
+          <Table.Th>Working Days</Table.Th>
           <Table.Th>Country</Table.Th>
           <Table.Th style={{ width: 100 }}>Actions</Table.Th>
         </Table.Tr>

@@ -16,6 +16,7 @@ pub struct Person {
     pub email: String,
     pub available_hours_per_week: f64,
     pub country_id: Option<i64>, // Optional reference to country
+    pub working_days: String,    // Comma-separated day codes (e.g., "Mon,Tue,Wed,Thu,Fri")
     pub created_at: String,
 }
 
@@ -98,6 +99,7 @@ pub struct CreatePersonInput {
     pub email: String,
     pub available_hours_per_week: f64,
     pub country_id: Option<i64>, // Optional country assignment
+    pub working_days: String,    // Comma-separated day codes (e.g., "Mon,Tue,Wed,Thu,Fri")
 }
 
 #[derive(Debug, Deserialize)]
@@ -204,6 +206,7 @@ pub struct PersonWithCountry {
     pub country_id: Option<i64>,
     pub country_iso_code: Option<String>,
     pub country_name: Option<String>,
+    pub working_days: String, // Comma-separated day codes (e.g., "Mon,Tue,Wed,Thu,Fri")
     pub created_at: String,
 }
 

@@ -33,6 +33,7 @@ pub async fn list_people_with_countries(
             p.country_id,
             c.iso_code as country_iso_code,
             c.name as country_name,
+            p.working_days,
             p.created_at
          FROM people p
          LEFT JOIN countries c ON p.country_id = c.id
@@ -58,12 +59,13 @@ pub async fn create_person(
     input: CreatePersonInput,
 ) -> Result<Person, String> {
     let result = sqlx::query(
-        "INSERT INTO people (name, email, available_hours_per_week, country_id) VALUES (?, ?, ?, ?)",
+        "INSERT INTO people (name, email, available_hours_per_week, country_id, working_days) VALUES (?, ?, ?, ?, ?)",
     )
     .bind(&input.name)
     .bind(&input.email)
     .bind(input.available_hours_per_week)
     .bind(input.country_id)
+    .bind(&input.working_days)
     .execute(pool.inner())
     .await
     .map_err(|e| e.to_string())?;
@@ -86,12 +88,13 @@ pub async fn update_person(
     input: CreatePersonInput,
 ) -> Result<Person, String> {
     sqlx::query(
-        "UPDATE people SET name = ?, email = ?, available_hours_per_week = ?, country_id = ? WHERE id = ?",
+        "UPDATE people SET name = ?, email = ?, available_hours_per_week = ?, country_id = ?, working_days = ? WHERE id = ?",
     )
     .bind(&input.name)
     .bind(&input.email)
     .bind(input.available_hours_per_week)
     .bind(input.country_id)
+    .bind(&input.working_days)
     .bind(id)
     .execute(pool.inner())
     .await
