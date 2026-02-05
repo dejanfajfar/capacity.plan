@@ -11,11 +11,15 @@ import type {
   CreateAssignmentInput,
   Absence,
   CreateAbsenceInput,
-  Overhead,
-  CreateOverheadInput,
-  OverheadAssignment,
-  OverheadAssignmentWithDetails,
-  CreateOverheadAssignmentInput,
+  Job,
+  JobWithTasks,
+  JobOverheadTask,
+  CreateJobInput,
+  CreateJobOverheadTaskInput,
+  PersonJobAssignment,
+  PersonJobAssignmentWithDetails,
+  CreatePersonJobAssignmentInput,
+  JobDependencies,
   ProjectRequirement,
   CreateProjectRequirementInput,
   Country,
@@ -242,67 +246,105 @@ export async function deleteAbsence(id: number): Promise<void> {
 }
 
 // ============================================================================
-// Overhead Commands
+// Job Commands (Global Job Templates)
 // ============================================================================
 
-export async function listOverheads(
-  planningPeriodId: number,
-): Promise<Overhead[]> {
-  return await invoke("list_overheads", { planningPeriodId });
+export async function listJobs(): Promise<Job[]> {
+  return await invoke("list_jobs");
 }
 
-export async function createOverhead(
-  input: CreateOverheadInput,
-): Promise<Overhead> {
-  return await invoke("create_overhead", { input });
+export async function getJob(id: number): Promise<JobWithTasks> {
+  return await invoke("get_job", { id });
 }
 
-export async function updateOverhead(
+export async function createJob(input: CreateJobInput): Promise<Job> {
+  return await invoke("create_job", { input });
+}
+
+export async function updateJob(
   id: number,
-  input: CreateOverheadInput,
-): Promise<Overhead> {
-  return await invoke("update_overhead", { id, input });
+  input: CreateJobInput,
+): Promise<Job> {
+  return await invoke("update_job", { id, input });
 }
 
-export async function deleteOverhead(id: number): Promise<void> {
-  return await invoke("delete_overhead", { id });
+export async function deleteJob(id: number): Promise<void> {
+  return await invoke("delete_job", { id });
+}
+
+export async function checkJobDependencies(
+  id: number,
+): Promise<JobDependencies> {
+  return await invoke("check_job_dependencies", { id });
 }
 
 // ============================================================================
-// Overhead Assignment Commands
+// Job Overhead Task Commands
 // ============================================================================
 
-export async function listOverheadAssignments(
-  overheadId: number,
-): Promise<OverheadAssignment[]> {
-  return await invoke("list_overhead_assignments", { overheadId });
+export async function listJobOverheadTasks(
+  jobId: number,
+): Promise<JobOverheadTask[]> {
+  return await invoke("list_job_overhead_tasks", { jobId });
 }
 
-export async function listPersonOverheadAssignments(
+export async function createJobOverheadTask(
+  input: CreateJobOverheadTaskInput,
+): Promise<JobOverheadTask> {
+  return await invoke("create_job_overhead_task", { input });
+}
+
+export async function updateJobOverheadTask(
+  id: number,
+  input: CreateJobOverheadTaskInput,
+): Promise<JobOverheadTask> {
+  return await invoke("update_job_overhead_task", { id, input });
+}
+
+export async function deleteJobOverheadTask(id: number): Promise<void> {
+  return await invoke("delete_job_overhead_task", { id });
+}
+
+// ============================================================================
+// Person Job Assignment Commands
+// ============================================================================
+
+export async function listPersonJobAssignments(
+  planningPeriodId: number,
+): Promise<PersonJobAssignmentWithDetails[]> {
+  return await invoke("list_person_job_assignments", { planningPeriodId });
+}
+
+export async function listPersonJobsForPerson(
   personId: number,
   planningPeriodId: number,
-): Promise<OverheadAssignmentWithDetails[]> {
-  return await invoke("list_person_overhead_assignments", {
+): Promise<PersonJobAssignmentWithDetails[]> {
+  return await invoke("list_person_jobs_for_person", {
     personId,
     planningPeriodId,
   });
 }
 
-export async function createOverheadAssignment(
-  input: CreateOverheadAssignmentInput,
-): Promise<OverheadAssignment> {
-  return await invoke("create_overhead_assignment", { input });
+export async function createPersonJobAssignment(
+  input: CreatePersonJobAssignmentInput,
+): Promise<PersonJobAssignment> {
+  return await invoke("create_person_job_assignment", { input });
 }
 
-export async function updateOverheadAssignment(
-  id: number,
-  input: CreateOverheadAssignmentInput,
-): Promise<OverheadAssignment> {
-  return await invoke("update_overhead_assignment", { id, input });
+export async function batchCreatePersonJobAssignments(
+  personId: number,
+  jobIds: number[],
+  planningPeriodId: number,
+): Promise<PersonJobAssignment[]> {
+  return await invoke("batch_create_person_job_assignments", {
+    personId,
+    jobIds,
+    planningPeriodId,
+  });
 }
 
-export async function deleteOverheadAssignment(id: number): Promise<void> {
-  return await invoke("delete_overhead_assignment", { id });
+export async function deletePersonJobAssignment(id: number): Promise<void> {
+  return await invoke("delete_person_job_assignment", { id });
 }
 
 // ============================================================================

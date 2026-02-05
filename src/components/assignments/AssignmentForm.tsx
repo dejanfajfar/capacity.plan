@@ -47,9 +47,8 @@ export function AssignmentForm({
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [isCustomProficiency, setIsCustomProficiency] = useState(false);
-  const [selectedProficiency, setSelectedProficiency] = useState<string>(
-    "proficient",
-  );
+  const [selectedProficiency, setSelectedProficiency] =
+    useState<string>("proficient");
 
   useEffect(() => {
     if (opened) {

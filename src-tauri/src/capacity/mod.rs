@@ -1,6 +1,7 @@
 use crate::db::DbPool;
 use crate::models::{
-    Absence as ModelAbsence, Assignment, Holiday, Person, PlanningPeriod, ProjectRequirement,
+    Absence as ModelAbsence, Assignment, Holiday, JobOverheadTask, Person, PersonJobAssignment,
+    PlanningPeriod, ProjectRequirement,
 };
 use chrono::{Datelike, NaiveDate, Weekday};
 use log::{debug, info, warn};
@@ -270,24 +271,35 @@ pub async fn calculate_person_available_hours(
         (0, 0.0)
     };
 
-    // Get overhead assignments for this person within the planning period
-    let overhead_assignments = sqlx::query_as::<_, crate::models::OverheadAssignment>(
-        "SELECT oa.* FROM overhead_assignments oa
-         JOIN overheads o ON oa.overhead_id = o.id
-         WHERE oa.person_id = ? AND o.planning_period_id = ?",
+    // Get job assignments for this person within the planning period
+    let job_assignments = sqlx::query_as::<_, PersonJobAssignment>(
+        "SELECT * FROM person_job_assignments 
+         WHERE person_id = ? AND planning_period_id = ?",
     )
     .bind(person.id)
     .bind(planning_period.id)
     .fetch_all(pool)
     .await
-    .map_err(|e| format!("Failed to fetch overhead assignments: {}", e))?;
+    .map_err(|e| format!("Failed to fetch job assignments: {}", e))?;
 
+    // Calculate overhead hours from all assigned jobs' overhead tasks
     let mut overhead_hours = 0.0;
-    for assignment in overhead_assignments {
-        if assignment.effort_period == "weekly" {
-            overhead_hours += assignment.effort_hours * total_weeks;
-        } else if assignment.effort_period == "daily" {
-            overhead_hours += assignment.effort_hours * working_days;
+    for job_assignment in job_assignments {
+        // Get all overhead tasks for this job
+        let overhead_tasks = sqlx::query_as::<_, JobOverheadTask>(
+            "SELECT * FROM job_overhead_tasks WHERE job_id = ?",
+        )
+        .bind(job_assignment.job_id)
+        .fetch_all(pool)
+        .await
+        .map_err(|e| format!("Failed to fetch job overhead tasks: {}", e))?;
+
+        for task in overhead_tasks {
+            if task.effort_period == "weekly" {
+                overhead_hours += task.effort_hours * total_weeks;
+            } else if task.effort_period == "daily" {
+                overhead_hours += task.effort_hours * working_days;
+            }
         }
     }
 

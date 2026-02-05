@@ -154,40 +154,67 @@ async fn run_migrations(pool: &DbPool) -> Result<(), sqlx::Error> {
     .execute(pool)
     .await?;
 
-    // Create overheads table
+    // Create jobs table (global job templates)
     sqlx::query(
         r#"
-        CREATE TABLE IF NOT EXISTS overheads (
+        CREATE TABLE IF NOT EXISTS jobs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            planning_period_id INTEGER NOT NULL,
-            name TEXT NOT NULL,
+            name TEXT NOT NULL UNIQUE,
             description TEXT,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (planning_period_id) REFERENCES planning_periods(id) ON DELETE CASCADE
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
         "#,
     )
     .execute(pool)
     .await?;
 
-    // Create overhead_assignments table
+    // Create job_overhead_tasks table (overhead tasks within a job)
     sqlx::query(
         r#"
-        CREATE TABLE IF NOT EXISTS overhead_assignments (
+        CREATE TABLE IF NOT EXISTS job_overhead_tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            overhead_id INTEGER NOT NULL,
-            person_id INTEGER NOT NULL,
+            job_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT,
             effort_hours REAL NOT NULL,
             effort_period TEXT NOT NULL CHECK(effort_period IN ('daily', 'weekly')),
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (overhead_id) REFERENCES overheads(id) ON DELETE CASCADE,
-            FOREIGN KEY (person_id) REFERENCES people(id) ON DELETE CASCADE,
-            UNIQUE(overhead_id, person_id)
+            FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
         )
         "#,
     )
     .execute(pool)
     .await?;
+
+    // Create person_job_assignments table (links person + job + planning_period)
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS person_job_assignments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            person_id INTEGER NOT NULL,
+            job_id INTEGER NOT NULL,
+            planning_period_id INTEGER NOT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (person_id) REFERENCES people(id) ON DELETE CASCADE,
+            FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
+            FOREIGN KEY (planning_period_id) REFERENCES planning_periods(id) ON DELETE CASCADE,
+            UNIQUE(person_id, job_id, planning_period_id)
+        )
+        "#,
+    )
+    .execute(pool)
+    .await?;
+
+    // Drop old overhead tables (clean slate migration)
+    sqlx::query("DROP TABLE IF EXISTS overhead_assignments")
+        .execute(pool)
+        .await
+        .ok(); // Ignore error if table doesn't exist
+
+    sqlx::query("DROP TABLE IF EXISTS overheads")
+        .execute(pool)
+        .await
+        .ok(); // Ignore error if table doesn't exist
 
     // Create indexes
     sqlx::query("CREATE INDEX IF NOT EXISTS idx_assignments_person ON assignments(person_id)")
@@ -207,18 +234,38 @@ async fn run_migrations(pool: &DbPool) -> Result<(), sqlx::Error> {
         .await?;
 
     sqlx::query(
-        "CREATE INDEX IF NOT EXISTS idx_overheads_planning_period ON overheads(planning_period_id)",
+        "CREATE INDEX IF NOT EXISTS idx_job_overhead_tasks_job ON job_overhead_tasks(job_id)",
     )
     .execute(pool)
     .await?;
 
-    sqlx::query("CREATE INDEX IF NOT EXISTS idx_overhead_assignments_overhead ON overhead_assignments(overhead_id)")
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_person_job_assignments_person ON person_job_assignments(person_id)")
         .execute(pool)
         .await?;
 
-    sqlx::query("CREATE INDEX IF NOT EXISTS idx_overhead_assignments_person ON overhead_assignments(person_id)")
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_person_job_assignments_job ON person_job_assignments(job_id)")
         .execute(pool)
         .await?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_person_job_assignments_period ON person_job_assignments(planning_period_id)")
+        .execute(pool)
+        .await?;
+
+    // Drop old overhead indexes (they will be removed when tables are dropped)
+    sqlx::query("DROP INDEX IF EXISTS idx_overheads_planning_period")
+        .execute(pool)
+        .await
+        .ok();
+
+    sqlx::query("DROP INDEX IF EXISTS idx_overhead_assignments_overhead")
+        .execute(pool)
+        .await
+        .ok();
+
+    sqlx::query("DROP INDEX IF EXISTS idx_overhead_assignments_person")
+        .execute(pool)
+        .await
+        .ok();
 
     sqlx::query("CREATE INDEX IF NOT EXISTS idx_project_requirements_project ON project_requirements(project_id)")
         .execute(pool)

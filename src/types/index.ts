@@ -55,31 +55,46 @@ export interface Absence {
   created_at: string;
 }
 
-export interface Overhead {
+// ============================================================================
+// Job Types (Global Job Templates with Overhead Tasks)
+// ============================================================================
+
+export interface Job {
   id: number;
-  planning_period_id: number;
   name: string;
   description: string | null;
   created_at: string;
 }
 
-export interface OverheadAssignment {
+export interface JobOverheadTask {
   id: number;
-  overhead_id: number;
-  person_id: number;
+  job_id: number;
+  name: string;
+  description: string | null;
   effort_hours: number;
   effort_period: "daily" | "weekly";
   created_at: string;
 }
 
-export interface OverheadAssignmentWithDetails {
+export interface JobWithTasks extends Job {
+  overhead_tasks: JobOverheadTask[];
+}
+
+export interface PersonJobAssignment {
   id: number;
-  overhead_id: number;
-  overhead_name: string;
-  overhead_description: string | null;
   person_id: number;
-  effort_hours: number;
-  effort_period: "daily" | "weekly";
+  job_id: number;
+  planning_period_id: number;
+  created_at: string;
+}
+
+export interface PersonJobAssignmentWithDetails {
+  id: number;
+  person_id: number;
+  job_id: number;
+  job_name: string;
+  job_description: string | null;
+  planning_period_id: number;
   created_at: string;
 }
 
@@ -224,17 +239,32 @@ export interface CreateAbsenceInput {
   reason?: string;
 }
 
-export interface CreateOverheadInput {
-  planning_period_id: number;
+// ============================================================================
+// Job Input Types
+// ============================================================================
+
+export interface CreateJobInput {
   name: string;
   description?: string;
 }
 
-export interface CreateOverheadAssignmentInput {
-  overhead_id: number;
-  person_id: number;
+export interface CreateJobOverheadTaskInput {
+  job_id: number;
+  name: string;
+  description?: string;
   effort_hours: number;
   effort_period: "daily" | "weekly";
+}
+
+export interface CreatePersonJobAssignmentInput {
+  person_id: number;
+  job_id: number;
+  planning_period_id: number;
+}
+
+export interface JobDependencies {
+  task_count: number;
+  assignment_count: number;
 }
 
 export interface CreateProjectRequirementInput {

@@ -55,22 +55,35 @@ pub struct Absence {
     pub created_at: String,
 }
 
+// ============================================================================
+// Job Models (Global Job Templates with Overhead Tasks)
+// ============================================================================
+
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
-pub struct Overhead {
+pub struct Job {
     pub id: i64,
-    pub planning_period_id: i64,
     pub name: String,
     pub description: Option<String>,
     pub created_at: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
-pub struct OverheadAssignment {
+pub struct JobOverheadTask {
     pub id: i64,
-    pub overhead_id: i64,
-    pub person_id: i64,
+    pub job_id: i64,
+    pub name: String,
+    pub description: Option<String>,
     pub effort_hours: f64,
     pub effort_period: String, // 'daily' or 'weekly'
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub struct PersonJobAssignment {
+    pub id: i64,
+    pub person_id: i64,
+    pub job_id: i64,
+    pub planning_period_id: i64,
     pub created_at: String,
 }
 
@@ -128,19 +141,30 @@ pub struct CreateAbsenceInput {
     pub reason: Option<String>,
 }
 
+// ============================================================================
+// Job Input DTOs
+// ============================================================================
+
 #[derive(Debug, Deserialize)]
-pub struct CreateOverheadInput {
-    pub planning_period_id: i64,
+pub struct CreateJobInput {
     pub name: String,
     pub description: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct CreateOverheadAssignmentInput {
-    pub overhead_id: i64,
-    pub person_id: i64,
+pub struct CreateJobOverheadTaskInput {
+    pub job_id: i64,
+    pub name: String,
+    pub description: Option<String>,
     pub effort_hours: f64,
     pub effort_period: String, // 'daily' or 'weekly'
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CreatePersonJobAssignmentInput {
+    pub person_id: i64,
+    pub job_id: i64,
+    pub planning_period_id: i64,
 }
 
 #[derive(Debug, Deserialize)]
@@ -265,17 +289,33 @@ pub struct CountryDependencies {
 // Extended Models for Commands
 // ============================================================================
 
-// Extended overhead assignment model with overhead details for UI display
-#[derive(Debug, Serialize, sqlx::FromRow)]
-pub struct OverheadAssignmentWithDetails {
+// Extended job model with its overhead tasks
+#[derive(Debug, Serialize)]
+pub struct JobWithTasks {
     pub id: i64,
-    pub overhead_id: i64,
-    pub overhead_name: String,
-    pub overhead_description: Option<String>,
-    pub person_id: i64,
-    pub effort_hours: f64,
-    pub effort_period: String,
+    pub name: String,
+    pub description: Option<String>,
     pub created_at: String,
+    pub overhead_tasks: Vec<JobOverheadTask>,
+}
+
+// Extended person job assignment with job details
+#[derive(Debug, Serialize, sqlx::FromRow)]
+pub struct PersonJobAssignmentWithDetails {
+    pub id: i64,
+    pub person_id: i64,
+    pub job_id: i64,
+    pub job_name: String,
+    pub job_description: Option<String>,
+    pub planning_period_id: i64,
+    pub created_at: String,
+}
+
+// Dependency information for job delete operations
+#[derive(Debug, Serialize)]
+pub struct JobDependencies {
+    pub task_count: i64,
+    pub assignment_count: i64,
 }
 
 // ============================================================================

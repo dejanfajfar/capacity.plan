@@ -17,6 +17,7 @@ import {
   IconSun,
   IconMoon,
   IconCalendarEvent,
+  IconBriefcase,
 } from "@tabler/icons-react";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -48,6 +49,7 @@ export function AppLayout() {
     },
     { to: "/projects", label: "Projects", icon: <IconFolder size={20} /> },
     { to: "/people", label: "People", icon: <IconUsers size={20} /> },
+    { to: "/jobs", label: "Jobs", icon: <IconBriefcase size={20} /> },
     {
       to: "/holidays",
       label: "Holidays",
