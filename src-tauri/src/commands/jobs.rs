@@ -71,6 +71,24 @@ pub async fn create_job(
 ) -> Result<Job, String> {
     debug!("Creating job: {}", input.name);
 
+    // Check if job with same name already exists
+    let existing =
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM jobs WHERE LOWER(name) = LOWER(?)")
+            .bind(&input.name)
+            .fetch_one(pool.inner())
+            .await
+            .map_err(|e| {
+                error!("Failed to check existing job: {}", e);
+                e.to_string()
+            })?;
+
+    if existing > 0 {
+        return Err(format!(
+            "A job with the name '{}' already exists. Please use a different name.",
+            input.name
+        ));
+    }
+
     let result = sqlx::query("INSERT INTO jobs (name, description) VALUES (?, ?)")
         .bind(&input.name)
         .bind(&input.description)
@@ -104,6 +122,26 @@ pub async fn update_job(
     input: CreateJobInput,
 ) -> Result<Job, String> {
     debug!("Updating job ID: {}", id);
+
+    // Check if another job with same name already exists (excluding current job)
+    let existing = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM jobs WHERE LOWER(name) = LOWER(?) AND id != ?",
+    )
+    .bind(&input.name)
+    .bind(id)
+    .fetch_one(pool.inner())
+    .await
+    .map_err(|e| {
+        error!("Failed to check existing job: {}", e);
+        e.to_string()
+    })?;
+
+    if existing > 0 {
+        return Err(format!(
+            "A job with the name '{}' already exists. Please use a different name.",
+            input.name
+        ));
+    }
 
     sqlx::query("UPDATE jobs SET name = ?, description = ? WHERE id = ?")
         .bind(&input.name)

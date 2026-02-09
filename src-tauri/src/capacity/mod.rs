@@ -632,3 +632,161 @@ pub async fn optimize_assignments_proportional(
         warnings,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::NaiveDate;
+
+    // Tests for parse_working_days_count
+    #[test]
+    fn test_parse_working_days_count_standard_weekdays() {
+        assert_eq!(parse_working_days_count("Mon,Tue,Wed,Thu,Fri"), 5);
+    }
+
+    #[test]
+    fn test_parse_working_days_count_full_week() {
+        assert_eq!(parse_working_days_count("Mon,Tue,Wed,Thu,Fri,Sat,Sun"), 7);
+    }
+
+    #[test]
+    fn test_parse_working_days_count_partial_week() {
+        assert_eq!(parse_working_days_count("Mon,Wed,Fri"), 3);
+    }
+
+    #[test]
+    fn test_parse_working_days_count_single_day() {
+        assert_eq!(parse_working_days_count("Mon"), 1);
+    }
+
+    #[test]
+    fn test_parse_working_days_count_empty_string() {
+        assert_eq!(parse_working_days_count(""), 0);
+    }
+
+    #[test]
+    fn test_parse_working_days_count_with_whitespace() {
+        assert_eq!(parse_working_days_count("Mon, Tue, Wed"), 3);
+    }
+
+    // Tests for parse_working_days_set
+    #[test]
+    fn test_parse_working_days_set_standard_weekdays() {
+        let days = parse_working_days_set("Mon,Tue,Wed,Thu,Fri");
+        assert_eq!(days.len(), 5);
+        assert!(days.contains(&Weekday::Mon));
+        assert!(days.contains(&Weekday::Tue));
+        assert!(days.contains(&Weekday::Wed));
+        assert!(days.contains(&Weekday::Thu));
+        assert!(days.contains(&Weekday::Fri));
+        assert!(!days.contains(&Weekday::Sat));
+        assert!(!days.contains(&Weekday::Sun));
+    }
+
+    #[test]
+    fn test_parse_working_days_set_weekend_only() {
+        let days = parse_working_days_set("Sat,Sun");
+        assert_eq!(days.len(), 2);
+        assert!(days.contains(&Weekday::Sat));
+        assert!(days.contains(&Weekday::Sun));
+    }
+
+    #[test]
+    fn test_parse_working_days_set_with_invalid_day() {
+        // Invalid days should be skipped
+        let days = parse_working_days_set("Mon,InvalidDay,Wed");
+        assert_eq!(days.len(), 2);
+        assert!(days.contains(&Weekday::Mon));
+        assert!(days.contains(&Weekday::Wed));
+    }
+
+    #[test]
+    fn test_parse_working_days_set_empty_string() {
+        let days = parse_working_days_set("");
+        assert!(days.is_empty());
+    }
+
+    // Tests for is_working_day
+    #[test]
+    fn test_is_working_day_monday_on_weekday_schedule() {
+        let date = NaiveDate::from_ymd_opt(2024, 1, 8).unwrap(); // Monday
+        let working_days = vec![Weekday::Mon, Weekday::Tue, Weekday::Wed, Weekday::Thu, Weekday::Fri];
+        assert!(is_working_day(&date, &working_days));
+    }
+
+    #[test]
+    fn test_is_working_day_saturday_on_weekday_schedule() {
+        let date = NaiveDate::from_ymd_opt(2024, 1, 6).unwrap(); // Saturday
+        let working_days = vec![Weekday::Mon, Weekday::Tue, Weekday::Wed, Weekday::Thu, Weekday::Fri];
+        assert!(!is_working_day(&date, &working_days));
+    }
+
+    #[test]
+    fn test_is_working_day_saturday_on_weekend_schedule() {
+        let date = NaiveDate::from_ymd_opt(2024, 1, 6).unwrap(); // Saturday
+        let working_days = vec![Weekday::Sat, Weekday::Sun];
+        assert!(is_working_day(&date, &working_days));
+    }
+
+    #[test]
+    fn test_is_working_day_empty_schedule() {
+        let date = NaiveDate::from_ymd_opt(2024, 1, 8).unwrap(); // Monday
+        let working_days: Vec<Weekday> = vec![];
+        assert!(!is_working_day(&date, &working_days));
+    }
+
+    // Tests for calculate_assignment_effective_hours
+    #[test]
+    fn test_effective_hours_full_allocation_expert() {
+        // 40h available, 100% allocation, 0.8 productivity (expert)
+        let effective = calculate_assignment_effective_hours(40.0, 100.0, 0.8);
+        assert!((effective - 32.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_effective_hours_half_allocation_proficient() {
+        // 40h available, 50% allocation, 0.5 productivity (proficient)
+        let effective = calculate_assignment_effective_hours(40.0, 50.0, 0.5);
+        assert!((effective - 10.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_effective_hours_zero_allocation() {
+        let effective = calculate_assignment_effective_hours(40.0, 0.0, 0.8);
+        assert!((effective - 0.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_effective_hours_zero_productivity() {
+        let effective = calculate_assignment_effective_hours(40.0, 100.0, 0.0);
+        assert!((effective - 0.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_effective_hours_zero_available() {
+        let effective = calculate_assignment_effective_hours(0.0, 100.0, 0.8);
+        assert!((effective - 0.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_effective_hours_real_scenario() {
+        // Realistic scenario: 35h/week available, 25% allocation, 0.65 productivity (advanced)
+        // Expected: 35 * 0.25 * 0.65 = 5.6875
+        let effective = calculate_assignment_effective_hours(35.0, 25.0, 0.65);
+        assert!((effective - 5.6875).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_effective_hours_master_level() {
+        // Master level: 40h available, 100% allocation, 0.9 productivity
+        let effective = calculate_assignment_effective_hours(40.0, 100.0, 0.9);
+        assert!((effective - 36.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_effective_hours_trainee_level() {
+        // Trainee level: 40h available, 100% allocation, 0.1 productivity
+        let effective = calculate_assignment_effective_hours(40.0, 100.0, 0.1);
+        assert!((effective - 4.0).abs() < 0.001);
+    }
+}
