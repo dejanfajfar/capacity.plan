@@ -28,7 +28,7 @@
     "date-fns": "^4.1.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-hook-form": "^7.70.0",
+    "react-hook-form": "^7.71.1",
     "react-router-dom": "^7.11.0",
     "recharts": "^3.6.0",
     "zod": "^4.3.5",
