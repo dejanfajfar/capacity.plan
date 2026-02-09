@@ -51,6 +51,16 @@ export function JobsManagementPage() {
       setLoading(true);
       const jobList = await listJobs();
       setJobs(jobList);
+
+      // Load tasks for all jobs upfront
+      const tasksMap = new Map<number, JobOverheadTask[]>();
+      await Promise.all(
+        jobList.map(async (job) => {
+          const jobTasks = await listJobOverheadTasks(job.id);
+          tasksMap.set(job.id, jobTasks);
+        }),
+      );
+      setTasks(tasksMap);
     } catch (error) {
       notifications.show({
         title: "Error",
