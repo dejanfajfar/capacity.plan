@@ -75,6 +75,8 @@ pub struct JobOverheadTask {
     pub description: Option<String>,
     pub effort_hours: f64,
     pub effort_period: String, // 'daily' or 'weekly'
+    pub is_optional: bool,     // true = optional task (may not happen)
+    pub optional_weight: f64, // Weight for optional tasks (0.0 to 1.0), only used when is_optional = true
     pub created_at: String,
 }
 
@@ -157,7 +159,9 @@ pub struct CreateJobOverheadTaskInput {
     pub name: String,
     pub description: Option<String>,
     pub effort_hours: f64,
-    pub effort_period: String, // 'daily' or 'weekly'
+    pub effort_period: String,        // 'daily' or 'weekly'
+    pub is_optional: bool,            // true = optional task (may not happen)
+    pub optional_weight: Option<f64>, // Weight for optional tasks (0.0 to 1.0), defaults to 0.5
 }
 
 #[derive(Debug, Deserialize)]

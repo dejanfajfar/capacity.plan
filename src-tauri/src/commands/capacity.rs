@@ -127,6 +127,7 @@ pub async fn get_capacity_overview(
             holiday_hours: breakdown.holiday_hours,
             base_available_hours: breakdown.base_hours,
             overhead_hours: breakdown.overhead_hours,
+            optional_overhead_hours: breakdown.optional_overhead_hours,
         });
     }
 
@@ -173,6 +174,7 @@ pub async fn get_capacity_overview(
                         holiday_days: breakdown.holiday_days,
                         holiday_hours: breakdown.holiday_hours,
                         overhead_hours: breakdown.overhead_hours,
+                        optional_overhead_hours: breakdown.optional_overhead_hours,
                     });
                 }
             }
@@ -313,6 +315,7 @@ pub async fn get_person_capacity(
         holiday_hours: breakdown.holiday_hours,
         base_available_hours: breakdown.base_hours,
         overhead_hours: breakdown.overhead_hours,
+        optional_overhead_hours: breakdown.optional_overhead_hours,
     };
 
     info!("Successfully generated person capacity");
@@ -399,6 +402,7 @@ pub async fn get_project_staffing(
             holiday_days: breakdown.holiday_days,
             holiday_hours: breakdown.holiday_hours,
             overhead_hours: breakdown.overhead_hours,
+            optional_overhead_hours: breakdown.optional_overhead_hours,
         });
     }
 

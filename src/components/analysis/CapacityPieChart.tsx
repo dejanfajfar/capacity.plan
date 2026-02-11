@@ -5,6 +5,7 @@ interface CapacityPieChartProps {
   absenceHours: number;
   holidayHours: number;
   overheadHours: number;
+  optionalOverheadHours: number;
   availableHours: number;
   baseHours: number;
   size?: number;
@@ -14,6 +15,7 @@ export function CapacityPieChart({
   absenceHours,
   holidayHours,
   overheadHours,
+  optionalOverheadHours,
   availableHours,
   baseHours,
   size = 200,
@@ -37,7 +39,16 @@ export function CapacityPieChart({
       value: absenceHours + holidayHours,
       color: theme.colors.blue[5],
     },
-    { name: "Overhead", value: overheadHours, color: theme.colors.orange[5] },
+    {
+      name: "Overhead",
+      value: overheadHours,
+      color: theme.colors.orange[5],
+    },
+    {
+      name: "Optional",
+      value: optionalOverheadHours,
+      color: theme.colors.yellow[5],
+    },
     { name: "Available", value: availableHours, color: theme.colors.green[5] },
   ].filter((item) => item.value > 0);
 

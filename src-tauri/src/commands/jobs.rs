@@ -254,15 +254,20 @@ pub async fn create_job_overhead_task(
         input.name, input.job_id
     );
 
+    // Use provided weight or default to 0.5 for optional tasks
+    let weight = input.optional_weight.unwrap_or(0.5);
+
     let result = sqlx::query(
-        "INSERT INTO job_overhead_tasks (job_id, name, description, effort_hours, effort_period) 
-         VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO job_overhead_tasks (job_id, name, description, effort_hours, effort_period, is_optional, optional_weight) 
+         VALUES (?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(input.job_id)
     .bind(&input.name)
     .bind(&input.description)
     .bind(input.effort_hours)
     .bind(&input.effort_period)
+    .bind(input.is_optional)
+    .bind(weight)
     .execute(pool.inner())
     .await
     .map_err(|e| {
@@ -295,15 +300,20 @@ pub async fn update_job_overhead_task(
 ) -> Result<JobOverheadTask, String> {
     debug!("Updating job overhead task ID: {}", id);
 
+    // Use provided weight or default to 0.5 for optional tasks
+    let weight = input.optional_weight.unwrap_or(0.5);
+
     sqlx::query(
         "UPDATE job_overhead_tasks 
-         SET name = ?, description = ?, effort_hours = ?, effort_period = ?
+         SET name = ?, description = ?, effort_hours = ?, effort_period = ?, is_optional = ?, optional_weight = ?
          WHERE id = ?",
     )
     .bind(&input.name)
     .bind(&input.description)
     .bind(input.effort_hours)
     .bind(&input.effort_period)
+    .bind(input.is_optional)
+    .bind(weight)
     .bind(id)
     .execute(pool.inner())
     .await

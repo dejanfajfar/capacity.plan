@@ -347,6 +347,27 @@ async fn run_migrations(pool: &DbPool) -> Result<(), sqlx::Error> {
 
     debug!("Working days migration completed");
 
+    // Add is_optional column to job_overhead_tasks table if it doesn't exist
+    // Default to 0 (required) for backward compatibility - existing tasks remain required
+    sqlx::query("ALTER TABLE job_overhead_tasks ADD COLUMN is_optional INTEGER NOT NULL DEFAULT 0")
+        .execute(pool)
+        .await
+        .ok(); // Ignore error if column already exists (SQLite limitation)
+
+    debug!("Job overhead task is_optional migration completed");
+
+    // Add optional_weight column to job_overhead_tasks table if it doesn't exist
+    // Default to 0.5 (50% probability) for backward compatibility
+    // This field is only used when is_optional = 1
+    sqlx::query(
+        "ALTER TABLE job_overhead_tasks ADD COLUMN optional_weight REAL NOT NULL DEFAULT 0.5",
+    )
+    .execute(pool)
+    .await
+    .ok(); // Ignore error if column already exists (SQLite limitation)
+
+    debug!("Job overhead task optional_weight migration completed");
+
     info!("Database migrations completed successfully");
     Ok(())
 }

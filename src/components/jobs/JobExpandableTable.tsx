@@ -205,7 +205,28 @@ export function JobExpandableTable({
                             <Table.Tbody>
                               {jobTasks.map((task) => (
                                 <Table.Tr key={task.id}>
-                                  <Table.Td>{task.name}</Table.Td>
+                                  <Table.Td>
+                                    <Group gap="xs">
+                                      {task.name}
+                                      {task.is_optional && (
+                                        <Tooltip
+                                          label={`This optional task has a ${Math.round(task.optional_weight * 100)}% probability of happening`}
+                                        >
+                                          <Badge
+                                            size="xs"
+                                            variant="light"
+                                            color="yellow"
+                                          >
+                                            Optional (
+                                            {Math.round(
+                                              task.optional_weight * 100,
+                                            )}
+                                            %)
+                                          </Badge>
+                                        </Tooltip>
+                                      )}
+                                    </Group>
+                                  </Table.Td>
                                   <Table.Td>
                                     <Text size="sm" c="dimmed" lineClamp={1}>
                                       {task.description || "-"}

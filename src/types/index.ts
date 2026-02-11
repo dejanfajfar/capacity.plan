@@ -73,6 +73,8 @@ export interface JobOverheadTask {
   description: string | null;
   effort_hours: number;
   effort_period: "daily" | "weekly";
+  is_optional: boolean;
+  optional_weight: number; // Weight for optional tasks (0.0 to 1.0), only used when is_optional = true
   created_at: string;
 }
 
@@ -121,10 +123,11 @@ export interface PersonCapacity {
   assignments: AssignmentSummary[];
   absence_days: number;
   absence_hours: number;
-  holiday_days: number; // NEW
-  holiday_hours: number; // NEW
+  holiday_days: number;
+  holiday_hours: number;
   base_available_hours: number;
   overhead_hours: number;
+  optional_overhead_hours: number;
 }
 
 export interface ProjectStaffing {
@@ -154,9 +157,10 @@ export interface PersonAssignmentSummary {
   effective_hours: number;
   absence_days: number;
   absence_hours: number;
-  holiday_days: number; // NEW
-  holiday_hours: number; // NEW
+  holiday_days: number;
+  holiday_hours: number;
   overhead_hours: number;
+  optional_overhead_hours: number;
 }
 
 export interface OptimizationResult {
@@ -254,6 +258,8 @@ export interface CreateJobOverheadTaskInput {
   description?: string;
   effort_hours: number;
   effort_period: "daily" | "weekly";
+  is_optional: boolean;
+  optional_weight?: number; // Weight for optional tasks (0.0 to 1.0), defaults to 0.5
 }
 
 export interface CreatePersonJobAssignmentInput {

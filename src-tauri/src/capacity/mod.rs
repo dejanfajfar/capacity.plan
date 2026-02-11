@@ -90,10 +90,11 @@ pub struct PersonCapacity {
     pub assignments: Vec<AssignmentSummary>,
     pub absence_days: i64,
     pub absence_hours: f64,
-    pub holiday_days: i64,  // NEW
-    pub holiday_hours: f64, // NEW
+    pub holiday_days: i64,
+    pub holiday_hours: f64,
     pub base_available_hours: f64,
-    pub overhead_hours: f64,
+    pub overhead_hours: f64,          // Required overhead tasks only
+    pub optional_overhead_hours: f64, // Optional overhead tasks (weighted at 50%)
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -126,9 +127,10 @@ pub struct PersonAssignmentSummary {
     pub effective_hours: f64,
     pub absence_days: i64,
     pub absence_hours: f64,
-    pub holiday_days: i64,  // NEW
-    pub holiday_hours: f64, // NEW
-    pub overhead_hours: f64,
+    pub holiday_days: i64,
+    pub holiday_hours: f64,
+    pub overhead_hours: f64,          // Required overhead tasks only
+    pub optional_overhead_hours: f64, // Optional overhead tasks (weighted at 50%)
 }
 
 #[derive(Debug)]
@@ -137,9 +139,10 @@ pub struct PersonAvailableHoursBreakdown {
     pub base_hours: f64,
     pub absence_days: i64,
     pub absence_hours: f64,
-    pub holiday_days: i64,  // NEW
-    pub holiday_hours: f64, // NEW
-    pub overhead_hours: f64,
+    pub holiday_days: i64,
+    pub holiday_hours: f64,
+    pub overhead_hours: f64,          // Required overhead tasks only
+    pub optional_overhead_hours: f64, // Optional overhead tasks (weighted at 50%)
 }
 
 // Core calculation functions
@@ -283,7 +286,11 @@ pub async fn calculate_person_available_hours(
     .map_err(|e| format!("Failed to fetch job assignments: {}", e))?;
 
     // Calculate overhead hours from all assigned jobs' overhead tasks
+    // Split into required (is_optional = false) and optional (is_optional = true)
+    // For optional tasks, we apply the per-task weight and track both raw and weighted hours
     let mut overhead_hours = 0.0;
+    let mut optional_overhead_hours = 0.0; // Raw optional hours (unweighted, for display)
+    let mut weighted_optional_overhead = 0.0; // Weighted optional hours (for calculation)
     for job_assignment in job_assignments {
         // Get all overhead tasks for this job
         let overhead_tasks = sqlx::query_as::<_, JobOverheadTask>(
@@ -295,20 +302,33 @@ pub async fn calculate_person_available_hours(
         .map_err(|e| format!("Failed to fetch job overhead tasks: {}", e))?;
 
         for task in overhead_tasks {
-            if task.effort_period == "weekly" {
-                overhead_hours += task.effort_hours * total_weeks;
+            let task_hours = if task.effort_period == "weekly" {
+                task.effort_hours * total_weeks
             } else if task.effort_period == "daily" {
-                overhead_hours += task.effort_hours * working_days;
+                task.effort_hours * working_days
+            } else {
+                0.0
+            };
+
+            if task.is_optional {
+                optional_overhead_hours += task_hours;
+                // Apply per-task weight (each task can have its own probability)
+                weighted_optional_overhead += task_hours * task.optional_weight;
+            } else {
+                overhead_hours += task_hours;
             }
         }
     }
 
     // Calculate available working days and hours after absences, holidays, and overhead
-    let available_hours = (base_hours - absence_hours - holiday_hours - overhead_hours).max(0.0);
+    // Note: We use pre-calculated weighted_optional_overhead instead of applying a global weight
+    let available_hours =
+        (base_hours - absence_hours - holiday_hours - overhead_hours - weighted_optional_overhead)
+            .max(0.0);
 
     debug!(
-        "Person {} available hours: {} (base: {}, working days: {}, absence days: {}, absence hours: {}, holiday days: {}, holiday hours: {}, overhead hours: {}, hours/day: {})",
-        person.name, available_hours, base_hours, working_days, total_absence_days, absence_hours, total_holiday_days, holiday_hours, overhead_hours, hours_per_day
+        "Person {} available hours: {} (base: {}, working days: {}, absence days: {}, absence hours: {}, holiday days: {}, holiday hours: {}, overhead hours: {}, optional overhead hours: {} (weighted: {}), hours/day: {})",
+        person.name, available_hours, base_hours, working_days, total_absence_days, absence_hours, total_holiday_days, holiday_hours, overhead_hours, optional_overhead_hours, weighted_optional_overhead, hours_per_day
     );
 
     Ok(PersonAvailableHoursBreakdown {
@@ -319,6 +339,7 @@ pub async fn calculate_person_available_hours(
         holiday_days: total_holiday_days,
         holiday_hours,
         overhead_hours,
+        optional_overhead_hours,
     })
 }
 
@@ -329,6 +350,34 @@ pub fn calculate_assignment_effective_hours(
     productivity_factor: f64,
 ) -> f64 {
     available_hours * (allocation_percentage / 100.0) * productivity_factor
+}
+
+/// Default weighting factor for optional overhead tasks (50% = 0.5)
+pub const DEFAULT_OPTIONAL_WEIGHT: f64 = 0.5;
+
+/// Calculate available hours from base hours and deductions
+/// This is the core capacity formula extracted for testability
+///
+/// Arguments:
+/// - base_hours: Total potential working hours in the period
+/// - absence_hours: Hours lost to absences (vacation, sick leave, etc.)
+/// - holiday_hours: Hours lost to public holidays
+/// - required_overhead_hours: Hours for required overhead tasks (always deducted 100%)
+/// - optional_overhead_hours: Hours for optional overhead tasks (weighted by optional_weight)
+/// - optional_weight: Weight factor for optional hours (0.0 to 1.0, default 0.5)
+///
+/// Returns: Available hours after all deductions (minimum 0.0)
+pub fn calculate_available_hours(
+    base_hours: f64,
+    absence_hours: f64,
+    holiday_hours: f64,
+    required_overhead_hours: f64,
+    optional_overhead_hours: f64,
+    optional_weight: f64,
+) -> f64 {
+    let weighted_optional = optional_overhead_hours * optional_weight;
+    (base_hours - absence_hours - holiday_hours - required_overhead_hours - weighted_optional)
+        .max(0.0)
 }
 
 /// Proportional optimization algorithm
@@ -710,14 +759,26 @@ mod tests {
     #[test]
     fn test_is_working_day_monday_on_weekday_schedule() {
         let date = NaiveDate::from_ymd_opt(2024, 1, 8).unwrap(); // Monday
-        let working_days = vec![Weekday::Mon, Weekday::Tue, Weekday::Wed, Weekday::Thu, Weekday::Fri];
+        let working_days = vec![
+            Weekday::Mon,
+            Weekday::Tue,
+            Weekday::Wed,
+            Weekday::Thu,
+            Weekday::Fri,
+        ];
         assert!(is_working_day(&date, &working_days));
     }
 
     #[test]
     fn test_is_working_day_saturday_on_weekday_schedule() {
         let date = NaiveDate::from_ymd_opt(2024, 1, 6).unwrap(); // Saturday
-        let working_days = vec![Weekday::Mon, Weekday::Tue, Weekday::Wed, Weekday::Thu, Weekday::Fri];
+        let working_days = vec![
+            Weekday::Mon,
+            Weekday::Tue,
+            Weekday::Wed,
+            Weekday::Thu,
+            Weekday::Fri,
+        ];
         assert!(!is_working_day(&date, &working_days));
     }
 
@@ -788,5 +849,112 @@ mod tests {
         // Trainee level: 40h available, 100% allocation, 0.1 productivity
         let effective = calculate_assignment_effective_hours(40.0, 100.0, 0.1);
         assert!((effective - 4.0).abs() < 0.001);
+    }
+
+    // Tests for calculate_available_hours and optional overhead weighting
+    #[test]
+    fn test_available_hours_no_deductions() {
+        // Base case: no absences, holidays, or overhead
+        let available = calculate_available_hours(160.0, 0.0, 0.0, 0.0, 0.0, 0.5);
+        assert!((available - 160.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_available_hours_with_absences_only() {
+        // 160h base, 16h absence (2 days at 8h/day)
+        let available = calculate_available_hours(160.0, 16.0, 0.0, 0.0, 0.0, 0.5);
+        assert!((available - 144.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_available_hours_with_holidays_only() {
+        // 160h base, 8h holiday (1 day)
+        let available = calculate_available_hours(160.0, 0.0, 8.0, 0.0, 0.0, 0.5);
+        assert!((available - 152.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_available_hours_with_required_overhead_only() {
+        // 160h base, 10h required overhead
+        let available = calculate_available_hours(160.0, 0.0, 0.0, 10.0, 0.0, 0.5);
+        assert!((available - 150.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_available_hours_with_optional_overhead_50_percent_weight() {
+        // 160h base, 20h optional overhead at 50% weight = 10h deduction
+        let available = calculate_available_hours(160.0, 0.0, 0.0, 0.0, 20.0, 0.5);
+        assert!((available - 150.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_available_hours_with_optional_overhead_zero_weight() {
+        // 160h base, 20h optional overhead at 0% weight = 0h deduction
+        let available = calculate_available_hours(160.0, 0.0, 0.0, 0.0, 20.0, 0.0);
+        assert!((available - 160.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_available_hours_with_optional_overhead_full_weight() {
+        // 160h base, 20h optional overhead at 100% weight = 20h deduction
+        let available = calculate_available_hours(160.0, 0.0, 0.0, 0.0, 20.0, 1.0);
+        assert!((available - 140.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_available_hours_combined_all_deductions() {
+        // Realistic scenario:
+        // - 160h base (4 weeks at 40h/week)
+        // - 16h absence (2 vacation days)
+        // - 8h holidays (1 public holiday)
+        // - 8h required overhead (team meetings)
+        // - 4h optional overhead at 50% = 2h deduction (optional training)
+        // Expected: 160 - 16 - 8 - 8 - 2 = 126h
+        let available = calculate_available_hours(160.0, 16.0, 8.0, 8.0, 4.0, 0.5);
+        assert!((available - 126.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_available_hours_mixed_overhead_types() {
+        // Test with both required and optional overhead
+        // 160h base, 20h required, 10h optional at 50% = 5h
+        // Expected: 160 - 20 - 5 = 135h
+        let available = calculate_available_hours(160.0, 0.0, 0.0, 20.0, 10.0, 0.5);
+        assert!((available - 135.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_available_hours_floor_at_zero() {
+        // Deductions exceed base hours - should floor at 0
+        let available = calculate_available_hours(100.0, 50.0, 30.0, 30.0, 0.0, 0.5);
+        assert!((available - 0.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_available_hours_optional_weight_boundary_values() {
+        // Test weight at edge values
+        let base = 100.0;
+        let optional = 40.0;
+
+        // Weight 0.0: no deduction from optional
+        assert!((calculate_available_hours(base, 0.0, 0.0, 0.0, optional, 0.0) - 100.0).abs() < 0.001);
+
+        // Weight 0.25: 10h deduction
+        assert!((calculate_available_hours(base, 0.0, 0.0, 0.0, optional, 0.25) - 90.0).abs() < 0.001);
+
+        // Weight 0.5 (default): 20h deduction
+        assert!((calculate_available_hours(base, 0.0, 0.0, 0.0, optional, 0.5) - 80.0).abs() < 0.001);
+
+        // Weight 0.75: 30h deduction
+        assert!((calculate_available_hours(base, 0.0, 0.0, 0.0, optional, 0.75) - 70.0).abs() < 0.001);
+
+        // Weight 1.0: full 40h deduction
+        assert!((calculate_available_hours(base, 0.0, 0.0, 0.0, optional, 1.0) - 60.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_default_optional_weight_constant() {
+        // Verify the default constant is 0.5 (50%)
+        assert!((DEFAULT_OPTIONAL_WEIGHT - 0.5).abs() < 0.001);
     }
 }

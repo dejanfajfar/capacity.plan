@@ -100,6 +100,7 @@ function PersonCapacityRow({
                     absenceHours={person.absence_hours}
                     holidayHours={person.holiday_hours}
                     overheadHours={person.overhead_hours}
+                    optionalOverheadHours={person.optional_overhead_hours}
                     availableHours={person.total_available_hours}
                     baseHours={person.base_available_hours}
                   />
@@ -149,7 +150,8 @@ function PersonCapacityRow({
                 {/* Capacity Deductions Summary (blue) */}
                 {(person.absence_days > 0 ||
                   person.holiday_days > 0 ||
-                  person.overhead_hours > 0) && (
+                  person.overhead_hours > 0 ||
+                  person.optional_overhead_hours > 0) && (
                   <Alert
                     icon={<IconInfoCircle size={16} />}
                     color="blue"
@@ -206,6 +208,29 @@ function PersonCapacityRow({
                           deducted
                         </Text>
                       )}
+                      {person.optional_overhead_hours > 0 && (
+                        <Tooltip
+                          label="Optional tasks are weighted by their individual probability (0-100%). The displayed deduction is the sum of each task's hours multiplied by its probability."
+                          withArrow
+                          multiline
+                          w={300}
+                        >
+                          <Text size="sm" style={{ cursor: "help" }}>
+                            <IconClock
+                              size={14}
+                              style={{
+                                display: "inline",
+                                verticalAlign: "middle",
+                              }}
+                            />{" "}
+                            Optional:{" "}
+                            <strong className="numeric-data">
+                              {person.optional_overhead_hours.toFixed(0)}h
+                            </strong>{" "}
+                            raw (weighted by probability)
+                          </Text>
+                        </Tooltip>
+                      )}
                       <Text size="xs" c="dimmed" mt={4}>
                         Base: {person.base_available_hours.toFixed(0)}h →
                         Available: {person.total_available_hours.toFixed(0)}h
@@ -225,7 +250,8 @@ function PersonCapacityRow({
                 {/* No deductions message (gray) */}
                 {person.absence_days === 0 &&
                   person.holiday_days === 0 &&
-                  person.overhead_hours === 0 && (
+                  person.overhead_hours === 0 &&
+                  person.optional_overhead_hours === 0 && (
                     <Alert
                       icon={<IconInfoCircle size={16} />}
                       color="gray"
@@ -642,18 +668,42 @@ export function CapacityAnalysis({ periodId }: CapacityAnalysisProps) {
                                         </Tooltip>
                                       )}
                                       {person.overhead_hours > 0 && (
-                                        <Badge
-                                          size="sm"
-                                          variant="light"
-                                          color="orange"
+                                        <Tooltip
+                                          label={`${person.overhead_hours.toFixed(0)}h deducted for required overhead tasks`}
+                                          withArrow
                                         >
-                                          {person.overhead_hours.toFixed(0)}h
-                                          overhead
-                                        </Badge>
+                                          <Badge
+                                            size="sm"
+                                            variant="light"
+                                            color="orange"
+                                          >
+                                            {person.overhead_hours.toFixed(0)}h
+                                            overhead
+                                          </Badge>
+                                        </Tooltip>
+                                      )}
+                                      {person.optional_overhead_hours > 0 && (
+                                        <Tooltip
+                                          label="Optional task hours weighted by their individual probability settings"
+                                          withArrow
+                                        >
+                                          <Badge
+                                            size="sm"
+                                            variant="light"
+                                            color="yellow"
+                                          >
+                                            {person.optional_overhead_hours.toFixed(
+                                              0,
+                                            )}
+                                            h optional
+                                          </Badge>
+                                        </Tooltip>
                                       )}
                                       {person.absence_days === 0 &&
                                         person.holiday_days === 0 &&
-                                        person.overhead_hours === 0 && (
+                                        person.overhead_hours === 0 &&
+                                        person.optional_overhead_hours ===
+                                          0 && (
                                           <Text size="sm" c="dimmed">
                                             —
                                           </Text>

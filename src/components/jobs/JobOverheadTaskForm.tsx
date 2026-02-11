@@ -9,6 +9,9 @@ import {
   Group,
   Stack,
   Text,
+  Switch,
+  Slider,
+  Box,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import type { JobOverheadTask, CreateJobOverheadTaskInput } from "../../types";
@@ -21,6 +24,15 @@ interface JobOverheadTaskFormProps {
   task?: JobOverheadTask | null;
   title: string;
 }
+
+// Preset marks for the probability slider
+const probabilityMarks = [
+  { value: 0, label: "0%" },
+  { value: 25, label: "25%" },
+  { value: 50, label: "50%" },
+  { value: 75, label: "75%" },
+  { value: 100, label: "100%" },
+];
 
 export function JobOverheadTaskForm({
   opened,
@@ -37,6 +49,8 @@ export function JobOverheadTaskForm({
       description: "",
       effort_hours: 1,
       effort_period: "weekly",
+      is_optional: false,
+      optional_weight: 0.5,
     },
     validate: {
       name: (value) =>
@@ -55,6 +69,8 @@ export function JobOverheadTaskForm({
           description: task.description || "",
           effort_hours: task.effort_hours,
           effort_period: task.effort_period,
+          is_optional: task.is_optional,
+          optional_weight: task.optional_weight,
         });
       } else {
         form.reset();
@@ -72,6 +88,9 @@ export function JobOverheadTaskForm({
       console.error("Failed to save overhead task:", error);
     }
   };
+
+  // Convert weight (0-1) to percentage for slider display
+  const weightAsPercent = (form.values.optional_weight ?? 0.5) * 100;
 
   return (
     <Modal opened={opened} onClose={onClose} title={title} size="md">
@@ -121,6 +140,35 @@ export function JobOverheadTaskForm({
             Example: 2 hours weekly = 2 hours per week deducted from available
             capacity
           </Text>
+
+          <Switch
+            label="Optional Task"
+            description="Optional tasks may or may not happen"
+            {...form.getInputProps("is_optional", { type: "checkbox" })}
+          />
+
+          {form.values.is_optional && (
+            <Box>
+              <Text size="sm" fw={500} mb="xs">
+                Probability ({Math.round(weightAsPercent)}%)
+              </Text>
+              <Slider
+                value={weightAsPercent}
+                onChange={(val) =>
+                  form.setFieldValue("optional_weight", val / 100)
+                }
+                min={0}
+                max={100}
+                step={5}
+                marks={probabilityMarks}
+                label={(val) => `${val}%`}
+              />
+              <Text size="xs" c="dimmed" mt="md">
+                How likely is this task to happen? Higher probability = more
+                hours deducted from capacity.
+              </Text>
+            </Box>
+          )}
 
           <Group justify="flex-end" mt="md">
             <Button variant="subtle" onClick={onClose}>

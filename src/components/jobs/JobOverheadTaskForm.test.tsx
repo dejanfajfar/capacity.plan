@@ -70,6 +70,7 @@ describe("JobOverheadTaskForm", () => {
           description: "Weekly code review sessions",
           effort_hours: 2,
           effort_period: "weekly",
+          is_optional: false,
         } satisfies CreateJobOverheadTaskInput),
       );
     });
@@ -112,6 +113,8 @@ describe("JobOverheadTaskForm", () => {
       description: "Existing description",
       effort_hours: 3,
       effort_period: "daily",
+      is_optional: false,
+      optional_weight: 0.5,
       created_at: new Date().toISOString(),
     };
 
@@ -158,6 +161,8 @@ describe("JobOverheadTaskForm", () => {
       description: null,
       effort_hours: 1,
       effort_period: "weekly",
+      is_optional: false,
+      optional_weight: 0.5,
       created_at: new Date().toISOString(),
     };
 

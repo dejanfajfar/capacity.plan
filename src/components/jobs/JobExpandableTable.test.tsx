@@ -38,6 +38,8 @@ describe("JobExpandableTable", () => {
         description: "Weekly code review sessions",
         effort_hours: 2,
         effort_period: "weekly",
+        is_optional: false,
+        optional_weight: 0.5,
         created_at: new Date().toISOString(),
       },
       {
@@ -47,6 +49,8 @@ describe("JobExpandableTable", () => {
         description: "Daily standup meetings",
         effort_hours: 0.5,
         effort_period: "daily",
+        is_optional: false,
+        optional_weight: 0.5,
         created_at: new Date().toISOString(),
       },
     ]);
