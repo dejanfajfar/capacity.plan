@@ -353,6 +353,7 @@ pub fn calculate_assignment_effective_hours(
 }
 
 /// Default weighting factor for optional overhead tasks (50% = 0.5)
+#[allow(dead_code)] // Used in tests
 pub const DEFAULT_OPTIONAL_WEIGHT: f64 = 0.5;
 
 /// Calculate available hours from base hours and deductions
@@ -367,6 +368,7 @@ pub const DEFAULT_OPTIONAL_WEIGHT: f64 = 0.5;
 /// - optional_weight: Weight factor for optional hours (0.0 to 1.0, default 0.5)
 ///
 /// Returns: Available hours after all deductions (minimum 0.0)
+#[allow(dead_code)] // Used in tests
 pub fn calculate_available_hours(
     base_hours: f64,
     absence_hours: f64,

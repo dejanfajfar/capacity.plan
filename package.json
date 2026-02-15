@@ -11,7 +11,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,css,json}\" && cargo fmt --manifest-path src-tauri/Cargo.toml"
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,css,json}\" && cargo fmt --manifest-path src-tauri/Cargo.toml",
+    "ci": "npm run build && npx tsc --noEmit && npm run test:run && cd src-tauri && cargo fmt -- --check && cargo clippy --all-targets --all-features -- -D warnings && cargo test --all-features"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
