@@ -937,19 +937,29 @@ mod tests {
         let optional = 40.0;
 
         // Weight 0.0: no deduction from optional
-        assert!((calculate_available_hours(base, 0.0, 0.0, 0.0, optional, 0.0) - 100.0).abs() < 0.001);
+        assert!(
+            (calculate_available_hours(base, 0.0, 0.0, 0.0, optional, 0.0) - 100.0).abs() < 0.001
+        );
 
         // Weight 0.25: 10h deduction
-        assert!((calculate_available_hours(base, 0.0, 0.0, 0.0, optional, 0.25) - 90.0).abs() < 0.001);
+        assert!(
+            (calculate_available_hours(base, 0.0, 0.0, 0.0, optional, 0.25) - 90.0).abs() < 0.001
+        );
 
         // Weight 0.5 (default): 20h deduction
-        assert!((calculate_available_hours(base, 0.0, 0.0, 0.0, optional, 0.5) - 80.0).abs() < 0.001);
+        assert!(
+            (calculate_available_hours(base, 0.0, 0.0, 0.0, optional, 0.5) - 80.0).abs() < 0.001
+        );
 
         // Weight 0.75: 30h deduction
-        assert!((calculate_available_hours(base, 0.0, 0.0, 0.0, optional, 0.75) - 70.0).abs() < 0.001);
+        assert!(
+            (calculate_available_hours(base, 0.0, 0.0, 0.0, optional, 0.75) - 70.0).abs() < 0.001
+        );
 
         // Weight 1.0: full 40h deduction
-        assert!((calculate_available_hours(base, 0.0, 0.0, 0.0, optional, 1.0) - 60.0).abs() < 0.001);
+        assert!(
+            (calculate_available_hours(base, 0.0, 0.0, 0.0, optional, 1.0) - 60.0).abs() < 0.001
+        );
     }
 
     #[test]
