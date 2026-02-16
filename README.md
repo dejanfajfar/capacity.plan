@@ -15,7 +15,7 @@ A desktop application for optimal resource allocation across projects and people
 - **Planning Periods** - Define time windows (quarters, months) for planning
 - **Smart Assignments** - Assign people to projects with productivity factors
 - **Absence Management** - Track absences that reduce available capacity
-- **Overhead Management** - Track recurring overhead tasks (meetings, admin work)
+- **Jobs & Overhead Tasks** - Define job templates with recurring overhead tasks (meetings, admin work)
 - **Optimization Algorithm** - Calculate optimal allocation percentages using linear programming
 - **Capacity Analysis** - Visualize utilization, staffing, and capacity breakdown with interactive charts
 - **Project Requirements** - Define specific hour requirements per project per period
@@ -26,7 +26,7 @@ A desktop application for optimal resource allocation across projects and people
 - **Backend:** Rust + Tauri v2
 - **Database:** SQLite with sqlx
 - **State Management:** Zustand (planned)
-- **Optimization:** good_lp linear programming solver
+- **Optimization:** Custom allocation algorithm
 - **Logging:** simplelog with daily file rotation
 
 ## Development Setup
@@ -153,15 +153,15 @@ When assigning people to projects, you select a **proficiency level** that repre
 
 The system provides 7 preset proficiency levels:
 
-| Level | Factor | Description | When to Use |
-|-------|--------|-------------|-------------|
-| **Master** | 0.90 | Subject matter expert with deep mastery | Person is the architect/SME, mentors others, maintains highest productivity |
-| **Expert** | 0.80 | Deep expertise and experience | Person has years of experience, works independently, rarely needs guidance |
-| **Advanced** | 0.65 | Strong knowledge and experience | Person knows the domain well, works independently most of the time |
-| **Proficient** | 0.50 | Solid understanding and competence | Person is competent but not specialized (default/baseline) |
-| **Intermediate** | 0.35 | Developing skills and knowledge | Person is learning, needs regular guidance and code reviews |
-| **Beginner** | 0.20 | Basic familiarity only | Person has little experience, needs frequent support and mentoring |
-| **Trainee** | 0.10 | Shadowing/training mode | Person is in training, minimal direct output, focused on learning |
+| Level            | Factor | Description                             | When to Use                                                                 |
+| ---------------- | ------ | --------------------------------------- | --------------------------------------------------------------------------- |
+| **Master**       | 0.90   | Subject matter expert with deep mastery | Person is the architect/SME, mentors others, maintains highest productivity |
+| **Expert**       | 0.80   | Deep expertise and experience           | Person has years of experience, works independently, rarely needs guidance  |
+| **Advanced**     | 0.65   | Strong knowledge and experience         | Person knows the domain well, works independently most of the time          |
+| **Proficient**   | 0.50   | Solid understanding and competence      | Person is competent but not specialized (default/baseline)                  |
+| **Intermediate** | 0.35   | Developing skills and knowledge         | Person is learning, needs regular guidance and code reviews                 |
+| **Beginner**     | 0.20   | Basic familiarity only                  | Person has little experience, needs frequent support and mentoring          |
+| **Trainee**      | 0.10   | Shadowing/training mode                 | Person is in training, minimal direct output, focused on learning           |
 
 **Custom Values**: You can also enter custom productivity factors (0.0 - 1.0) for special cases.
 
@@ -184,28 +184,37 @@ The optimization engine uses linear programming to:
 ```
 capacity.plan/
 ├── src/                           # React frontend
+│   ├── assets/                   # Static assets (images, icons)
 │   ├── components/               # UI components
 │   │   ├── absences/            # Absence management
 │   │   ├── analysis/            # Capacity analysis & charts
 │   │   ├── assignments/         # Assignment management
-│   │   ├── overheads/          # Overhead management
-│   │   ├── people/             # People management
-│   │   ├── period/             # Period overview
-│   │   ├── person/             # Person detail view
-│   │   ├── planning/           # Planning period management
-│   │   ├── projects/           # Project management
-│   │   └── requirements/       # Project requirements
-│   ├── pages/                  # Page components
-│   ├── contexts/               # React contexts
-│   ├── lib/                    # Utility functions & Tauri API
-│   └── types/                  # TypeScript type definitions
+│   │   ├── capacity/            # Capacity calculations
+│   │   ├── countries/           # Country management
+│   │   ├── holidays/            # Holiday management
+│   │   ├── jobs/                # Jobs & overhead task management
+│   │   ├── layout/              # App layout components
+│   │   ├── people/              # People management
+│   │   ├── period/              # Period overview
+│   │   ├── person/              # Person detail view
+│   │   ├── planning/            # Planning period management
+│   │   ├── projects/            # Project management
+│   │   ├── requirements/        # Project requirements
+│   │   └── ui/                  # Shared UI components
+│   ├── constants/                # Application constants
+│   ├── contexts/                 # React contexts
+│   ├── lib/                      # Utility functions & Tauri API
+│   ├── pages/                    # Page components
+│   ├── test/                     # Test utilities & setup
+│   └── types/                    # TypeScript type definitions
 │
 ├── src-tauri/                    # Rust backend
 │   ├── src/
-│   │   ├── capacity/           # Optimization algorithm
-│   │   ├── commands/           # Tauri commands (API)
-│   │   ├── db/                 # Database setup & migrations
-│   │   └── models/             # Data models
+│   │   ├── api/                 # API helpers
+│   │   ├── capacity/            # Optimization algorithm
+│   │   ├── commands/            # Tauri commands (API)
+│   │   ├── db/                  # Database setup & migrations
+│   │   └── models/              # Data models
 │   └── Cargo.toml
 │
 └── ~/.capacity-planner/          # User data directory (runtime)
