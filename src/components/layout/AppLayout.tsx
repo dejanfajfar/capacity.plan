@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import {
   AppShell,
-  Burger,
   Group,
   Text,
   NavLink,
   ActionIcon,
   Box,
+  Divider,
+  Stack,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import {
   IconCalendar,
@@ -22,7 +22,6 @@ import {
 import { useTheme } from "../../contexts/ThemeContext";
 
 export function AppLayout() {
-  const [opened, { toggle }] = useDisclosure();
   const location = useLocation();
   const { colorScheme, toggleColorScheme } = useTheme();
   const [version, setVersion] = useState<string>("");
@@ -58,62 +57,48 @@ export function AppLayout() {
   ];
 
   return (
-    <AppShell
-      header={{ height: 60 }}
-      navbar={{
-        width: 250,
-        breakpoint: "sm",
-        collapsed: { mobile: !opened },
-      }}
-      padding="md"
-    >
-      <AppShell.Header>
-        <Group h="100%" px="md" justify="space-between">
-          <Group>
-            <Burger
-              opened={opened}
-              onClick={toggle}
-              hiddenFrom="sm"
-              size="sm"
-            />
-            <Text size="xl" fw={700}>
+    <AppShell navbar={{ width: 280, breakpoint: "xs" }} padding="md">
+      <AppShell.Navbar p="md">
+        <AppShell.Section>
+          <Group justify="space-between" mb="md">
+            <Text size="lg" fw={700}>
               Capacity Planner
             </Text>
+            <ActionIcon
+              variant="subtle"
+              size="lg"
+              onClick={toggleColorScheme}
+              title={`Switch to ${colorScheme === "dark" ? "light" : "dark"} mode`}
+            >
+              {colorScheme === "dark" ? (
+                <IconSun size={20} />
+              ) : (
+                <IconMoon size={20} />
+              )}
+            </ActionIcon>
           </Group>
+          <Divider />
+        </AppShell.Section>
 
-          <ActionIcon
-            variant="subtle"
-            size="lg"
-            onClick={toggleColorScheme}
-            title={`Switch to ${colorScheme === "dark" ? "light" : "dark"} mode`}
-          >
-            {colorScheme === "dark" ? (
-              <IconSun size={20} />
-            ) : (
-              <IconMoon size={20} />
-            )}
-          </ActionIcon>
-        </Group>
-      </AppShell.Header>
-
-      <AppShell.Navbar p="md">
-        <AppShell.Section grow>
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              component={Link}
-              to={item.to}
-              label={item.label}
-              leftSection={item.icon}
-              active={location.pathname === item.to}
-              mb="xs"
-            />
-          ))}
+        <AppShell.Section grow mt="sm">
+          <Stack gap={4}>
+            {navItems.map((item) => (
+              <NavLink
+                key={item.to}
+                component={Link}
+                to={item.to}
+                label={item.label}
+                leftSection={item.icon}
+                active={location.pathname.startsWith(item.to)}
+              />
+            ))}
+          </Stack>
         </AppShell.Section>
 
         {version && (
           <AppShell.Section>
-            <Box px="md" py="sm">
+            <Divider mb="sm" />
+            <Box px="xs">
               <Text size="xs" c="dimmed">
                 v{version}
               </Text>
@@ -123,7 +108,26 @@ export function AppLayout() {
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <Outlet />
+        <Box
+          style={(theme) => ({
+            height: "100%",
+            borderRadius: theme.radius.md,
+            border: `1px solid ${
+              colorScheme === "dark" ? "var(--mantine-color-dark-3)" : "#93a1a1"
+            }`,
+            backgroundColor:
+              colorScheme === "dark"
+                ? "var(--mantine-color-dark-5)"
+                : "#fdf6e3",
+            boxShadow:
+              colorScheme === "dark"
+                ? "0 4px 24px rgba(0, 0, 0, 0.4)"
+                : "0 4px 24px rgba(0, 0, 0, 0.12)",
+            overflow: "auto",
+          })}
+        >
+          <Outlet />
+        </Box>
       </AppShell.Main>
     </AppShell>
   );

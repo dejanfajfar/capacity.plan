@@ -23,7 +23,6 @@ export function ProjectList({ projects, onEdit, onDelete }: ProjectListProps) {
         <Table.Tr>
           <Table.Th>Name</Table.Th>
           <Table.Th>Description</Table.Th>
-          <Table.Th>Target Hours/Period</Table.Th>
           <Table.Th style={{ width: 100 }}>Actions</Table.Th>
         </Table.Tr>
       </Table.Thead>
@@ -35,9 +34,6 @@ export function ProjectList({ projects, onEdit, onDelete }: ProjectListProps) {
               <Text size="sm" lineClamp={1}>
                 {project.description || "-"}
               </Text>
-            </Table.Td>
-            <Table.Td className="numeric-data">
-              {project.required_hours} hrs/period
             </Table.Td>
             <Table.Td>
               <ActionIcon.Group>

@@ -262,13 +262,12 @@ export const oneDarkTheme = createTheme({
   components: {
     AppShell: {
       styles: {
-        header: {
-          backgroundColor: "var(--mantine-color-dark-6)",
-          borderBottom: "1px solid var(--mantine-color-dark-3)",
-        },
         navbar: {
           backgroundColor: "var(--mantine-color-dark-6)",
-          borderRight: "1px solid var(--mantine-color-dark-3)",
+          borderRight: "1px solid var(--mantine-color-dark-6)",
+        },
+        main: {
+          backgroundColor: "var(--mantine-color-dark-6)",
         },
       },
     },
@@ -398,16 +397,12 @@ export const solarizedLightTheme = createTheme({
   components: {
     AppShell: {
       styles: {
-        header: {
-          backgroundColor: "#eee8d5", // Solarized base2 (light surface)
-          borderBottom: "1px solid #93a1a1", // Solarized base1 (subtle border)
-        },
         navbar: {
           backgroundColor: "#eee8d5", // Solarized base2 (light surface)
-          borderRight: "1px solid #93a1a1", // Solarized base1 (subtle border)
+          borderRight: "1px solid #eee8d5", // matches background — invisible
         },
         main: {
-          backgroundColor: "#fdf6e3", // Solarized base3 (lightest background)
+          backgroundColor: "#eee8d5", // Solarized base2 — matches navbar
         },
       },
     },
